@@ -1,0 +1,12 @@
+{
+    "postgres": {
+        "user": "admin",
+        "password": "~admin~124679~",
+        "host": "db",
+        "database": "kimthi"
+    },
+    "pagination": {
+        "defaultSize": 10,
+        "maxSize": 50
+    }
+}

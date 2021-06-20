@@ -1,0 +1,25 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.myContainer = void 0;
+require("reflect-metadata");
+var pg_1 = require("pg");
+var types_1 = require("./types");
+var inversify_1 = require("inversify");
+var config_json_1 = __importDefault(require("../config.json"));
+var UserRepositoryPostgres_1 = require("./repository/UserRepositoryPostgres");
+var UserController_1 = require("./controller/UserController");
+var JwtAuthenticator_1 = require("./middleware/JwtAuthenticator");
+var UserView_1 = require("./view/UserView");
+var UserAuthorizer_1 = require("./middleware/UserAuthorizer");
+exports.myContainer = new inversify_1.Container();
+exports.myContainer.bind(types_1.TYPES.POSTGRES_DRIVER).toConstantValue(new pg_1.Pool(config_json_1.default.postgres));
+exports.myContainer.bind(types_1.TYPES.JWT_SECRECT_KEY).toConstantValue("38BggaT/EYOza5yIKeR13+9kgibw3K5UK/5AJjlAamoLo0IT/y3fX2Qcx18IS1e0zTMb556dtfac4bNV0EOuGsdXAQRRgiJueyanKW534X/VRZgSUggNeR4lEuz0q7iBbRjGLS7zm+hjU1MtoBbW70C2qX2cnFTRXuVwGHy2pQyYCo+stA9+ZJiacryZarT4yf/kUr6hJ+/WAJTMHHRcBWOLr6vedZQ7EmVfJA==");
+exports.myContainer.bind(types_1.TYPES.USER_VIEW).to(UserView_1.UserView);
+exports.myContainer.bind(types_1.TYPES.USER_CONTROLLER).to(UserController_1.UserController);
+exports.myContainer.bind(types_1.TYPES.USER_REPOSITORY).to(UserRepositoryPostgres_1.UserRepositoryPostgres);
+exports.myContainer.bind(types_1.TYPES.JWT_DURATION_S).toConstantValue(24 * 3600 * 30);
+exports.myContainer.bind(types_1.TYPES.JWT_AUTHENTICATOR).to(JwtAuthenticator_1.JwtAuthenticator);
+exports.myContainer.bind(types_1.TYPES.USER_AUTHORIZER).to(UserAuthorizer_1.UserAuthorizer);
