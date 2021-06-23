@@ -59,8 +59,8 @@ export class UserRepositoryPostgres implements IUserRepository {
         var result = await this.driver.query(`
             SELECT u.id, u.username, u.password, u.is_deactivated, u.is_verified
             FROM "user" u
-            WHERE u.username = '${username}'
-        `);
+            WHERE u.username = $1
+        `, [username]);
 
         if (result.rowCount == 0) {
             throw new NotFound("user", "username", username);

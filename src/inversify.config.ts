@@ -9,6 +9,17 @@ import { JwtAuthenticator } from "./middleware/JwtAuthenticator";
 import { IUserRepository } from "./repository/IUserRepository";
 import { UserView } from "./view/UserView";
 import { UserAuthorizer } from "./middleware/UserAuthorizer";
+import { IProductRepository } from "./repository/IProductRepository";
+import { ProductRepositoryPostgres } from "./repository/ProductRepositoryPostgres";
+import { IProductPriceRepository } from "./repository/IPriceRepository";
+import { PriceRepositoryPostgres } from "./repository/PriceRepositoryPostgres";
+import { IImageRepository } from "./repository/IImageRepository";
+import { ImageRepositoryPostgres } from "./repository/ImageRepositoryPostgres";
+import { IBinaryRepository } from "./repository/IBinaryRepository";
+import { BinaryRepositoryFileSystem } from "./repository/BinaryRepositoryFilesystem";
+import { ProductController } from "./controller/ProductController";
+import { ProductImageController } from "./controller/ImageController";
+import { ProductView } from "./view/ProductView";
 
 
 export const myContainer = new Container();
@@ -21,3 +32,11 @@ myContainer.bind<IUserRepository>(TYPES.USER_REPOSITORY).to(UserRepositoryPostgr
 myContainer.bind<number>(TYPES.JWT_DURATION_S).toConstantValue(24 * 3600 * 30);
 myContainer.bind<JwtAuthenticator>(TYPES.JWT_AUTHENTICATOR).to(JwtAuthenticator);
 myContainer.bind<UserAuthorizer>(TYPES.USER_AUTHORIZER).to(UserAuthorizer);
+myContainer.bind<IProductRepository>(TYPES.PRODUCT_REPOSITORY).to(ProductRepositoryPostgres);
+myContainer.bind<IProductPriceRepository>(TYPES.PRODUCT_PRICE_REPOSITORY).to(PriceRepositoryPostgres);
+myContainer.bind<IImageRepository>(TYPES.IMAGE_REPOSITORY).to(ImageRepositoryPostgres)
+myContainer.bind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).to(BinaryRepositoryFileSystem)
+myContainer.bind<ProductController>(TYPES.PRODUCT_CONTROLLER).to(ProductController)
+myContainer.bind<ProductImageController>(TYPES.PRODUCT_IMAGE_CONTROLLER).to(ProductImageController)
+myContainer.bind<ProductView>(TYPES.PRODUCT_VIEW).to(ProductView)
+

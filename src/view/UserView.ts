@@ -14,9 +14,6 @@ export class UserView {
         let username = request.body.username;
         let password = request.body.password;
 
-        console.log('password');
-        console.log(password);
-
         var ret = await this.controller.logIn(username, password);
         if (ret === null) {
             return response.status(404).send();

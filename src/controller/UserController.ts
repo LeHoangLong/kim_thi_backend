@@ -27,7 +27,6 @@ export class UserController {
 
     async logIn(username: string, password: string) : Promise<[string, number] | null> {
         var user = await this.repository.fetchUserByUsername(username);
-        var encryptedPassword = await bcrypt.hash(password, 10);
         let compare = await bcrypt.compare(password, user.password);
         if (compare) {
             if (this.jwtAuthentication !== null) {

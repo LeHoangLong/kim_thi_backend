@@ -3,7 +3,6 @@ import { User } from "../src/model/User";
 import { IUserRepository } from "../src/repository/IUserRepository";
 import 'reflect-metadata';
 import sinon from 'sinon';
-import { expect } from 'chai';
 import { TYPES } from '../src/types';
 import { myContainer } from "../src/inversify.config";
 import { UserView } from "../src/view/UserView";
@@ -57,12 +56,14 @@ describe('User test', function() {
             }
         }
         context.response = {
-            status: function(status: number){},
-            cookie: function(name: string, value: string, option: CookieOptions){}
+            status(status: number){ return this },
+            cookie(name: string, value: string, option: CookieOptions){ return this },
+            send() {},
         }
         
         context.cookieSpy = sinon.spy(context.response, "cookie");
         context.statusSpy = sinon.spy(context.response, "status");
+        context.sendSpy = sinon.spy(context.response, "send")
                 
     });
 
@@ -73,11 +74,13 @@ describe('User test', function() {
         });
         sinon.assert.calledOnceWithExactly(context.generateTokenSpy, "username");
         sinon.assert.calledOnceWithExactly(context.statusSpy, 200);
+        sinon.assert.calledOnce(context.sendSpy)
     });
 
     it('should reject if password is incorrect', async function() {
         context.request.body.password = 'password2';
         await context.view.loginView(context.request as any, context.response as any);
         sinon.assert.calledOnceWithExactly(context.statusSpy, 404);
+        sinon.assert.calledOnce(context.sendSpy)
     }) 
 });

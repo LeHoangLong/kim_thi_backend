@@ -1,6 +1,6 @@
 export class UnrecognizedEnumValue {
     constructor(
-        public readonly value: number
+        public readonly value: number | string
     ) {}
 
     toString(): string {
