@@ -18,25 +18,26 @@ module.exports.up = async function (next) {
         await client.query(`
             CREATE TABLE IF NOT EXISTS "product_price" (
                 id SERIAL PRIMARY KEY,
-                unit INTEGER CHECK (unit >= 0 AND unit < 1)
+                unit INTEGER CHECK (unit >= 0 AND unit < 1),
                 min_quantity INTEGER CHECK (min_quantity >= 0) NOT NULL,
                 price REAL NOT NULL
             )
         `)
         await client.query(`
             CREATE TABLE IF NOT EXISTS "product" (
-                id SERIAL PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
-                is_delete BOOLEAN DEFAULT FALSE NOT NULL,
-                avatar_id TEXT REFERENCES "image"(id) ON DELETE PROTECT ON UPDATE CASCADE,
+                is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
+                avatar_id TEXT REFERENCES image(id) ON DELETE NO ACTION ON UPDATE CASCADE,
                 rank INTEGER NOT NULL CHECK(rank > 0),
-                display_price_id INTEGER REFERENCES "product_price"(id) ON DELETE PROTECT ON UPDATE CASCADE,
+                display_price_id INTEGER REFERENCES product_price(id) ON DELETE NO ACTION ON UPDATE CASCADE,
                 created_time TIMESTAMPTZ DEFAULT NOW()
             )
         `)
         await client.query('COMMIT');
     } catch (exception) {
         await client.query('ROLLBACK');
+        throw exception
     }
     next()
 }
@@ -52,6 +53,7 @@ module.exports.down = async function (next) {
         await client.query('COMMIT');
     } catch (exception) {
         await client.query('ROLLBACK');
+        throw exception
     }
     next()
 }

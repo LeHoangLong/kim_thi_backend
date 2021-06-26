@@ -1,6 +1,8 @@
 import { IBinaryRepository } from "./IBinaryRepository";
 import fs from 'fs';
+import { injectable } from "inversify";
 
+@injectable()
 export class BinaryRepositoryFileSystem implements IBinaryRepository {
     async save(namespace: string, id: string, data: Buffer) : Promise<boolean> {
         let path = this.getPath(namespace, id);

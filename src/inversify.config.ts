@@ -20,6 +20,7 @@ import { BinaryRepositoryFileSystem } from "./repository/BinaryRepositoryFilesys
 import { ProductController } from "./controller/ProductController";
 import { ProductImageController } from "./controller/ImageController";
 import { ProductView } from "./view/ProductView";
+import { AdminAuthorizer } from "./middleware/AdminAuthorizer";
 
 
 export const myContainer = new Container();
@@ -39,4 +40,5 @@ myContainer.bind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).to(BinaryRepository
 myContainer.bind<ProductController>(TYPES.PRODUCT_CONTROLLER).to(ProductController)
 myContainer.bind<ProductImageController>(TYPES.PRODUCT_IMAGE_CONTROLLER).to(ProductImageController)
 myContainer.bind<ProductView>(TYPES.PRODUCT_VIEW).to(ProductView)
+myContainer.bind<AdminAuthorizer>(TYPES.ADMIN_AUTHORIZER).to(AdminAuthorizer)
 

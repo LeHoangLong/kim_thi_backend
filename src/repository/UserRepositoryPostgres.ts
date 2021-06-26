@@ -75,6 +75,11 @@ export class UserRepositoryPostgres implements IUserRepository {
             [],
         );
 
+        result = await this.driver.query(`
+            SELECT value as permission
+            FROM "permission" 
+            WHERE user_id = $1
+        `, [user.id]);
         for (var row of result.rows) {
             user.permissions.push(row['permission'])
         }

@@ -37,4 +37,9 @@ export class ProductView {
         return response.status(200).send(ret);
     }
 
+    async fetchProductsCount(request: express.Request, response: express.Response) {
+        let numberOfProducts = await this.productController.fetchNumberOfProducts()
+        response.status(200).send(numberOfProducts)
+    }
+
 }

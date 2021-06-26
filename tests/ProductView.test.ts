@@ -25,8 +25,8 @@ describe('Product view test', async function() {
                 throw "";
             },
             
-            fetchNumberOfProducts(): Promise<number> {
-                throw "";
+            async fetchNumberOfProducts(): Promise<number> {
+                return 15;
             },
 
             async fetchProducts(offset: number, limit: number): Promise<Product[]> {
@@ -176,4 +176,11 @@ describe('Product view test', async function() {
             }
         ])
     });
+
+    it('Fetch product count', async function() {
+        let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
+        await productView.fetchProductsCount(context.request as Request, context.response as Response)
+        sinon.assert.calledOnceWithExactly(context.statusSpy, 200)
+        sinon.assert.calledOnceWithExactly(context.sendSpy, 15)
+    })
 })

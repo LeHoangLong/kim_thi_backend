@@ -76,4 +76,8 @@ export class ProductController {
         }
         return ret;
     }
+
+    async fetchNumberOfProducts() : Promise<number> {
+        return this.productRepository.fetchNumberOfProducts();
+    }
 }

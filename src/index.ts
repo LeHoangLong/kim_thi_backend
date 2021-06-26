@@ -3,6 +3,7 @@ import cookies from 'cookie-parser';
 import { generateContext } from './middleware/Context';
 import { TYPES } from './types';
 import userRoutes from './routes/UserRoute';
+import productRoutes from './routes/ProductRoute';
 import { myContainer } from './inversify.config';
 import { JwtAuthenticator } from './middleware/JwtAuthenticator';
 
@@ -21,6 +22,8 @@ app.use((req, res, next) => {
   }
 });
 app.use('/user', userRoutes)
+app.use('/products', productRoutes)
+
 
 app.listen(port, () => {
   return console.log(`server is listening on ${port}`);
