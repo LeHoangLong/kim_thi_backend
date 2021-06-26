@@ -55,4 +55,34 @@ export class ImageRepositoryPostgres implements IImageRepository {
 
         return results.rowCount;
     }
+
+    async fetchImages(offset: number, limit: number) : Promise<Image[]> {
+        let results = await this.client.query(`
+            SELECT id, is_deleted, created_timestamp
+            FROM "image"
+            WHERE is_deleted = FALSE
+            ORDER BY created_timestamp DESC
+            LIMIT $1 OFFSET $2
+        `, [limit, offset])
+        let images : Image[] = []
+        for (let i = 0; i < results.rowCount; i++) {
+            let result = results.rows[i]
+            images.push({
+                id: result['id'],
+                isDeleted: result['is_deleted'],
+                createdTimeStamp: result['created_timestamp'],
+            })
+        }
+        return images
+    }
+
+    async fetchNumberOfImages() : Promise<number> {
+        let results = await this.client.query(`
+            SELECT COUNT(*)
+            FROM "image"
+            WHERE is_deleted = FALSE
+        `)
+        return results.rows[0].count
+    }
+
 }

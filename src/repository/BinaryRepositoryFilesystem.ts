@@ -7,7 +7,13 @@ export class BinaryRepositoryFileSystem implements IBinaryRepository {
     async save(namespace: string, id: string, data: Buffer) : Promise<boolean> {
         let path = this.getPath(namespace, id);
         let result = await new Promise<boolean>((resolve, reject) => {
-            fs.writeFile(path, data, (error) => {
+            let splitPath = path.split('/')
+            splitPath.pop()
+            let joinedPath = splitPath.join("/")
+            if (!fs.existsSync(joinedPath)) {
+                fs.mkdirSync(joinedPath)
+            }
+            fs.writeFile(path, data, { flag: 'w' }, (error) => {
                 if (error != null) {
                     resolve(true);
                 } else {
@@ -19,7 +25,6 @@ export class BinaryRepositoryFileSystem implements IBinaryRepository {
     }
 
     getPath(namespace: string, id: string) : string {
-        let path = require.resolve('module');
-        return `${path}/../../public/products/images/${id}`;
+        return `public/products/images/${namespace}/${id}`;
     }
 }

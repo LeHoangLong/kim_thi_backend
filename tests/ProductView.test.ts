@@ -2,97 +2,28 @@ import 'reflect-metadata';
 import sinon from 'sinon';
 import { TYPES } from '../src/types';
 import { myContainer } from "../src/inversify.config";
-import { UserView } from "../src/view/UserView";
-import { JwtAuthenticator } from "../src/middleware/JwtAuthenticator";
-import { CookieOptions, Request, Response } from "express";
-import bcrypt from 'bcrypt';
 import { ProductView } from '../src/view/ProductView';
 import { IProductRepository } from '../src/repository/IProductRepository';
 import { IProductPriceRepository } from '../src/repository/IPriceRepository';
-import { Product } from '../src/model/Product';
-import { EProductUnit, ProductPrice } from '../src/model/ProductPrice';
 import { IImageRepository } from '../src/repository/IImageRepository';
-import { Image } from '../src/model/Image';
 import { IBinaryRepository } from '../src/repository/IBinaryRepository';
+import { productRepository } from './mocks/MockProductRepository';
+import { iProductPriceRepository } from './mocks/MockProductPriceRepository';
+import { MockImageRepository } from './mocks/MockImageRepository';
+import { MockBinaryRepository } from './mocks/MockBinaryRepository';
+import { Request, Response } from 'express';
 
 describe('Product view test', async function() {
     let context : any = {}
     this.beforeEach(function() {
         var now = new Date();
         var clock = sinon.useFakeTimers(now);
-        const productRepository : IProductRepository = {
-            createProduct(product: Product): Promise<Product> {
-                throw "";
-            },
-            
-            async fetchNumberOfProducts(): Promise<number> {
-                return 15;
-            },
-
-            async fetchProducts(offset: number, limit: number): Promise<Product[]> {
-                let ret : Product[] = []
-                for (let i = 0; i < limit; i++) {
-                    ret.push({
-                        id: (i + offset).toString(),
-                        name: 'name_' + (i + offset).toString(),
-                        isDeleted: false,
-                        avatarId: '0',
-                        displayPriceId: i + offset,
-                        createdTimeStamp: new Date(),
-                        rank: 0,
-                    })
-                }
-                return ret
-            },
-        }
-
-        const iProductPriceRepository : IProductPriceRepository = {
-            createPrice(price: ProductPrice) : Promise<ProductPrice> {
-                throw ""
-            },
-            async fetchPriceById(id: number) : Promise<ProductPrice> {
-                return {
-                    id: id,
-                    unit: EProductUnit.KG,
-                    minQuantity: 0,
-                    price: 100,
-                    isDeleted: false,
-                }
-            },
-        }
-
-        const iImageRepository : IImageRepository = {
-            async fetchImageById(imageId: string) : Promise<Image> {
-                return {
-                    id: imageId,
-                    isDeleted: false,
-                    createdTimeStamp: new Date(),
-                }
-            },
-
-            createImage(imageId?: string) : Promise<Image> {
-                throw ""
-            },
-            
-            deleteImage(imageId: string) : Promise<number> {
-                throw ""
-            }
-        }
-
-        const iBinaryRepository : IBinaryRepository = {
-            async save(namespace: string, id: string, data: Buffer) : Promise<boolean> {
-                return true
-            },
-
-            getPath(namespace: string, id: string) : string {
-                return namespace + "_" + id
-            },
-        }
-
+        const mockImageRepository = new MockImageRepository()
+        const mockBinaryRepository = new MockBinaryRepository()
         myContainer.rebind<IProductRepository>(TYPES.PRODUCT_REPOSITORY).toConstantValue(productRepository)
         myContainer.rebind<IProductPriceRepository>(TYPES.PRODUCT_PRICE_REPOSITORY).toConstantValue(iProductPriceRepository)
-        myContainer.rebind<IImageRepository>(TYPES.IMAGE_REPOSITORY).toConstantValue(iImageRepository)
-        myContainer.rebind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).toConstantValue(iBinaryRepository)
+        myContainer.rebind<IImageRepository>(TYPES.IMAGE_REPOSITORY).toConstantValue(mockImageRepository)
+        myContainer.rebind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).toConstantValue(mockBinaryRepository)
     
         let request = {
             body: {
@@ -112,7 +43,7 @@ describe('Product view test', async function() {
 
         context.productRepository = productRepository
         context.iProductPriceRepository = iProductPriceRepository
-        context.iImageRepository = iImageRepository
+        context.mockImageRepository = mockImageRepository
         context.request = request
         context.response = response
         context.now = now

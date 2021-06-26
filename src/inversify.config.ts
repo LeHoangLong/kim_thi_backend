@@ -21,6 +21,7 @@ import { ProductController } from "./controller/ProductController";
 import { ProductImageController } from "./controller/ImageController";
 import { ProductView } from "./view/ProductView";
 import { AdminAuthorizer } from "./middleware/AdminAuthorizer";
+import { ImageView } from "./view/ImageView";
 
 
 export const myContainer = new Container();
@@ -41,4 +42,4 @@ myContainer.bind<ProductController>(TYPES.PRODUCT_CONTROLLER).to(ProductControll
 myContainer.bind<ProductImageController>(TYPES.PRODUCT_IMAGE_CONTROLLER).to(ProductImageController)
 myContainer.bind<ProductView>(TYPES.PRODUCT_VIEW).to(ProductView)
 myContainer.bind<AdminAuthorizer>(TYPES.ADMIN_AUTHORIZER).to(AdminAuthorizer)
-
+myContainer.bind<ImageView>(TYPES.IMAGE_VIEW).to(ImageView)

@@ -18,11 +18,14 @@ export class ProductImageController {
 
     }
 
-    async createImage(data: Buffer) : Promise<Image> {
+    async createImage(data: Buffer) : Promise<ImageWithPath> {
         let image = await this.imageRepository.createImage();
         try {
             await this.binaryRepository.save("product_images", image.id, data);
-            return image;
+            return {
+                ...image,
+                path: this.binaryRepository.getPath("product_images", image.id)
+            };
         } catch (exception) {
             this.imageRepository.deleteImage(image.id);
             throw exception
@@ -36,5 +39,23 @@ export class ProductImageController {
             ...image,
             path: path,
         };
+    }
+
+    async fetchImagesWithPath(offset: number, limit: number) : Promise<ImageWithPath[]> {
+        let images = await this.imageRepository.fetchImages(offset, limit)
+        let imagesWithPath: ImageWithPath[] = []
+        for (let i = 0; i < images.length; i++) {
+            let image = images[i]
+            let path = await this.binaryRepository.getPath("product_images", image.id)
+            imagesWithPath.push({
+                ...image,
+                path: path,
+            })
+        }
+        return imagesWithPath
+    }
+
+    async fetcNumberOfImages() : Promise<number> {
+        return this.imageRepository.fetchNumberOfImages()
     }
 }

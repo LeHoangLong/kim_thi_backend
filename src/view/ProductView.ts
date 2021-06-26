@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import { inject, injectable } from "inversify";
 import { TYPES } from '../types';
-import { UserController } from '../controller/UserController';
 import express, { CookieOptions } from 'express';
 import { ProductImageController } from '../controller/ImageController';
 import { ProductController } from '../controller/ProductController';
