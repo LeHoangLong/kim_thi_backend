@@ -35,7 +35,6 @@ export class UserController {
                 return null;
             }
         } else {
-            console.log('compare failed');
             return null;
         }
     }

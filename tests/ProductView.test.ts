@@ -7,11 +7,14 @@ import { IProductRepository } from '../src/repository/IProductRepository';
 import { IProductPriceRepository } from '../src/repository/IPriceRepository';
 import { IImageRepository } from '../src/repository/IImageRepository';
 import { IBinaryRepository } from '../src/repository/IBinaryRepository';
-import { productRepository } from './mocks/MockProductRepository';
+import { MockProductRepository } from './mocks/MockProductRepository';
 import { iProductPriceRepository } from './mocks/MockProductPriceRepository';
 import { MockImageRepository } from './mocks/MockImageRepository';
 import { MockBinaryRepository } from './mocks/MockBinaryRepository';
 import { Request, Response } from 'express';
+import chai from 'chai'
+import { EProductUnit } from '../src/model/ProductPrice';
+
 
 describe('Product view test', async function() {
     let context : any = {}
@@ -20,7 +23,8 @@ describe('Product view test', async function() {
         var clock = sinon.useFakeTimers(now);
         const mockImageRepository = new MockImageRepository()
         const mockBinaryRepository = new MockBinaryRepository()
-        myContainer.rebind<IProductRepository>(TYPES.PRODUCT_REPOSITORY).toConstantValue(productRepository)
+        const mockProductRepository = new MockProductRepository()
+        myContainer.rebind<IProductRepository>(TYPES.PRODUCT_REPOSITORY).toConstantValue(mockProductRepository)
         myContainer.rebind<IProductPriceRepository>(TYPES.PRODUCT_PRICE_REPOSITORY).toConstantValue(iProductPriceRepository)
         myContainer.rebind<IImageRepository>(TYPES.IMAGE_REPOSITORY).toConstantValue(mockImageRepository)
         myContainer.rebind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).toConstantValue(mockBinaryRepository)
@@ -41,7 +45,7 @@ describe('Product view test', async function() {
             },
         }
 
-        context.productRepository = productRepository
+        context.productRepository = mockProductRepository
         context.iProductPriceRepository = iProductPriceRepository
         context.mockImageRepository = mockImageRepository
         context.request = request
@@ -63,17 +67,27 @@ describe('Product view test', async function() {
                     name: 'name_2',
                     isDeleted: false,
                     avatarId: '0',
-                    displayPriceId: 2,
                     createdTimeStamp: context.now,
                     rank: 0
                 },
-                displayPrice: { 
-                    id: 2, 
-                    unit: 0, 
-                    minQuantity: 0, 
-                    price: 100, 
-                    isDeleted: false 
-                },
+                prices: [
+                    {
+                      id: 0,
+                      unit: 'KG',
+                      isDeleted: false,
+                      defaultPrice: 100,
+                      priceLevels: [],
+                      isDefault: true
+                    },
+                    {
+                      id: 1,
+                      unit: 'KG',
+                      isDeleted: false,
+                      defaultPrice: 100,
+                      priceLevels: [],
+                      isDefault: false
+                    }
+                ],
                 image: {
                     id: '0',
                     isDeleted: false,
@@ -87,17 +101,27 @@ describe('Product view test', async function() {
                     name: 'name_3',
                     isDeleted: false,
                     avatarId: '0',
-                    displayPriceId: 3,
                     createdTimeStamp: context.now,
                     rank: 0
                 },
-                displayPrice: { 
-                    id: 3, 
-                    unit: 0, 
-                    minQuantity: 0, 
-                    price: 100, 
-                    isDeleted: false 
-                },
+                prices: [
+                    {
+                      id: 0,
+                      unit: 'KG',
+                      isDeleted: false,
+                      defaultPrice: 100,
+                      priceLevels: [],
+                      isDefault: true
+                    },
+                    {
+                      id: 1,
+                      unit: 'KG',
+                      isDeleted: false,
+                      defaultPrice: 100,
+                      priceLevels: [],
+                      isDefault: false
+                    }
+                ],
                 image: {
                     id: '0',
                     isDeleted: false,
@@ -113,5 +137,92 @@ describe('Product view test', async function() {
         await productView.fetchProductsCount(context.request as Request, context.response as Response)
         sinon.assert.calledOnceWithExactly(context.statusSpy, 200)
         sinon.assert.calledOnceWithExactly(context.sendSpy, 15)
+    })
+
+    it('Create product', async function() {
+        let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
+        context.request = {
+            body: {
+                id: "product_id",
+                name: "product_name",
+                avatarId: 0,
+                defaultPrice: {
+                    unit: "KG",
+                    defaultPrice: 101,
+                    priceLevels: [{
+                        minQuantity: 15,
+                        price: 50
+                    }]
+                },
+                alternativePrices: [
+                    {
+                        unit: "KG",
+                        defaultPrice: 101,
+                        priceLevels: [{
+                            minQuantity: 15,
+                            price: 50
+                        }]
+                    }
+                ],
+                rank: 0,
+            }
+        }
+        await productView.createProduct(context.request as Request, context.response as Response)
+        sinon.assert.calledOnceWithExactly(context.statusSpy, 201)
+        // mock price repo will return a predefined set of prices
+        // thus the returned values here dont match
+        // but it is ok, we only need to check that prices are actually returned
+        sinon.assert.calledOnceWithExactly(context.sendSpy, {
+            product: {
+                id: '0',
+                name: 'product_name',
+                isDeleted: false,
+                avatarId: 0,
+                createdTimeStamp: context.now,
+                rank: 0
+            },
+            prices: [
+              {
+                id: 0,
+                unit: 'KG',
+                isDeleted: false,
+                defaultPrice: 100,
+                priceLevels: [],
+                isDefault: true
+              },
+              {
+                id: 1,
+                unit: 'KG',
+                isDeleted: false,
+                defaultPrice: 100,
+                priceLevels: [],
+                isDefault: false
+              }
+            ]
+        })
+
+        // check that data was actually saved
+        let mockProductRepository = context.productRepository as MockProductRepository
+        chai.expect(mockProductRepository.prices.size).to.equals(1)
+        chai.expect(mockProductRepository.prices.get('0')).to.deep.equals([
+            {
+                unit: EProductUnit.KG,
+                defaultPrice: 101,
+                priceLevels: [{
+                    minQuantity: 15,
+                    price: 50
+                }],
+                isDefault: false
+            },
+            {
+                unit: EProductUnit.KG,
+                defaultPrice: 101,
+                priceLevels: [{
+                    minQuantity: 15,
+                    price: 50
+                }],
+                isDefault: true
+            },
+        ])
     })
 })

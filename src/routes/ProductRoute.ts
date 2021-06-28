@@ -17,4 +17,8 @@ router.get('/summaries/count', userAuthorizer.authorize, adminAuthorizer.authori
     myContainer.get<ProductView>(TYPES.PRODUCT_VIEW).fetchProductsCount(request, response);
 });
 
+router.post('/', userAuthorizer.authorize, adminAuthorizer.authorize, (request: Request, response: Response) => {
+    myContainer.get<ProductView>(TYPES.PRODUCT_VIEW).createProduct(request, response)
+})
+
 export default router;
