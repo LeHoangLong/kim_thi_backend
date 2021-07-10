@@ -17,11 +17,12 @@ module.exports.up = async function (next) {
         `)
         await client.query(`
             CREATE TABLE IF NOT EXISTS "product" (
-                id TEXT PRIMARY KEY,
+                id SERIAL PRIMARY KEY ,
+                serial_number TEXT NOT NULL,
                 name TEXT NOT NULL,
                 is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
                 avatar_id TEXT REFERENCES image(id) ON DELETE NO ACTION ON UPDATE CASCADE NOT NULL,
-                rank INTEGER NOT NULL CHECK(rank > 0),
+                rank INTEGER NOT NULL CHECK(rank >= 0),
                 created_time TIMESTAMPTZ DEFAULT NOW() NOT NULL
             )
         `)
@@ -29,19 +30,26 @@ module.exports.up = async function (next) {
             CREATE TABLE IF NOT EXISTS "product_price" (
                 id SERIAL PRIMARY KEY,
                 unit INTEGER CHECK (unit >= 0 AND unit < 1) NOT NULL,
-                min_quantity INTEGER CHECK (min_quantity >= 0) NOT NULL,
-                price REAL NOT NULL,
+                default_price REAL NOT NULL,
                 is_default BOOLEAN NOT NULL,
                 is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
-                product_id TEXT REFERENCES "product"(id) ON DELETE NO ACTION ON UPDATE CASCADE
+                product_id INTEGER REFERENCES "product"(id) ON DELETE NO ACTION ON UPDATE CASCADE NOT NULL
             )
         `)
         await client.query(`
             CREATE TABLE IF NOT EXISTS "product_price_level" (
                 id SERIAL PRIMARY KEY,
+                min_quantity INTEGER CHECK (min_quantity >= 0) NOT NULL,
                 product_price_id INTEGER REFERENCES "product_price"(id) ON DELETE NO ACTION ON UPDATE CASCADE,
-                is_deleted BOOLEAN NOT NULL DEFAULT FALSE
+                is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+                price REAL NOT NULL
             )
+        `)
+        await client.query(`
+            CREATE INDEX product_id_index ON "product"(id)
+        `)
+        await client.query(`
+            CREATE INDEX product_price_product_id ON "product_price"(product_id)
         `)
         await client.query('COMMIT');
     } catch (exception) {

@@ -15,7 +15,6 @@ import { Request, Response } from 'express';
 import chai from 'chai'
 import { EProductUnit } from '../src/model/ProductPrice';
 
-
 describe('Product view test', async function() {
     let context : any = {}
     this.beforeEach(function() {
@@ -31,9 +30,13 @@ describe('Product view test', async function() {
     
         let request = {
             body: {
+            },
+            params: {
+            },
+            query: {
                 limit: 2,
                 offset: 2,
-            }
+            },
         }
 
         let response = {
@@ -63,32 +66,23 @@ describe('Product view test', async function() {
         sinon.assert.calledOnceWithExactly(context.sendSpy, [
             {
                 product: {
-                    id: '2',
+                    id: 2,
+                    serialNumber: '2',
                     name: 'name_2',
                     isDeleted: false,
                     avatarId: '0',
                     createdTimeStamp: context.now,
                     rank: 0
                 },
-                prices: [
-                    {
-                      id: 0,
-                      unit: 'KG',
-                      isDeleted: false,
-                      defaultPrice: 100,
-                      priceLevels: [],
-                      isDefault: true
-                    },
-                    {
-                      id: 1,
-                      unit: 'KG',
-                      isDeleted: false,
-                      defaultPrice: 100,
-                      priceLevels: [],
-                      isDefault: false
-                    }
-                ],
-                image: {
+                defaultPrice: {
+                  id: 0,
+                  unit: 0,
+                  isDeleted: false,
+                  defaultPrice: 100,
+                  priceLevels: [],
+                  isDefault: true
+                },
+                avatar: {
                     id: '0',
                     isDeleted: false,
                     createdTimeStamp: context.now,
@@ -97,32 +91,23 @@ describe('Product view test', async function() {
             },
             {
                 product: {
-                    id: '3',
+                    id: 3,
+                    serialNumber: '3',
                     name: 'name_3',
                     isDeleted: false,
                     avatarId: '0',
                     createdTimeStamp: context.now,
                     rank: 0
                 },
-                prices: [
-                    {
-                      id: 0,
-                      unit: 'KG',
-                      isDeleted: false,
-                      defaultPrice: 100,
-                      priceLevels: [],
-                      isDefault: true
-                    },
-                    {
-                      id: 1,
-                      unit: 'KG',
-                      isDeleted: false,
-                      defaultPrice: 100,
-                      priceLevels: [],
-                      isDefault: false
-                    }
-                ],
-                image: {
+                defaultPrice: {
+                  id: 0,
+                  unit: 0,
+                  isDeleted: false,
+                  defaultPrice: 100,
+                  priceLevels: [],
+                  isDefault: true
+                },
+                avatar: {
                     id: '0',
                     isDeleted: false,
                     createdTimeStamp: context.now,
@@ -143,9 +128,11 @@ describe('Product view test', async function() {
         let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
         context.request = {
             body: {
-                id: "product_id",
+                serialNumber: 'serial_number',
                 name: "product_name",
-                avatarId: 0,
+                avatar: {
+                    id: 0,
+                },
                 defaultPrice: {
                     unit: "KG",
                     defaultPrice: 101,
@@ -174,7 +161,8 @@ describe('Product view test', async function() {
         // but it is ok, we only need to check that prices are actually returned
         sinon.assert.calledOnceWithExactly(context.sendSpy, {
             product: {
-                id: '0',
+                id: 0,
+                serialNumber: 'serial_number',
                 name: 'product_name',
                 isDeleted: false,
                 avatarId: 0,
@@ -198,13 +186,20 @@ describe('Product view test', async function() {
                 priceLevels: [],
                 isDefault: false
               }
-            ]
+            ],
+            images: [],
+            avatar: {
+              id: 0,
+              isDeleted: false,
+              createdTimeStamp: context.now,
+              path: 'product_images_0'
+            }
         })
 
         // check that data was actually saved
         let mockProductRepository = context.productRepository as MockProductRepository
         chai.expect(mockProductRepository.prices.size).to.equals(1)
-        chai.expect(mockProductRepository.prices.get('0')).to.deep.equals([
+        chai.expect(mockProductRepository.prices.get(0)).to.deep.equals([
             {
                 unit: EProductUnit.KG,
                 defaultPrice: 101,
@@ -224,5 +219,49 @@ describe('Product view test', async function() {
                 isDefault: true
             },
         ])
+    })
+
+
+    it('Fetch product detail', async function() {
+        let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
+        context.request.params.id = 1
+        await productView.fetchProductDetailById(context.request as Request, context.response as Response)
+        sinon.assert.calledOnceWithExactly(context.statusSpy, 200)
+        sinon.assert.calledOnceWithExactly(context.sendSpy, {
+            product: {
+              id: 1,
+              serialNumber: '1',
+              name: 'name_1',
+              isDeleted: false,
+              avatarId: '0',
+              createdTimeStamp: context.now,
+              rank: 0
+            },
+            prices: [
+              {
+                id: 0,
+                unit: 'KG',
+                isDeleted: false,
+                defaultPrice: 100,
+                priceLevels: [],
+                isDefault: true
+              },
+              {
+                id: 1,
+                unit: 'KG',
+                isDeleted: false,
+                defaultPrice: 100,
+                priceLevels: [],
+                isDefault: false
+              }
+            ],
+            avatar: {
+              id: '0',
+              isDeleted: false,
+              createdTimeStamp: context.now,
+              path: 'product_images_0'
+            },
+            images: []
+        })
     })
 })

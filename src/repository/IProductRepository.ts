@@ -5,4 +5,6 @@ export interface IProductRepository {
     createProduct(product: Product, prices: ProductPrice[]): Promise<Product>;
     fetchNumberOfProducts(): Promise<number>;
     fetchProducts(offset: number, limit: number): Promise<Product[]>;
+    fetchProductById(id: number) : Promise<Product>;
+    deleteProduct(pk: number) : Promise<number>;
 }

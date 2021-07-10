@@ -1,9 +1,11 @@
 import { inject, injectable } from "inversify";
 import { Pool, PoolClient } from "pg";
+import { NotFound } from "../exception/NotFound";
 import { Product } from "../model/Product";
 import { ProductPrice } from "../model/ProductPrice";
 import { TYPES } from "../types";
 import { IProductRepository } from "./IProductRepository";
+var PgError = require("pg-error")
 
 @injectable()
 export class ProductRepositoryPostgres implements IProductRepository{
@@ -15,34 +17,48 @@ export class ProductRepositoryPostgres implements IProductRepository{
 
     async createProduct(product: Product, prices: ProductPrice[]): Promise<Product> {
         let connection = await this.client.connect()
-        connection.query('BEGIN')
+        await connection.query('BEGIN')
         try {
-            var results = await this.client.query(`
+            var results = await connection.query(`
                 INSERT INTO "product" (
-                    name, rank, avatar_id
+                    serial_number, name, rank, avatar_id
                 ) VALUES (
-                    $1, $2, $3
-                ) RETURNING (id, created_time, is_deleted)
-            `, [ product.name, product.rank, product.avatarId ]);
+                    $1, $2, $3, $4
+                ) RETURNING id, created_time, is_deleted
+            `, [ product.serialNumber, product.name, product.rank, product.avatarId ]);
             let newProduct = {...product};
             newProduct.id = results.rows[0].id;
+            newProduct.serialNumber = product.serialNumber;
             newProduct.createdTimeStamp = results.rows[0].created_time;
             newProduct.isDeleted = results.rows[0].is_deleted;
-            await this.createProductPrice(connection, newProduct.id!, prices)
-            connection.query('COMMIT')
+            await this.createProductPrice(connection, results.rows[0].id, prices)
+            await connection.query('COMMIT')
             return newProduct;
         } catch (exception) {
-            connection.query('ROLLBACK')
-            throw exception
+            await connection.query('ROLLBACK')
+            if (exception instanceof PgError) {
+                throw exception.message
+            } else {
+                throw exception
+            }
         } finally {
             connection.release()
         }
     }
 
-    async createProductPrice(connection: PoolClient, productId: string, prices: ProductPrice[]) : Promise<ProductPrice[]> {
+    async deleteProduct(id: number) : Promise<number> {
+        let results = await this.client.query(`
+            UPDATE "product" SET is_deleted = TRUE WHERE id = $1
+        `, [id]);
+
+        return results.rowCount
+    }
+
+    async createProductPrice(connection: PoolClient, productId: number, prices: ProductPrice[]) : Promise<ProductPrice[]> {
         let ret : ProductPrice[] = []
         for (let i = 0; i < prices.length; i++) {
             let price = prices[i]
+
             let results = await connection.query(`
                 INSERT INTO "product_price" (
                     unit, 
@@ -63,20 +79,19 @@ export class ProductRepositoryPostgres implements IProductRepository{
                 isDefault: price.isDefault,
             }
 
-            for (let j = 0; j < price.priceLevels.length; i++) {
+            for (let j = 0; j < price.priceLevels.length; j++) {
                 let priceLevel = price.priceLevels[j]
                 await connection.query(`
                     INSERT INTO "product_price_level" (
                         product_price_id,
                         min_quantity,
-                        price,
+                        price
                     ) VALUES (
                         $1, $2, $3
                     )
                 `, [newPrice.id, priceLevel.minQuantity, priceLevel.price])
                 newPrice.priceLevels.push(priceLevel)
             }
-
             ret.push(newPrice)
         }
 
@@ -86,11 +101,11 @@ export class ProductRepositoryPostgres implements IProductRepository{
     async fetchProducts(offset: number, limit: number): Promise<Product[]> {
         var results = await this.client.query(`
             SELECT 
-                id, name, is_deleted, avatar_id,
+                id, serial_number, name, is_deleted, avatar_id,
                 rank, created_time
             FROM "product"
             WHERE is_deleted = FALSE
-            ORDER BY created_time
+            ORDER BY created_time DESC
             LIMIT $1
             OFFSET $2
         `, [limit, offset])
@@ -99,6 +114,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
             let result = results.rows[i];
             products.push({
                 id: result['id'],
+                serialNumber: result['serial_number'],
                 name: result['name'],
                 isDeleted: result['is_deleted'],
                 avatarId: result['avatar_id'],
@@ -115,4 +131,29 @@ export class ProductRepositoryPostgres implements IProductRepository{
         `);
         return result.rows[0].count;
     }
+
+    async fetchProductById(id: number) : Promise<Product> {
+        var result = await this.client.query(`
+            SELECT 
+                id, serial_number, name, is_deleted, avatar_id,
+                rank, created_time
+            FROM "product"
+            WHERE is_deleted = FALSE AND id = $1
+        `, [id])
+        if (result.rowCount == 0) {
+            throw new NotFound("product", "id", id.toString())
+        } else {
+            let row = result.rows[0]
+            return {
+                id: row['id'],
+                serialNumber: row['serial_number'],
+                name: row['name'],
+                isDeleted: row['is_deleted'],
+                avatarId: row['avatar_id'],
+                createdTimeStamp: row['created_time'],
+                rank: row['rank'],
+            }
+        }
+    }
+
 }

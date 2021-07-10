@@ -16,30 +16,17 @@ export class ProductView {
     ) {}
 
     async fetchProducts(request: express.Request, response: express.Response) {
-        let limit = request.body.limit;
-        let offset = request.body.offset;
-        if (limit === undefined) {
+        let limit = parseInt(request.query.limit as string);
+        let offset = parseInt(request.query.offset as string);
+        if (isNaN(limit)) {
             limit = config.pagination.defaultSize;
         }
-        if (offset === undefined) {
+        if (isNaN(offset)) {
             offset = 0;
         }
 
-        let products = await this.productController.fetchProducts(offset, limit);
-        let ret = []
-        for (let i = 0; i < products.length; i++) {
-            products[i].prices.forEach((e) => {
-                let unitStr = EProductUnitToString(e.unit)
-                e.unit = unitStr as any
-            })
-            let image = await this.imageController.fetchImageWithPath(products[i].product.avatarId);
-            let productsWithImages = {
-                ...products[i],
-                image: image,
-            };
-            ret.push(productsWithImages);
-        }
-        return response.status(200).send(ret);
+        let products = await this.productController.fetchProductSummaries(offset, limit);
+        return response.status(200).send(products);
     }
 
     async fetchProductsCount(request: express.Request, response: express.Response) {
@@ -47,24 +34,54 @@ export class ProductView {
         response.status(200).send(numberOfProducts)
     }
 
+    async updateProduct(request: express.Request, response: express.Response) {
+        try {
+            let productId = parseInt(request.params.id)
+            if (isNaN(productId)) {
+                return response.status(400).send()
+            }
+            let [alternativePrices, defaultPrice] = this.convertPrice(request.body)
+            let productWithPrices = await this.productController.updateProduct(productId, {
+                serialNumber: request.body.serialNumber,
+                name: request.body.name,
+                avatarId: request.body.avatar.id,
+                defaultPrice: defaultPrice,
+                alternativePrices: alternativePrices,
+                rank: request.body.rank
+            })
+            productWithPrices.prices.forEach((e) => {
+                let unitStr = EProductUnitToString(e.unit)
+                e.unit = unitStr as any
+            })
+            return response.status(200).send(productWithPrices)
+        } catch (exception) {
+            return response.status(500).send(exception)
+        }
+    }
+
+    private convertPrice(body: any) : [ProductPrice[],ProductPrice] {
+        let defaultPrice = {
+            ...body.defaultPrice,
+            unit: stringToEProductUnit(body.defaultPrice.unit)
+        }
+
+        let alternativePrices : ProductPrice[] = []
+        for (let i = 0; i < body.alternativePrices.length; i++) {
+            alternativePrices.push({
+                ...body.alternativePrices[i],
+                unit: stringToEProductUnit(body.alternativePrices[i].unit)
+            })
+        }
+        return [alternativePrices, defaultPrice]
+    }
+
     async createProduct(request: express.Request, response: express.Response) {
         try {
-            let defaultPrice = {
-                ...request.body.defaultPrice,
-                unit: stringToEProductUnit(request.body.defaultPrice.unit)
-            }
-
-            let alternativePrices : ProductPrice[] = []
-            for (let i = 0; i < request.body.alternativePrices.length; i++) {
-                alternativePrices.push({
-                    ...request.body.alternativePrices[i],
-                    unit: stringToEProductUnit(request.body.defaultPrice.unit)
-                })
-            }
+            let [alternativePrices, defaultPrice] = this.convertPrice(request.body)
             let productWithPrices = await this.productController.createProduct({
-                id: request.body.id,
+                serialNumber: request.body.serialNumber,
                 name: request.body.name,
-                avatarId: request.body.avatarId,
+                avatarId: request.body.avatar.id,
                 defaultPrice: defaultPrice,
                 alternativePrices: alternativePrices,
                 rank: request.body.rank
@@ -79,8 +96,19 @@ export class ProductView {
             if (exception instanceof UnrecognizedEnumValue) {
                 return response.status(400).send("Unsupported unit")
             } else {
-                throw exception
+                console.log(exception)
+                return response.status(500).send(exception)
             }
         }
+    }
+
+    async fetchProductDetailById(request: express.Request, response: express.Response) {
+        if (request.params.id === undefined) {
+            return response.status(400).send('Missing id')
+        }
+        let productId = parseInt(request.params.id)
+        let productDetail = await this.productController.fetchProductDetailById(productId)
+        productDetail.prices.forEach(e => (e.unit as any) = EProductUnitToString(e.unit))
+        return response.status(200).send(productDetail)
     }
 }

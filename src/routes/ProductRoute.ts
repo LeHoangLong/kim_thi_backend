@@ -21,4 +21,11 @@ router.post('/', userAuthorizer.authorize, adminAuthorizer.authorize, (request: 
     myContainer.get<ProductView>(TYPES.PRODUCT_VIEW).createProduct(request, response)
 })
 
+router.get('/:id', userAuthorizer.authorize, adminAuthorizer.authorize, (request: Request, response: Response) => {
+    myContainer.get<ProductView>(TYPES.PRODUCT_VIEW).fetchProductDetailById(request, response)
+})
+
+router.put('/:id', userAuthorizer.authorize, adminAuthorizer.authorize, (request: Request, response: Response) => {
+    myContainer.get<ProductView>(TYPES.PRODUCT_VIEW).updateProduct(request, response)
+})
 export default router;

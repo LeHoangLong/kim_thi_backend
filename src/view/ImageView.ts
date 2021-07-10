@@ -5,6 +5,7 @@ import express, { CookieOptions } from 'express';
 import { ProductImageController } from '../controller/ImageController';
 import config from '../../config.json';
 import fileUpload from  "express-fileupload"
+import { NotFound } from '../exception/NotFound';
 
 @injectable()
 export class ImageView {
@@ -13,7 +14,21 @@ export class ImageView {
     ) {
     }
 
+    async fetchImageById(request: express.Request, response: express.Response) {
+        try {
+            let image = await this.imageController.fetchImageById(request.params.id)
+            return response.status(200).send(image)
+        } catch (exception) {
+            if (exception instanceof NotFound) {
+                return response.status(404).send()
+            } else {
+                return response.status(500).send(exception)
+            }
+        }
+    }
+    
     async fetchImages(request: express.Request, response: express.Response) {
+        console.log('fetch images')
         let limit = request.body.limit;
         let offset = request.body.offset;
         if (limit === undefined) {
@@ -42,6 +57,7 @@ export class ImageView {
     }
 
     async fetchNumberOfImages(request: express.Request, response: express.Response) {
+        console.log('fetchNumberOfImages')
         let numberOfImages = await this.imageController.fetcNumberOfImages()
         return response.status(200).send(numberOfImages)
     }

@@ -1,5 +1,6 @@
 export interface Product {
-    id: string | null,
+    id: number | null,
+    serialNumber: string,
     name: string,
     isDeleted: boolean,
     avatarId: string,

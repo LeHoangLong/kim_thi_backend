@@ -58,4 +58,13 @@ export class ProductImageController {
     async fetcNumberOfImages() : Promise<number> {
         return this.imageRepository.fetchNumberOfImages()
     }
+
+    async fetchImageById(imageId: string) : Promise<ImageWithPath> {
+        let image = await this.imageRepository.fetchImageById(imageId)
+        let path = await this.binaryRepository.getPath("product_images", image.id)
+        return {
+            ...image, 
+            path
+        }
+    }
 }
