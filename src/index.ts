@@ -5,14 +5,17 @@ import { TYPES } from './types';
 import userRoutes from './routes/UserRoute';
 import productRoutes from './routes/ProductRoute';
 import imageRoutes from './routes/ImageRoute';
+import pageRoutes from './routes/PageRoute';
 import { myContainer } from './inversify.config';
 import { JwtAuthenticator } from './middleware/JwtAuthenticator';
 import fileUpload from 'express-fileupload'
+var path = require('path')
 
 const app = express();
 const port = 80;
 const jwtAuthentication = myContainer.get<JwtAuthenticator>(TYPES.JWT_AUTHENTICATOR);
 
+app.set('view engine', 'ejs');
 app.use(express.json());
 app.use(cookies());
 app.use(generateContext);
@@ -26,9 +29,13 @@ app.use((req, res, next) => {
     next();
   }
 });
-app.use('/user', userRoutes)
-app.use('/products', productRoutes)
-app.use('/images', imageRoutes)
+
+app.set('views', path.join(__dirname, 'pages/'))
+
+app.use('/backend/user', userRoutes)
+app.use('/backend/products', productRoutes)
+app.use('/backend/images', imageRoutes)
+app.use('/', pageRoutes)
 
 app.listen(port, () => {
   return console.log(`server is listening on ${port}`);

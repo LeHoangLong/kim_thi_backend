@@ -1,0 +1,55 @@
+<%- include('header') %>
+    <header>
+        <%- include('navigationBar') %>
+    </header>
+    <main>
+        <section>
+            <article>
+                <div class="slide-show">
+                    <img src="/public/logos/shop.png"/>
+                    <img src="/public/logos/shop_2.png"/>
+                </div>
+                
+                <div>
+                    <%- include('searchProductBar', {searchTerm: searchTerm}) %>
+                    <nav class="product-summaries">
+                        <% for (var i = 0; i < products.length; i++) { %>
+                            <a href="/products/<%= products[i].product.id %>">
+                                <%- include('productSummaryCard', products[i]) %>
+                            </a>    
+                        <% } %>                
+                    </nav>
+                </div>
+
+                <footer class="page-numbering">
+                    <% if (numberOfPages > 1) {
+                        let minPage =  pageNumber - 3;
+                        if (minPage < 0) {
+                            minPage = 0;
+                        }
+                        let maxPage = pageNumber + 3;
+                        if (maxPage > numberOfPages) {
+                            maxPage = numberOfPages;
+                        }
+                        for (var i = minPage; i < maxPage; i++) { 
+                            if (i === pageNumber) {
+                                %>
+                                <h4 class="selected"><%= i + 1 %></h4>
+                            <%
+                            } else {
+                            %>
+                                <a href="?pageNumber=<%= i %>"><h4><%= i + 1 %></h4></a>
+                            <% 
+                            }
+                        }
+                    } %>
+                </footer>
+            </article>
+        </section>
+
+        <section>
+            <%- include('cartPage', {zIndex: 1000}) %>
+            <%- include('floatingCartButton') %>
+        </section>
+    </main>
+<%- include('footer') %>

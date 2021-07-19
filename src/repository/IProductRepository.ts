@@ -7,4 +7,6 @@ export interface IProductRepository {
     fetchProducts(offset: number, limit: number): Promise<Product[]>;
     fetchProductById(id: number) : Promise<Product>;
     deleteProduct(pk: number) : Promise<number>;
+    fetchProductsCountWithName(name: string) : Promise<number>;
+    findProductsByName(name: string, offset: number, limit: number) : Promise<Product[]>;
 }

@@ -98,6 +98,18 @@ export class ProductRepositoryPostgres implements IProductRepository{
         return ret
     }
 
+    _jsonToProduct(json: any) : Product {
+        return {
+            id: json['id'],
+            serialNumber: json['serial_number'],
+            name: json['name'],
+            isDeleted: json['is_deleted'],
+            avatarId: json['avatar_id'],
+            createdTimeStamp: json['created_time'],
+            rank: json['rank'],
+        }
+    }  
+
     async fetchProducts(offset: number, limit: number): Promise<Product[]> {
         var results = await this.client.query(`
             SELECT 
@@ -112,15 +124,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
         let products : Product[] = [];
         for (let i = 0; i < results.rows.length; i++) {
             let result = results.rows[i];
-            products.push({
-                id: result['id'],
-                serialNumber: result['serial_number'],
-                name: result['name'],
-                isDeleted: result['is_deleted'],
-                avatarId: result['avatar_id'],
-                createdTimeStamp: result['created_time'],
-                rank: result['rank'],
-            })
+            products.push(this._jsonToProduct(result))
         }
         return products;
     }
@@ -156,4 +160,33 @@ export class ProductRepositoryPostgres implements IProductRepository{
         }
     }
 
+    async fetchProductsCountWithName(name: string) : Promise<number> {
+        let response = await this.client.query(`
+            SELECT COUNT(*) 
+            FROM "product" 
+            WHERE name LIKE $1 AND is_deleted = FALSE
+        `, [`%${name}%`])
+        console.log('response.rows')
+        console.log(response.rows)
+        return response.rows[0].count
+    }
+
+    async findProductsByName(name: string, offset: number, limit: number) : Promise<Product[]> {
+        let response = await this.client.query(`
+            SELECT 
+                id, serial_number, name, is_deleted, avatar_id,
+                rank, created_time
+            FROM "product"
+            WHERE name LIKE $1 AND is_deleted = FALSE
+            ORDER BY rank DESC, created_time DESC
+            LIMIT $2
+            OFFSET $3
+        `, [`%${name}%`, limit, offset]);
+        let ret : Product[] = [];
+        for (let i = 0; i < response.rows.length; i++) {
+            let result = response.rows[i];
+            ret.push(this._jsonToProduct(result))
+        }
+        return ret;
+    }
 }

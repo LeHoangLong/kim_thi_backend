@@ -1,0 +1,56 @@
+<section class="cart-page" id="cart-page" style="z-index: <%= zIndex %>;display:none;">
+    <header>
+        <button class="go-back-button">
+            <h5>
+                <i class="fas fa-arrow-left"></i>
+            </h5>
+        </button>
+        <button id="remove-cart-item-button" style="display: none">
+            <h6>
+                <i class="fas fa-trash"></i>
+            </h6>
+        </button>
+    </header>
+    <div id="cart-item-list">
+    </div>
+
+    <article id="cart-item-template" class="cart-item" style="display: none;">
+        <aside>
+            <input type="radio" class="car-item-select"></input>
+        </aside>
+        <figure>
+            <a class="cart-item-avatar-link">
+                <img class="cart-item-avatar"/>
+            </a>
+        </figure>
+        <div>
+            <h6>
+                <strong class="cart-item-product-name">
+                </strong>
+            </h6>
+            <div class="cart-item-row cart-item-unit-row">
+                <p>Đơn&nbsp;vị</p>
+                <p class="cart-item-unit"></p>
+            </div>
+            <div class="cart-item-row cart-item-price-row">
+                <h6 class="cart-item-price"></h6>
+                <p class="cart-item-min-quantity body-2"></p>
+            </div>
+            <input type="text" class="cart-item-quantity"></input>
+        </div>
+
+        <footer class="total-and-checkout">
+            <div class="total-text">
+                <p class="total">
+                    Tổng cộng&nbsp;
+                </p>
+                <strong id="total" class="total"></strong>
+            </div>
+            <button id="checkout-button" class="primary-button">
+                <strong class="body-1">
+                    Thanh toán
+                </strong>
+            </button>
+        </footer>
+    </article>
+</section>

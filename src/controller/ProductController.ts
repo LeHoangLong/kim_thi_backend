@@ -72,8 +72,7 @@ export class ProductController {
         }
     }
 
-    async fetchProductSummaries(offset: number, limit: number) : Promise<ProductSummary[]> {
-        let products = await this.productRepository.fetchProducts(offset, limit);
+    async _productsToProductSummaries(products: Product[]) : Promise<ProductSummary[]> {
         let ret : ProductSummary[] = [];
         for (let i = 0; i < products.length; i++) {
             let product = products[i];
@@ -87,6 +86,11 @@ export class ProductController {
             ret.push(summary)
         }
         return ret;
+    }
+
+    async fetchProductSummaries(offset: number, limit: number) : Promise<ProductSummary[]> {
+        let products = await this.productRepository.fetchProducts(offset, limit);
+        return this._productsToProductSummaries(products);
     }
 
     async fetchProductDetailById(id: number) : Promise<ProductWithPricesAndImages> {
@@ -106,15 +110,20 @@ export class ProductController {
     }
 
     async updateProduct(id: number, args: CreateProductArgs) : Promise<ProductWithPricesAndImages> {
-        console.log('1.1')
         await this.productRepository.deleteProduct(id)
-        console.log('1.2')
         let prices = await this.productPriceRepository.fetchPricesByProductId(id)
-        console.log('1.3')
         for (let i = 0; i < prices.length; i++) {
             await this.productPriceRepository.deletePrice(prices[i].id!)
         }
-        console.log('1.4')
         return this.createProduct(args)
+    }
+
+    async findProductsByName(name: string, offset: number, limit: number) : Promise<[number, ProductSummary[]]> {
+        let count = await this.productRepository.fetchProductsCountWithName(name);
+        console.log('count')
+        console.log(count)
+        let products = await this.productRepository.findProductsByName(name, offset, limit)
+        let productSummaries = await this._productsToProductSummaries(products)
+        return [count, productSummaries];
     }
 }

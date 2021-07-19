@@ -1,0 +1,114 @@
+<%- include('header') %>
+    <header>
+        <%- include('navigationBar') %>
+    </header>
+
+    <main>
+        <section id="product-detail-page">
+            <section id="quantity-and-unit-selection" class="quantity-and-unit-selection quantity-and-unit-selection-hidden">
+                <div class="background"></div>
+                <form action="javascript:void(0);">
+                    <div class="input-container">
+                        <label for="unit">Đơn vị</label>
+                        <div class="input">
+                            <select id="unit-select" class="input">
+                                <%
+                                    for (let i = 0; i < product.prices.length; i++) {
+                                %>
+                                        <option value="<%= product.prices[i].unit %>"><%= product.prices[i].unit %></option>
+                                <%
+                                    }
+                                %>
+                            </select>
+                        </div>
+                        <label for="quantity-input">Số lượng</label>
+                        <div class="quantity-input-container input">
+                            <button class="change-quantity-button">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <input id="quantity-input" type="number" value="1"></input>
+                            <button class="change-quantity-button">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="primary-button confirm-button" id="confirm-buy-button">
+                        <strong>
+                            Xác nhận
+                        </strong>
+                    </button>
+                </form>
+            </section>
+
+            <section class="product-detail">
+                <figure>
+                    <img class="main-img" src="/<%= product.avatar.path %>">
+                </figure>
+                <article>
+                    <header>
+                        <h2>
+                            <%= product.product.name %>
+                        </h2>
+                    </header>
+                    <div class="main">
+                        <h5>
+                            <strong>Giá</strong>
+                        </h5>
+                        <h5>
+                            <strong>Số lượng</strong>
+                        </h5>
+                        <% for (let i = 0; i < product.prices.length; i++) { %>
+                            <p><%= product.prices[i].defaultPrice %></p>
+                            <p> Mặc định ( <%= product.prices[i].unit %> ) </p>
+                        <%  for (let j = 0; j < product.prices[i].priceLevels.length; j++) { %>
+                                <p><%= product.prices[i].priceLevels[j].price %></p>
+                                <p> >= <%= product.prices[i].priceLevels[j].minQuantity %> <%= product.prices[i].unit %></p>
+                        <%  }
+                        } %>
+                    </div>
+                </article>
+            </section>
+
+            <section class="search-related-products">
+                <h4>
+                    Sản phẩm khác
+                </h4>
+                <%- include('searchProductBar', { searchTerm: '' }) %>
+            </section>
+
+            <section>
+                <div class="add-to-cart-buttons fake">
+                    <button class="primary-button">
+                        <strong>
+                            Thêm vào giỏ
+                        </strong>
+                    </button>
+                </div>
+                <div class="add-to-cart-buttons">
+                    <button class="primary-button" id="add-to-cart-button">
+                        <strong>
+                            Thêm vào giỏ
+                        </strong>
+                    </button>
+                    <button class="secondary-button" id="buy-now-button">
+                        <strong>
+                            Mua ngay
+                        </strong>
+                    </button>
+                </div>
+            </section>
+        </section>
+
+        <%- include('cartPage', {zIndex: 1000}) %>
+
+        <%- include('floatingCartButton') %>
+    </main>
+
+    <script>
+        var context = {
+            productDetail: <%- JSON.stringify(product) %>,
+        }    
+        console.log('context')
+        console.log(context)
+    </script>
+<%- include('footer') %>
