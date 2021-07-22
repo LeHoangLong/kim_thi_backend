@@ -3,7 +3,7 @@ import { ProductController } from "../controller/ProductController";
 import { myContainer } from "../inversify.config";
 import { EProductUnitToString } from "../model/ProductPrice";
 import { TYPES } from "../types";
-import config from '../../config.json'
+import config from '../config'
 
 export async function productSummaryPage(request: Request, response: Response) {
     let controller = myContainer.get<ProductController>(TYPES.PRODUCT_CONTROLLER);

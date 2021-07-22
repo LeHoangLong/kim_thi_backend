@@ -2,7 +2,9 @@ import { inject, injectable } from "inversify";
 import { Pool, PoolClient } from "pg";
 import { NotFound } from "../exception/NotFound";
 import { Product } from "../model/Product";
+import { ProductCategory } from "../model/ProductCategory";
 import { ProductPrice } from "../model/ProductPrice";
+import { PostgresConnectionFactory } from "../services/PostgresConnectionFactory";
 import { TYPES } from "../types";
 import { IProductRepository } from "./IProductRepository";
 var PgError = require("pg-error")
@@ -10,15 +12,15 @@ var PgError = require("pg-error")
 @injectable()
 export class ProductRepositoryPostgres implements IProductRepository{
     constructor(
-        @inject(TYPES.POSTGRES_DRIVER) private client: Pool
+        @inject(TYPES.POSTGRES_DRIVER) private client: Pool,
+        @inject(TYPES.CONNECTION_FACTORY) private connectionFactory: PostgresConnectionFactory,
     ) {
 
     }
 
-    async createProduct(product: Product, prices: ProductPrice[]): Promise<Product> {
-        let connection = await this.client.connect()
-        await connection.query('BEGIN')
-        try {
+    async createProduct(product: Product): Promise<Product> {
+        let ret : Product
+        await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
             var results = await connection.query(`
                 INSERT INTO "product" (
                     serial_number, name, rank, avatar_id
@@ -31,70 +33,19 @@ export class ProductRepositoryPostgres implements IProductRepository{
             newProduct.serialNumber = product.serialNumber;
             newProduct.createdTimeStamp = results.rows[0].created_time;
             newProduct.isDeleted = results.rows[0].is_deleted;
-            await this.createProductPrice(connection, results.rows[0].id, prices)
-            await connection.query('COMMIT')
-            return newProduct;
-        } catch (exception) {
-            await connection.query('ROLLBACK')
-            if (exception instanceof PgError) {
-                throw exception.message
-            } else {
-                throw exception
-            }
-        } finally {
-            connection.release()
-        }
+            ret = newProduct;
+        })
+        return ret!;
     }
 
     async deleteProduct(id: number) : Promise<number> {
-        let results = await this.client.query(`
-            UPDATE "product" SET is_deleted = TRUE WHERE id = $1
-        `, [id]);
-
-        return results.rowCount
-    }
-
-    async createProductPrice(connection: PoolClient, productId: number, prices: ProductPrice[]) : Promise<ProductPrice[]> {
-        let ret : ProductPrice[] = []
-        for (let i = 0; i < prices.length; i++) {
-            let price = prices[i]
-
+        let ret : number = 0
+        await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
             let results = await connection.query(`
-                INSERT INTO "product_price" (
-                    unit, 
-                    default_price,
-                    product_id,
-                    is_default
-                ) VALUES (
-                    $1, $2, $3, $4
-                ) RETURNING id
-            `, [price.unit, price.defaultPrice, productId, price.isDefault])
-
-            let newPrice : ProductPrice = {
-                id: results.rows[0].id,
-                unit: price.unit,
-                defaultPrice: price.defaultPrice,
-                isDeleted: false,
-                priceLevels: [],
-                isDefault: price.isDefault,
-            }
-
-            for (let j = 0; j < price.priceLevels.length; j++) {
-                let priceLevel = price.priceLevels[j]
-                await connection.query(`
-                    INSERT INTO "product_price_level" (
-                        product_price_id,
-                        min_quantity,
-                        price
-                    ) VALUES (
-                        $1, $2, $3
-                    )
-                `, [newPrice.id, priceLevel.minQuantity, priceLevel.price])
-                newPrice.priceLevels.push(priceLevel)
-            }
-            ret.push(newPrice)
-        }
-
+            UPDATE "product" SET is_deleted = TRUE WHERE id = $1
+            `, [id]);
+            ret = results.rowCount
+        })
         return ret
     }
 
@@ -166,8 +117,6 @@ export class ProductRepositoryPostgres implements IProductRepository{
             FROM "product" 
             WHERE name LIKE $1 AND is_deleted = FALSE
         `, [`%${name}%`])
-        console.log('response.rows')
-        console.log(response.rows)
         return response.rows[0].count
     }
 
@@ -188,5 +137,73 @@ export class ProductRepositoryPostgres implements IProductRepository{
             ret.push(this._jsonToProduct(result))
         }
         return ret;
+    }
+
+    async fetchProductsByCategory(category: string, limit: number, offset: number) : Promise<Product[]> {
+        let response = await this.client.query(`
+        SELECT 
+            id, serial_number, name, is_deleted, avatar_id,
+            rank, created_time
+        FROM "product" INNER JOIN "product_category" cat
+        WHERE cat.category = $1 AND is_deleted = FALSE
+        ORDER BY rank DESC, created_time DESC
+        LIMIT $2
+        OFFSET $3
+        `, [category, limit, offset]);
+        let ret : Product[] = [];
+        for (let i = 0; i < response.rows.length; i++) {
+            let result = response.rows[i];
+            ret.push(this._jsonToProduct(result))
+        }
+        return ret;
+    }
+
+
+    async fetchProductCategories(productId: number) : Promise<ProductCategory[]> {
+        let response = await this.client.query(`
+            SELECT 
+                category
+            FROM "product_category"
+            WHERE product_id = $1
+        `, [productId])
+        let ret : ProductCategory[] = [];
+        for (let i = 0; i < response.rows.length; i++) {
+            let result = response.rows[i];
+            ret.push(this._jsonToProductCategory(result, productId))
+        }
+        return ret;
+    }
+
+    async createProductCategory(productId: number, categories: string[]) : Promise<ProductCategory[]> {
+        let ret : ProductCategory[] = []
+        for (let i = 0; i < categories.length; i++) {
+            await this.client.query(`
+                INSERT INTO "product_product_category" (
+                    category, 
+                    product_id
+                ) VALUES ($1, $2)
+            `, [categories[i], productId])
+            ret.push({
+                category: categories[i],
+            })
+        }
+        return ret;
+    }
+
+    _jsonToProductCategory(json: any, productId: number) : ProductCategory {
+        return {
+            category: json['category'],
+        }
+    }
+
+    async updateProductCategories(productId: number, categories: string[]) : Promise<ProductCategory[]> {
+        let ret : ProductCategory[] = []
+        await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
+            await this.client.query(`
+                DELETE FROM "product_product_category" WHERE product_id = $1
+            `, [productId])
+            ret = await this.createProductCategory(productId, categories)
+        })
+        return ret
     }
 }

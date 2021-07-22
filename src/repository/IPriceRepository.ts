@@ -5,4 +5,5 @@ export interface IProductPriceRepository {
     fetchPricesByProductId(productId: number) : Promise<ProductPrice[]>
     fetchDefaultPriceByProductId(productId: number) : Promise<ProductPrice>
     deletePrice(id: number) : Promise<number>
+    createProductPrice(productId: number, prices: ProductPrice[]) : Promise<ProductPrice[]>
 }

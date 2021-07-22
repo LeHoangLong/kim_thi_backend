@@ -3,9 +3,12 @@ import { uuid } from "uuidv4";
 import { UnrecognizedEnumValue } from "../exception/UnrecognizedEnumValue";
 import { Image } from "../model/Image";
 import { Product } from "../model/Product";
+import { ProductCategory } from "../model/ProductCategory";
 import { EProductUnit, ProductPrice } from "../model/ProductPrice";
 import { IProductPriceRepository } from "../repository/IPriceRepository";
+import { IProductCategoryRepository } from "../repository/IProductCategoryRepository";
 import { IProductRepository } from "../repository/IProductRepository";
+import { IConnectionFactory } from "../services/IConnectionFactory";
 import { TYPES } from "../types";
 import { ImageWithPath, ProductImageController } from "./ImageController";
 
@@ -17,7 +20,8 @@ export interface CreateProductArgs {
     avatarId: string,
     defaultPrice: ProductPrice,
     alternativePrices: ProductPrice[],
-    rank: number
+    rank: number,
+    categories: string[]
 }
 
 export interface ProductSummary {
@@ -31,14 +35,17 @@ export interface ProductWithPricesAndImages {
     prices: ProductPrice[],
     avatar: ImageWithPath,
     images: ImageWithPath[],
+    categories: ProductCategory[],
 }
 
 @injectable()
 export class ProductController {
     constructor(
+        @inject(TYPES.CONNECTION_FACTORY) private connectionFactory: IConnectionFactory,
         @inject(TYPES.PRODUCT_REPOSITORY) private productRepository: IProductRepository,
         @inject(TYPES.PRODUCT_PRICE_REPOSITORY) private productPriceRepository: IProductPriceRepository,
         @inject(TYPES.PRODUCT_IMAGE_CONTROLLER) private productImageController: ProductImageController,
+        @inject(TYPES.PRODUCT_CATEGORY_REPOSITORY) private productCategoryRepository: IProductCategoryRepository,
     ){}
 
     async createProduct(args: CreateProductArgs) : Promise<ProductWithPricesAndImages> {
@@ -61,14 +68,23 @@ export class ProductController {
         pricesToCreate.forEach(e => e.isDefault = false)
         pricesToCreate.push(args.defaultPrice)
         
-        product = await this.productRepository.createProduct(product, pricesToCreate); 
-        let productPrices = await this.productPriceRepository.fetchPricesByProductId(product.id!);
+        let productPrices : ProductPrice[] = [];
+        let categories : ProductCategory[] = [];
+        await this.connectionFactory.startTransaction([
+            this.productRepository,
+            this.productPriceRepository
+        ], async () => {
+            product = await this.productRepository.createProduct(product);
+            productPrices = await this.productPriceRepository.createProductPrice(product.id!, pricesToCreate)
+            categories = await this.productCategoryRepository.fetchProductCategoriesByProductId(product.id!)
+        })
         let avatar = await this.productImageController.fetchImageWithPath(product.avatarId)
         return {
             product: product,
             prices: productPrices,
             images: [],
             avatar: avatar,
+            categories: categories,
         }
     }
 
@@ -97,11 +113,13 @@ export class ProductController {
         let product = await this.productRepository.fetchProductById(id)
         let avatarWithImage = await this.productImageController.fetchImageWithPath(product.avatarId)
         let productPrices = await this.productPriceRepository.fetchPricesByProductId(product.id!);
+        let categories = await this.productCategoryRepository.fetchProductCategoriesByProductId(product.id!)
         return {
             product: product,
             prices: productPrices,
             avatar: avatarWithImage,
             images: [],
+            categories: categories,
         }
     }
 
@@ -120,10 +138,13 @@ export class ProductController {
 
     async findProductsByName(name: string, offset: number, limit: number) : Promise<[number, ProductSummary[]]> {
         let count = await this.productRepository.fetchProductsCountWithName(name);
-        console.log('count')
-        console.log(count)
         let products = await this.productRepository.findProductsByName(name, offset, limit)
         let productSummaries = await this._productsToProductSummaries(products)
         return [count, productSummaries];
+    }
+
+    async updateProductCategories(productId: number, categories: string[]) : Promise<ProductCategory[]>{
+        await this.productRepository.fetchProductById(productId); // check if product id exists
+        return this.productRepository.updateProductCategories(productId, categories)
     }
 }

@@ -9,6 +9,8 @@ import pageRoutes from './routes/PageRoute';
 import { myContainer } from './inversify.config';
 import { JwtAuthenticator } from './middleware/JwtAuthenticator';
 import fileUpload from 'express-fileupload'
+
+var migrate = require('migrate')
 var path = require('path')
 
 const app = express();
@@ -37,6 +39,21 @@ app.use('/backend/products', productRoutes)
 app.use('/backend/images', imageRoutes)
 app.use('/', pageRoutes)
 
-app.listen(port, () => {
+app.listen(port, async () => {
+  
+  await new Promise((resolve, reject) => {
+    migrate.load({
+      stateStore: './migrations-state/.migrate-development'
+    }, function(err: any, set: any) {
+      if (err) {
+          throw err;
+      } else {
+          set.up(function() {
+            resolve(true)
+          });
+      }
+    })
+  })
+
   return console.log(`server is listening on ${port}`);
 });

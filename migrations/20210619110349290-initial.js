@@ -1,14 +1,13 @@
 'use strict'
 
-const config = require("../config.json");
-const { Client, Pool } = require("pg");
 const UserRepositoryPostgres = require('../build/src/repository/UserRepositoryPostgres').UserRepositoryPostgres;
 const UserController = require('../build/src/controller/UserController').UserController;
 const { NotFound } = require("../build/src/exception/NotFound");
-
+const { Client, Pool } = require("pg");
+const config = require('../src/config').config
 
 module.exports.up = async function (next) {
-    let pool = new Pool(config.postgres);
+    let pool = new Pool(config.postgres)
     let client = await pool.connect();
     await client.query('BEGIN');
     try {
@@ -32,8 +31,11 @@ module.exports.up = async function (next) {
     } catch (exception) {
       await client.query('ROLLBACK');
       throw exception;
+    } finally {
+      await client.release();
     }
 
+    client = await pool.connect();
     await client.query('BEGIN');
     try {
       let userDriver = new UserRepositoryPostgres(pool);
@@ -49,16 +51,21 @@ module.exports.up = async function (next) {
       }
       await client.query('COMMIT');
     } catch (exception) {
+      console.log('rollback')
       await client.query('ROLLBACK');
       throw exception;
+    } finally {
+      await client.release()
     }
+
     next()
 }
 
 module.exports.down = async function (next) {
-  let client = new Client(config.postgres);
-  await client.connect();
+  let pool = new Pool(config.postgres)
+  let client = await pool.connect();
   await client.query('DROP TABLE IF EXISTS "permission"');
   await client.query('DROP TABLE IF EXISTS "user"');
+  await client.release()
   next();
 }

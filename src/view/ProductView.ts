@@ -4,9 +4,10 @@ import { TYPES } from '../types';
 import express, { CookieOptions } from 'express';
 import { ProductImageController } from '../controller/ImageController';
 import { ProductController } from '../controller/ProductController';
-import config from '../../config.json';
+import config from '../config';
 import { UnrecognizedEnumValue } from '../exception/UnrecognizedEnumValue';
 import { EProductUnit, EProductUnitToString, ProductPrice, stringToEProductUnit } from '../model/ProductPrice';
+import { NotFound } from '../exception/NotFound';
 
 @injectable()
 export class ProductView {
@@ -47,7 +48,8 @@ export class ProductView {
                 avatarId: request.body.avatar.id,
                 defaultPrice: defaultPrice,
                 alternativePrices: alternativePrices,
-                rank: request.body.rank
+                rank: request.body.rank,
+                categories: request.body.categories,
             })
             productWithPrices.prices.forEach((e) => {
                 let unitStr = EProductUnitToString(e.unit)
@@ -84,7 +86,8 @@ export class ProductView {
                 avatarId: request.body.avatar.id,
                 defaultPrice: defaultPrice,
                 alternativePrices: alternativePrices,
-                rank: request.body.rank
+                rank: request.body.rank,
+                categories: request.body.categories,
             })
 
             productWithPrices.prices.forEach((e) => {
@@ -110,5 +113,18 @@ export class ProductView {
         let productDetail = await this.productController.fetchProductDetailById(productId)
         productDetail.prices.forEach(e => (e.unit as any) = EProductUnitToString(e.unit))
         return response.status(200).send(productDetail)
+    }
+
+    async updateProductCategories(request: express.Request, response: express.Response) {
+        try {
+            let productCategories = await this.productController.updateProductCategories(request.body.productId, request.body.categories)
+            return response.status(200).send(productCategories)
+        } catch (exception) {
+            if (exception instanceof NotFound) {
+                return response.status(404).send()
+            } else {
+                return response.status(500).send()
+            }
+        }
     }
 }

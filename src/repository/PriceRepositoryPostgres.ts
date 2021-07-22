@@ -1,14 +1,16 @@
 import { inject, injectable } from "inversify";
-import { Pool } from "pg";
+import { Pool, PoolClient } from "pg";
 import { NotFound } from "../exception/NotFound";
 import { ProductPrice } from "../model/ProductPrice";
+import { PostgresConnectionFactory } from "../services/PostgresConnectionFactory";
 import { TYPES } from "../types";
 import { IProductPriceRepository } from "./IPriceRepository";
 const PgError = require('pg-error')
 @injectable()
 export class PriceRepositoryPostgres implements IProductPriceRepository {
     constructor(
-        @inject(TYPES.POSTGRES_DRIVER) private client: Pool
+        @inject(TYPES.POSTGRES_DRIVER) private client: Pool,
+        @inject(TYPES.CONNECTION_FACTORY) private connectionFactory: PostgresConnectionFactory,
     ) {
     }
 
@@ -148,5 +150,51 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
         } catch (exception) {
             throw exception.message
         }
+    }
+
+
+    async createProductPrice(productId: number, prices: ProductPrice[]) : Promise<ProductPrice[]> {
+        let ret : ProductPrice[] = []
+        await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
+            for (let i = 0; i < prices.length; i++) {
+                let price = prices[i]
+    
+                let results = await connection.query(`
+                    INSERT INTO "product_price" (
+                        unit, 
+                        default_price,
+                        product_id,
+                        is_default
+                    ) VALUES (
+                        $1, $2, $3, $4
+                    ) RETURNING id
+                `, [price.unit, price.defaultPrice, productId, price.isDefault])
+    
+                let newPrice : ProductPrice = {
+                    id: results.rows[0].id,
+                    unit: price.unit,
+                    defaultPrice: price.defaultPrice,
+                    isDeleted: false,
+                    priceLevels: [],
+                    isDefault: price.isDefault,
+                }
+    
+                for (let j = 0; j < price.priceLevels.length; j++) {
+                    let priceLevel = price.priceLevels[j]
+                    await connection.query(`
+                        INSERT INTO "product_price_level" (
+                            product_price_id,
+                            min_quantity,
+                            price
+                        ) VALUES (
+                            $1, $2, $3
+                        )
+                    `, [newPrice.id, priceLevel.minQuantity, priceLevel.price])
+                    newPrice.priceLevels.push(priceLevel)
+                }
+                ret.push(newPrice)
+            }
+        })
+        return ret
     }
 }

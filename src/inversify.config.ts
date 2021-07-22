@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { Pool } from 'pg';
 import { TYPES } from './types';
 import { Container } from 'inversify';
-import config from '../config.json';
+import config from './config';
 import { UserRepositoryPostgres } from "./repository/UserRepositoryPostgres";
 import { UserController } from "./controller/UserController";
 import { JwtAuthenticator } from "./middleware/JwtAuthenticator";
@@ -22,6 +22,10 @@ import { ProductImageController } from "./controller/ImageController";
 import { ProductView } from "./view/ProductView";
 import { AdminAuthorizer } from "./middleware/AdminAuthorizer";
 import { ImageView } from "./view/ImageView";
+import { IConnectionFactory } from "./services/IConnectionFactory";
+import { PostgresConnectionFactory } from "./services/PostgresConnectionFactory";
+import { IProductCategoryRepository } from "./repository/IProductCategoryRepository";
+import { ProductCategoryRepositoryPostgres } from "./repository/ProductCategoryRepositoryPostgres";
 
 
 export const myContainer = new Container();
@@ -43,3 +47,7 @@ myContainer.bind<ProductImageController>(TYPES.PRODUCT_IMAGE_CONTROLLER).to(Prod
 myContainer.bind<ProductView>(TYPES.PRODUCT_VIEW).to(ProductView)
 myContainer.bind<AdminAuthorizer>(TYPES.ADMIN_AUTHORIZER).to(AdminAuthorizer)
 myContainer.bind<ImageView>(TYPES.IMAGE_VIEW).to(ImageView)
+myContainer.bind<IConnectionFactory>(TYPES.CONNECTION_FACTORY).toConstantValue(new PostgresConnectionFactory(myContainer.get<Pool>(TYPES.POSTGRES_DRIVER)))
+myContainer.bind<IProductCategoryRepository>(TYPES.PRODUCT_CATEGORY_REPOSITORY).to(ProductCategoryRepositoryPostgres)
+
+export default myContainer

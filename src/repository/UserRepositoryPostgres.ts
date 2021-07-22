@@ -15,9 +15,10 @@ export class UserRepositoryPostgres implements IUserRepository {
     ) {}
 
     async createUser(username: string, password: string, permissions: Permission[]): Promise<User> {
-        await this.driver.query('BEGIN');
+        let connection = await this.driver.connect()
+        await connection.query('BEGIN');
         try {
-            var result = await this.driver.query(`
+            var result = await connection.query(`
                 INSERT INTO "user" (username, password, is_deactivated, is_verified) 
                 VALUES ($1, $2, $3, $4)
                 RETURNING id, username, password, is_deactivated, is_verified
@@ -33,7 +34,7 @@ export class UserRepositoryPostgres implements IUserRepository {
             );
 
             for (let permission of permissions) {
-                var permissionResult = await this.driver.query(`
+                var permissionResult = await connection.query(`
                     INSERT INTO "permission" (user_id, value)
                     VALUES ($1, $2)
                     RETURNING value
@@ -42,16 +43,17 @@ export class UserRepositoryPostgres implements IUserRepository {
                 user.permissions.push(permissionJson['value']);
             }
                 
-            await this.driver.query('COMMIT');
+            await connection.query('COMMIT');
             return user;
         } catch (error) {
+            await connection.query('ROLLBACK');
             if (error.message === 'USERNAME_ALREADY_EXISTS') {
                 throw new DuplicateResource("user", "username", username);
             } else {
                 throw error;
             }
         } finally {
-            await this.driver.query('ROLLBACK');
+            connection.release()
         }
     } 
 

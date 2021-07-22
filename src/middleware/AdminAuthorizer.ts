@@ -10,8 +10,6 @@ export class AdminAuthorizer {
             request.context.user === undefined || 
             !(request.context.user as User).permissions.includes(Permission.ADMIN)
         ) {
-            console.log('request.context.user.permissions')
-            console.log(request.context.user.permissions)
             return response.status(401).send();
         } else {
             next();

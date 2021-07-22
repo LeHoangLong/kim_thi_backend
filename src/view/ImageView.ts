@@ -3,7 +3,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from '../types';
 import express, { CookieOptions } from 'express';
 import { ProductImageController } from '../controller/ImageController';
-import config from '../../config.json';
+import config from '../config';
 import fileUpload from  "express-fileupload"
 import { NotFound } from '../exception/NotFound';
 
@@ -28,7 +28,6 @@ export class ImageView {
     }
     
     async fetchImages(request: express.Request, response: express.Response) {
-        console.log('fetch images')
         let limit = request.body.limit;
         let offset = request.body.offset;
         if (limit === undefined) {
@@ -57,7 +56,6 @@ export class ImageView {
     }
 
     async fetchNumberOfImages(request: express.Request, response: express.Response) {
-        console.log('fetchNumberOfImages')
         let numberOfImages = await this.imageController.fetcNumberOfImages()
         return response.status(200).send(numberOfImages)
     }

@@ -1,5 +1,5 @@
 import express from 'express';
-import config from '../../config.json';
+import config from '../config';
 
 declare global {
     export namespace Express {
