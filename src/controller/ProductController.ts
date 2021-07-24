@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
 import { UnrecognizedEnumValue } from "../exception/UnrecognizedEnumValue";
 import { Image } from "../model/Image";
 import { Product } from "../model/Product";
@@ -51,7 +51,7 @@ export class ProductController {
     async createProduct(args: CreateProductArgs) : Promise<ProductWithPricesAndImages> {
         let serialNumber : string = args.serialNumber
         if (serialNumber === "") {
-            serialNumber = uuid()
+            serialNumber = v4()
         }
         let product : Product = {
             id: null,
@@ -76,7 +76,7 @@ export class ProductController {
         ], async () => {
             product = await this.productRepository.createProduct(product);
             productPrices = await this.productPriceRepository.createProductPrice(product.id!, pricesToCreate)
-            categories = await this.productCategoryRepository.fetchProductCategoriesByProductId(product.id!)
+            categories = await this.productRepository.fetchProductCategories(product.id!)
         })
         let avatar = await this.productImageController.fetchImageWithPath(product.avatarId)
         return {
@@ -113,7 +113,7 @@ export class ProductController {
         let product = await this.productRepository.fetchProductById(id)
         let avatarWithImage = await this.productImageController.fetchImageWithPath(product.avatarId)
         let productPrices = await this.productPriceRepository.fetchPricesByProductId(product.id!);
-        let categories = await this.productCategoryRepository.fetchProductCategoriesByProductId(product.id!)
+        let categories = await this.productRepository.fetchProductCategories(product.id!)
         return {
             product: product,
             prices: productPrices,

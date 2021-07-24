@@ -34,11 +34,13 @@ export class ProductCategoryRepositoryPostgres implements IProductCategoryReposi
     async createProductCategory(category: string) : Promise<ProductCategory> {
         let result : ProductCategory
         await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
-            let response = await connection.query(`
+            await connection.query(`
                 INSERT INTO "product_category" (category)
                 VALUES ($1)
             `, [category])
-            result = this._jsonToProductCategory(response.rows[0])
+            result = {
+                category: category,
+            }
         })
         return result!
     }
@@ -54,22 +56,7 @@ export class ProductCategoryRepositoryPostgres implements IProductCategoryReposi
         })
         return result
     }
-
-    async fetchProductCategoriesByProductId(productId: number) : Promise<ProductCategory[]> {
-        let result : ProductCategory[] = []
-        await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
-            let response = await connection.query(`
-                SELECT category
-                FROM "product_product_category" 
-                WHERE product_id = $1
-            `, [productId])
-            for (let i = 0; i < response.rows.length; i++) {
-                result.push(this._jsonToProductCategory(response.rows[i]))
-            }
-        })
-        return result
-    }
-
+    
     _jsonToProductCategory(json: any) : ProductCategory {
         return {
             category: json['category'],

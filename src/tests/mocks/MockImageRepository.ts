@@ -1,4 +1,3 @@
-import { uuid } from "uuidv4"
 import { NotFound } from "../../exception/NotFound"
 import { Image } from "../../model/Image"
 import { IImageRepository } from "../../repository/IImageRepository"

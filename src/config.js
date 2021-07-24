@@ -3,13 +3,15 @@ export const config = {
         "user": "admin",
         "password": "~admin~124679~",
         "host": "db",
-        "database": "kimthi"
+        "database": "kimthi",
+        "application_name": 'kimthi',
     },
     "postgres_test": {
         "user": "admin",
         "password": "~admin~124679~",
         "host": "db-test",
-        "database": "kimthi"
+        "database": "kimthi",
+        "application_name": 'kimthi',
     },
     "pagination": {
         "defaultSize": 10,

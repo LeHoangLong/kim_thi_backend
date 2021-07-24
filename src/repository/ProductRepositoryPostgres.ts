@@ -84,7 +84,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
         var result = await this.client.query(`
             SELECT COUNT(*) FROM "product" WHERE is_deleted = FALSE
         `);
-        return result.rows[0].count;
+        return parseInt(result.rows[0].count)
     }
 
     async fetchProductById(id: number) : Promise<Product> {
@@ -117,7 +117,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
             FROM "product" 
             WHERE name LIKE $1 AND is_deleted = FALSE
         `, [`%${name}%`])
-        return response.rows[0].count
+        return parseInt(response.rows[0].count)
     }
 
     async findProductsByName(name: string, offset: number, limit: number) : Promise<Product[]> {
@@ -138,59 +138,65 @@ export class ProductRepositoryPostgres implements IProductRepository{
         }
         return ret;
     }
-
+    
     async fetchProductsByCategory(category: string, limit: number, offset: number) : Promise<Product[]> {
-        let response = await this.client.query(`
-        SELECT 
-            id, serial_number, name, is_deleted, avatar_id,
-            rank, created_time
-        FROM "product" INNER JOIN "product_category" cat
-        WHERE cat.category = $1 AND is_deleted = FALSE
-        ORDER BY rank DESC, created_time DESC
-        LIMIT $2
-        OFFSET $3
-        `, [category, limit, offset]);
         let ret : Product[] = [];
-        for (let i = 0; i < response.rows.length; i++) {
-            let result = response.rows[i];
-            ret.push(this._jsonToProduct(result))
-        }
+        await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
+            let response = await connection.query(`
+                SELECT 
+                    id, serial_number, name, is_deleted, avatar_id,
+                    rank, created_time
+                FROM "product" INNER JOIN "product_product_category" cat
+                ON is_deleted = FALSE AND cat.product_id = id AND cat.category = $1
+                ORDER BY rank DESC, created_time DESC
+                LIMIT $2
+                OFFSET $3
+            `, [category, limit, offset]);
+            for (let i = 0; i < response.rows.length; i++) {
+                let result = response.rows[i];
+                ret.push(this._jsonToProduct(result))
+            }
+        })
         return ret;
     }
 
 
     async fetchProductCategories(productId: number) : Promise<ProductCategory[]> {
-        let response = await this.client.query(`
-            SELECT 
-                category
-            FROM "product_category"
-            WHERE product_id = $1
-        `, [productId])
         let ret : ProductCategory[] = [];
-        for (let i = 0; i < response.rows.length; i++) {
-            let result = response.rows[i];
-            ret.push(this._jsonToProductCategory(result, productId))
-        }
+        await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
+            let response = await connection.query(`
+                SELECT 
+                    category
+                FROM "product_product_category"
+                WHERE product_id = $1
+            `, [productId])
+            for (let i = 0; i < response.rows.length; i++) {
+                let result = response.rows[i];
+                ret.push(this._jsonToProductCategory(result))
+            }
+        })
         return ret;
     }
 
     async createProductCategory(productId: number, categories: string[]) : Promise<ProductCategory[]> {
         let ret : ProductCategory[] = []
-        for (let i = 0; i < categories.length; i++) {
-            await this.client.query(`
+        await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
+            for (let i = 0; i < categories.length; i++) {
+                await connection.query(`
                 INSERT INTO "product_product_category" (
-                    category, 
-                    product_id
-                ) VALUES ($1, $2)
-            `, [categories[i], productId])
-            ret.push({
-                category: categories[i],
-            })
-        }
+                        category, 
+                        product_id
+                    ) VALUES ($1, $2)
+                `, [categories[i], productId])
+                ret.push({
+                    category: categories[i],
+                })
+            }
+        })
         return ret;
     }
 
-    _jsonToProductCategory(json: any, productId: number) : ProductCategory {
+    _jsonToProductCategory(json: any) : ProductCategory {
         return {
             category: json['category'],
         }
@@ -198,7 +204,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
 
     async updateProductCategories(productId: number, categories: string[]) : Promise<ProductCategory[]> {
         let ret : ProductCategory[] = []
-        await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
+        await this.connectionFactory.getConnection(this, async (connection) => {
             await this.client.query(`
                 DELETE FROM "product_product_category" WHERE product_id = $1
             `, [productId])

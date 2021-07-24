@@ -45,6 +45,7 @@ export class PostgresConnectionFactory implements IConnectionFactory{
                 isIntransaction = true
             }
         }
+
         if (connection === undefined) {
             let noneTransactionObject = this.noneTransactionObjects.get(object)
             if (noneTransactionObject === undefined) {
@@ -63,7 +64,8 @@ export class PostgresConnectionFactory implements IConnectionFactory{
                 let noneTransactionObject = this.noneTransactionObjects.get(object)
                 if (noneTransactionObject !== undefined) {
                     if (noneTransactionObject.depth === 0) {
-                        connection.release()                        
+                        await connection.release()                        
+                        this.noneTransactionObjects.delete(object)
                     } else {
                         noneTransactionObject.depth -= 1
                     }
@@ -72,24 +74,28 @@ export class PostgresConnectionFactory implements IConnectionFactory{
         }
     }
 
+    async getNumberOfConnections() : Promise<number> {
+        return this.pool.totalCount - this.pool.idleCount
+    }
+
     async startTransaction(objects: any[], callback: () => void) {
         let connection = await this.pool.connect()
         let transactionObjects = new TransactionObjects(
             objects,
             connection, 
         )
-        connection.query('BEGIN')
+        await connection.query('BEGIN')
         try {
             this.transactionObjects.push(transactionObjects)
             await callback()
-            connection.query('COMMIT')
+            await connection.query('COMMIT')
         } catch (exception) {
-            connection.query('ROLLBACK')
+            await connection.query('ROLLBACK')
             throw exception
         } finally {
             let index = this.transactionObjects.indexOf(transactionObjects)
             this.transactionObjects.splice(index, 1)
-            connection.release()
+            await connection.release()
         }
     }
 }

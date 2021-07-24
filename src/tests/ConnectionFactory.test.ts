@@ -16,6 +16,7 @@ describe('Postgres connection factory test', async function() {
     })
     it('get connection ok', async function() {
         let factory = myContainer.get<PostgresConnectionFactory>(TYPES.CONNECTION_FACTORY)
+        chai.expect(await factory.getNumberOfConnections()).to.eql(0)
         await factory.getConnection(1, async function(connection: PoolClient) {
             let response = await connection.query(`SELECT COUNT(*) FROM "test"`)
             chai.expect(parseInt(response.rows[0].count)).equals(0)
@@ -23,11 +24,14 @@ describe('Postgres connection factory test', async function() {
             response = await connection.query(`SELECT COUNT(*) FROM "test"`)
             chai.expect(parseInt(response.rows[0].count)).equals(1)
         })
+        chai.expect(await factory.getNumberOfConnections()).to.eql(0)
 
         await factory.getConnection(1, async function(connection: PoolClient) {
             let response = await connection.query(`SELECT COUNT(*) FROM "test"`)
             chai.expect(parseInt(response.rows[0].count)).equals(1)
         })
+
+        chai.expect(await factory.getNumberOfConnections()).to.eql(0)
     })
 
     it('nested connection', async function() {

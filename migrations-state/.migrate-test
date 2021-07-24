@@ -3,11 +3,11 @@
   "migrations": [
     {
       "title": "20210619110349290-initial.js",
-      "timestamp": 1626981495950
+      "timestamp": 1627157578216
     },
     {
       "title": "20210624015618892create_product-price-and-image.js",
-      "timestamp": 1626981495950
+      "timestamp": 1627157578216
     }
   ]
 }

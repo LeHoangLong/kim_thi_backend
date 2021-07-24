@@ -77,6 +77,7 @@ module.exports.up = async function (next) {
         throw exception
     }  finally {
         await client.release()
+        await pool.end()
     }
     next()
 }
@@ -98,6 +99,7 @@ module.exports.down = async function (next) {
         throw exception
     }  finally {
         await client.release()
+        await pool.end()
     }
     next()
 }

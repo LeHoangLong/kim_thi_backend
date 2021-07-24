@@ -12,4 +12,6 @@ export interface IProductRepository {
     findProductsByName(name: string, offset: number, limit: number) : Promise<Product[]>;
     fetchProductsByCategory(category: string, limit: number, offset: number) : Promise<Product[]>;
     updateProductCategories(productId: number, categories: string[]) : Promise<ProductCategory[]>;
+    fetchProductCategories(productId: number) : Promise<ProductCategory[]>;
+    createProductCategory(productId: number, categories: string[]) : Promise<ProductCategory[]>;
 }

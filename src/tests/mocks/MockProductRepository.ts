@@ -1,8 +1,6 @@
-import { uuid } from "uuidv4";
 import { NotFound } from "../../exception/NotFound";
 import { Product } from "../../model/Product";
 import { ProductCategory } from "../../model/ProductCategory";
-import { ProductPrice } from "../../model/ProductPrice";
 import { IProductRepository } from "../../repository/IProductRepository";
 
 export class MockProductRepository implements IProductRepository {

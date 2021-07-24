@@ -4,6 +4,6 @@ export interface Product {
     name: string,
     isDeleted: boolean,
     avatarId: string,
-    createdTimeStamp: Date,
-    rank: number,
+    createdTimeStamp: Date | null,
+    rank: number, // rank is to indicate which product to prioritize for showing
 }
