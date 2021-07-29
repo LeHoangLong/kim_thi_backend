@@ -10,6 +10,27 @@
                     <img src="/public/logos/shop_2.png"/>
                 </div>
                 
+                <% if (categories) { %>
+                    <h4 class="category-title">Danh mục</h4>
+                <% } %>
+                <nav class="categories">
+                    <% if (categories) {
+                        for (var i = 0; i < categories.length; i++) { 
+                            if (categories[i].isSelected) { %>
+                                <a class="category selected" href="?categories=<%= categories[i].category %>">
+                            <% } else { %>
+                                <a class="category" href="?categories=<%= categories[i].category %>">
+                            <% } %>
+                                <h6>
+                                    <strong>
+                                        <%= categories[i].category %>
+                                    </strong>
+                                </h6>
+                            </a>
+                    <%  }
+                    } %>
+                </nav>
+
                 <div>
                     <%- include('searchProductBar', {searchTerm: searchTerm}) %>
                     <nav class="product-summaries">

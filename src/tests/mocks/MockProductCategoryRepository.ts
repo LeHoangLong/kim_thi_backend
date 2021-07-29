@@ -2,6 +2,10 @@ import { ProductCategory } from "../../model/ProductCategory";
 import { IProductCategoryRepository } from "../../repository/IProductCategoryRepository";
 
 export class MockProductCategoryRepository implements IProductCategoryRepository {
+    async fetchNumberOfCategories(): Promise<number> {
+        return 1
+    }
+
     async fetchAllCategories(limit: number, offset: number): Promise<ProductCategory[]> {
         let ret : ProductCategory[] = [];
         for (let i = offset; i < limit + offset; i++) {

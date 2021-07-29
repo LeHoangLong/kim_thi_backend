@@ -56,6 +56,18 @@ export class ProductCategoryRepositoryPostgres implements IProductCategoryReposi
         })
         return result
     }
+
+    async fetchNumberOfCategories() : Promise<number> {
+        let result : number = 0
+        await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
+            let response = await connection.query(`
+                SELECT COUNT(*) FROM "product_category"
+            `)
+            result = response.rows[0].count
+        })
+
+        return result
+    }
     
     _jsonToProductCategory(json: any) : ProductCategory {
         return {

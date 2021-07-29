@@ -6,6 +6,7 @@ import userRoutes from './routes/UserRoute';
 import productRoutes from './routes/ProductRoute';
 import imageRoutes from './routes/ImageRoute';
 import pageRoutes from './routes/PageRoute';
+import productCategoryRoutes from './routes/ProductCategoryRoute';
 import { myContainer } from './inversify.config';
 import { JwtAuthenticator } from './middleware/JwtAuthenticator';
 import fileUpload from 'express-fileupload'
@@ -37,10 +38,16 @@ app.set('views', path.join(__dirname, 'pages/'))
 app.use('/backend/user', userRoutes)
 app.use('/backend/products', productRoutes)
 app.use('/backend/images', imageRoutes)
+app.use('/backend/categories', productCategoryRoutes)
 app.use('/', pageRoutes)
 
+
+app.use(function (error: any, req: express.Request, res: express.Response, next: any) {
+  console.error(error.stack)
+  res.status(500).send(error)
+})
+
 app.listen(port, async () => {
-  
   await new Promise((resolve, reject) => {
     migrate.load({
       stateStore: './migrations-state/.migrate-development'

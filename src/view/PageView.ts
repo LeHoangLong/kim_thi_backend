@@ -1,27 +1,46 @@
 import { Request, Response } from "express";
-import { ProductController } from "../controller/ProductController";
+import { ProductController, ProductSummary } from "../controller/ProductController";
 import { myContainer } from "../inversify.config";
 import { EProductUnitToString } from "../model/ProductPrice";
 import { TYPES } from "../types";
 import config from '../config'
+import { ProductCategoryController } from "../controller/ProductCategoryController";
 
 export async function productSummaryPage(request: Request, response: Response) {
     let controller = myContainer.get<ProductController>(TYPES.PRODUCT_CONTROLLER);
+    let categoryController = myContainer.get<ProductCategoryController>(TYPES.PRODUCT_CATEGORY_CONTROLLER)
     let pageNumber = parseInt(request.query.pageNumber as string);
     if (isNaN(pageNumber)) {
         pageNumber = 0;
     }
 
-    let productSummaries = await controller.fetchProductSummaries(pageNumber * config.pagination.defaultSize, config.pagination.defaultSize);
+    let categoryStr = request.query.categories as string;
+
+    let productSummaries: ProductSummary[] = [];
+    if (categoryStr) {
+        productSummaries = await controller.fetchProductsByCategory(categoryStr, pageNumber * config.pagination.defaultSize, config.pagination.defaultSize);
+    } else {
+        productSummaries = await controller.fetchProductSummaries(pageNumber * config.pagination.defaultSize, config.pagination.defaultSize);
+    }
+
     for (let i = 0; i < productSummaries.length; i++) {
         productSummaries[i].defaultPrice.unit = EProductUnitToString(productSummaries[i].defaultPrice.unit) as any;
     }
     let productsCount = await controller.fetchNumberOfProducts()
+    let categories = await categoryController.fetchCategories(config.pagination.defaultSize, 0)
+    for (let i = 0; i < categories.length; i++) {
+        if (categories[i].category === categoryStr) {
+            (categories[i] as any).isSelected = true
+        } else {
+            (categories[i] as any).isSelected = false
+        }
+    }
     return response.status(200).render('productSummariesPage.ejs', {
         products: productSummaries,
         pageNumber,
         numberOfPages: Math.ceil(productsCount / config.pagination.defaultSize),
         searchTerm: "",
+        categories: categories
     })
 }
 
@@ -64,5 +83,6 @@ export async function productSearchPage(request: Request, response: Response) {
         pageNumber,
         numberOfPages: Math.ceil(count / config.pagination.defaultSize),
         searchTerm: phrase,
+        categories: null,
     })
 }

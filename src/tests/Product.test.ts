@@ -341,7 +341,7 @@ describe('Product view test', async function() {
         let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
         context.request.body.categories = ['cat_2', 'cat_3']
         context.request.body.productId = 1
-        await productView.updateProductCategories(context.request, context.response)
+        await productView.updateProduct(context.request, context.response)
         sinon.assert.calledOnceWithExactly(context.statusSpy, 200)
         sinon.assert.calledOnceWithExactly(context.sendSpy, [
             { category: 'cat_2' },
@@ -355,7 +355,7 @@ describe('Product view test', async function() {
         context.request.body.categories = ['cat_2', 'cat_3']
         context.request.body.productId = 2
         context.productRepository.notFoundId.push(2)
-        await productView.updateProductCategories(context.request, context.response)
+        await productView.updateProduct(context.request, context.response)
         sinon.assert.calledOnceWithExactly(context.statusSpy, 404)
         
     })

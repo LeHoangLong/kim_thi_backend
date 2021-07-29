@@ -51,8 +51,12 @@ export class MockProductRepository implements IProductRepository {
         throw new Error("Method not implemented.");
     }
 
-    createProductCategory(productId: number, categories: string[]): Promise<ProductCategory[]> {
-        throw new Error("Method not implemented.");
+    async createProductCategory(productId: number, categories: string[]): Promise<ProductCategory[]> {
+        let ret: ProductCategory[] = []
+        for (let i = 0; i< categories.length; i++) {
+            ret.push({ category: categories[i] })
+        }
+        return ret
     }
 
     async createProduct(product: Product): Promise<Product> {

@@ -21,7 +21,7 @@ export interface CreateProductArgs {
     defaultPrice: ProductPrice,
     alternativePrices: ProductPrice[],
     rank: number,
-    categories: string[]
+    categories: ProductCategory[]
 }
 
 export interface ProductSummary {
@@ -76,7 +76,11 @@ export class ProductController {
         ], async () => {
             product = await this.productRepository.createProduct(product);
             productPrices = await this.productPriceRepository.createProductPrice(product.id!, pricesToCreate)
-            categories = await this.productRepository.fetchProductCategories(product.id!)
+            let categoryStr : string[] = []
+            for (let i = 0; i < args.categories.length; i++) {
+                categoryStr.push(args.categories[i].category)
+            }
+            categories = await this.productRepository.createProductCategory(product.id!, categoryStr)
         })
         let avatar = await this.productImageController.fetchImageWithPath(product.avatarId)
         return {
@@ -86,6 +90,10 @@ export class ProductController {
             avatar: avatar,
             categories: categories,
         }
+    }
+
+    async deleteProduct(productId: number) : Promise<number> {
+        return this.productRepository.deleteProduct(productId)
     }
 
     async _productsToProductSummaries(products: Product[]) : Promise<ProductSummary[]> {
@@ -109,6 +117,11 @@ export class ProductController {
         return this._productsToProductSummaries(products);
     }
 
+    async fetchProductsByCategory(category: string, offset: number, limit: number) : Promise<ProductSummary[]> {
+        let products = await this.productRepository.fetchProductsByCategory(category, limit, offset);
+        return this._productsToProductSummaries(products);
+    }
+
     async fetchProductDetailById(id: number) : Promise<ProductWithPricesAndImages> {
         let product = await this.productRepository.fetchProductById(id)
         let avatarWithImage = await this.productImageController.fetchImageWithPath(product.avatarId)
@@ -128,12 +141,75 @@ export class ProductController {
     }
 
     async updateProduct(id: number, args: CreateProductArgs) : Promise<ProductWithPricesAndImages> {
-        await this.productRepository.deleteProduct(id)
+        let currentProduct = await this.productRepository.fetchProductById(id)
         let prices = await this.productPriceRepository.fetchPricesByProductId(id)
-        for (let i = 0; i < prices.length; i++) {
-            await this.productPriceRepository.deletePrice(prices[i].id!)
+        let createdProduct : ProductWithPricesAndImages | null = null
+        if (this.shouldUpdateProduct(currentProduct, args) || this.shouldUpdatePrice(prices, args)) {
+            await this.connectionFactory.startTransaction([this.productRepository, this.productPriceRepository], async () => {
+                await this.productRepository.deleteProduct(id)
+                for (let i = 0; i < prices.length; i++) {
+                    await this.productPriceRepository.deletePrice(prices[i].id!)
+                }
+            })
+            createdProduct = await this.createProduct(args)
         }
-        return this.createProduct(args)
+
+        let currentProductCategories : ProductCategory[] = await this.productRepository.fetchProductCategories(id)
+        if (this.shouldUpdateProductCategories(currentProductCategories, args)) {
+            let categoryStr: string[] = []
+            for (let  i = 0; i < args.categories.length; i++) {
+                categoryStr.push(args.categories[i].category)
+            }
+            let categories = await this.productRepository.updateProductCategories(id, categoryStr)
+            if (createdProduct !== null) {
+                createdProduct.categories = categories
+            }
+        }
+
+        if (createdProduct !== null) {
+            return createdProduct
+        } else {
+            return this.fetchProductDetailById(id)
+        }
+    }
+
+    private shouldUpdateProduct(currentProductDetail: Product, args: CreateProductArgs) : boolean {
+        if (currentProductDetail.name !== args.name ||
+             currentProductDetail.serialNumber !== args.serialNumber ||
+             currentProductDetail.avatarId !== args.avatarId ||
+             currentProductDetail.rank !== args.rank) {
+            return true
+        }
+        return false
+    }
+
+    private shouldUpdatePrice(currentProductPrices: ProductPrice[], args: CreateProductArgs) : boolean {
+        if (currentProductPrices.length !== args.alternativePrices.length + 1) {
+            return true
+        } else {
+            if (currentProductPrices.findIndex(e => e.id === args.defaultPrice.id)) {
+                return true
+            }
+            for (let i = 0; i < args.alternativePrices.length; i++) {
+                if (currentProductPrices.findIndex(e => e.id !== args.alternativePrices[i].id) === -1){
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    private shouldUpdateProductCategories(currentProductCategories: ProductCategory[], args: CreateProductArgs) : boolean {
+        if (currentProductCategories.length !== args.categories.length) {
+            return true
+        } else {
+            for (let i = 0; i < currentProductCategories.length; i++) {
+                if (args.categories.findIndex(e => e.category === currentProductCategories[i].category) === -1) {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     async findProductsByName(name: string, offset: number, limit: number) : Promise<[number, ProductSummary[]]> {
@@ -141,10 +217,5 @@ export class ProductController {
         let products = await this.productRepository.findProductsByName(name, offset, limit)
         let productSummaries = await this._productsToProductSummaries(products)
         return [count, productSummaries];
-    }
-
-    async updateProductCategories(productId: number, categories: string[]) : Promise<ProductCategory[]>{
-        await this.productRepository.fetchProductById(productId); // check if product id exists
-        return this.productRepository.updateProductCategories(productId, categories)
     }
 }

@@ -587,3 +587,29 @@ input[type=number] {
 .search-related-products .search-bar-container .search-bar {
     width: 100%;
 }
+
+.categories {
+    display: flex;
+    overflow-x: auto;
+    margin: var(--m3);
+}
+
+.categories .category {
+    border-radius: 10000px;
+    border: 1px var(--border-color) solid;
+    box-shadow: 2px 2px 2px 1px var(--shadow-color);
+    margin: var(--m3);
+    padding: var(--p3) var(--p5);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.categories .category.selected {
+    background-color: var(--primary-color);
+    color: var(--on-primary-color);
+}
+
+.category-title {
+    margin-left: var(--m3);
+    color: var(--primary-color);
+}

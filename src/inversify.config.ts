@@ -26,6 +26,8 @@ import { IConnectionFactory } from "./services/IConnectionFactory";
 import { PostgresConnectionFactory } from "./services/PostgresConnectionFactory";
 import { IProductCategoryRepository } from "./repository/IProductCategoryRepository";
 import { ProductCategoryRepositoryPostgres } from "./repository/ProductCategoryRepositoryPostgres";
+import { ProductCategoryController } from "./controller/ProductCategoryController";
+import { ProductCategoryView } from "./view/ProductCategoryView";
 
 
 export const myContainer = new Container();
@@ -49,5 +51,7 @@ myContainer.bind<AdminAuthorizer>(TYPES.ADMIN_AUTHORIZER).to(AdminAuthorizer)
 myContainer.bind<ImageView>(TYPES.IMAGE_VIEW).to(ImageView)
 myContainer.bind<IConnectionFactory>(TYPES.CONNECTION_FACTORY).toConstantValue(new PostgresConnectionFactory(myContainer.get<Pool>(TYPES.POSTGRES_DRIVER)))
 myContainer.bind<IProductCategoryRepository>(TYPES.PRODUCT_CATEGORY_REPOSITORY).to(ProductCategoryRepositoryPostgres)
+myContainer.bind<ProductCategoryController>(TYPES.PRODUCT_CATEGORY_CONTROLLER).to(ProductCategoryController)
+myContainer.bind<ProductCategoryView>(TYPES.PRODUCT_CATEGORY_VIEW).to(ProductCategoryView)
 
 export default myContainer

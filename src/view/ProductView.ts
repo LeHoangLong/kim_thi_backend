@@ -32,7 +32,7 @@ export class ProductView {
 
     async fetchProductsCount(request: express.Request, response: express.Response) {
         let numberOfProducts = await this.productController.fetchNumberOfProducts()
-        response.status(200).send(numberOfProducts)
+        response.status(200).send(numberOfProducts.toString())
     }
 
     async updateProduct(request: express.Request, response: express.Response) {
@@ -56,6 +56,20 @@ export class ProductView {
                 e.unit = unitStr as any
             })
             return response.status(200).send(productWithPrices)
+        } catch (exception) {
+            console.log('exception')
+            console.log(exception)
+            return response.status(500).send(exception)
+        }
+    }
+    
+    async deleteProduct(request: express.Request, response: express.Response) {
+        try {
+            let productId = parseInt(request.body.id)
+            if (isNaN(productId)) {
+                return response.status(400).send()
+            }
+            await this.productController.deleteProduct(productId)
         } catch (exception) {
             return response.status(500).send(exception)
         }
@@ -113,18 +127,5 @@ export class ProductView {
         let productDetail = await this.productController.fetchProductDetailById(productId)
         productDetail.prices.forEach(e => (e.unit as any) = EProductUnitToString(e.unit))
         return response.status(200).send(productDetail)
-    }
-
-    async updateProductCategories(request: express.Request, response: express.Response) {
-        try {
-            let productCategories = await this.productController.updateProductCategories(request.body.productId, request.body.categories)
-            return response.status(200).send(productCategories)
-        } catch (exception) {
-            if (exception instanceof NotFound) {
-                return response.status(404).send()
-            } else {
-                return response.status(500).send()
-            }
-        }
     }
 }

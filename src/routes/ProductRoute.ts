@@ -21,6 +21,10 @@ router.post('/', userAuthorizer.authorize, adminAuthorizer.authorize, (request: 
     myContainer.get<ProductView>(TYPES.PRODUCT_VIEW).createProduct(request, response)
 })
 
+router.delete('/', userAuthorizer.authorize, adminAuthorizer.authorize, (request: Request, response: Response) => {
+    myContainer.get<ProductView>(TYPES.PRODUCT_VIEW).deleteProduct(request, response)
+})
+
 router.get('/:id', userAuthorizer.authorize, adminAuthorizer.authorize, (request: Request, response: Response) => {
     myContainer.get<ProductView>(TYPES.PRODUCT_VIEW).fetchProductDetailById(request, response)
 })
