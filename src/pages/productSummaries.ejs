@@ -1,0 +1,7 @@
+<nav class="product-summaries">
+    <% for (var i = 0; i < products.length; i++) { %>
+        <a href="/products/<%= products[i].product.id %>">
+            <%- include('productSummaryCard', products[i]) %>
+        </a>    
+    <% } %>                
+</nav>

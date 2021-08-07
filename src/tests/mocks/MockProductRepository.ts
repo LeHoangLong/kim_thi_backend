@@ -1,7 +1,7 @@
 import { NotFound } from "../../exception/NotFound";
 import { Product } from "../../model/Product";
 import { ProductCategory } from "../../model/ProductCategory";
-import { IProductRepository } from "../../repository/IProductRepository";
+import { IProductRepository, ProductSearchFilter } from "../../repository/IProductRepository";
 
 export class MockProductRepository implements IProductRepository {
     public products : Map<number, Product>
@@ -53,6 +53,8 @@ export class MockProductRepository implements IProductRepository {
 
     async createProductCategory(productId: number, categories: string[]): Promise<ProductCategory[]> {
         let ret: ProductCategory[] = []
+        console.log('categories 1')
+        console.log(categories)
         for (let i = 0; i< categories.length; i++) {
             ret.push({ category: categories[i] })
         }
@@ -72,7 +74,7 @@ export class MockProductRepository implements IProductRepository {
         return 1;
     }
     
-    async fetchNumberOfProducts(): Promise<number> {
+    async fetchNumberOfProducts(filter: ProductSearchFilter = {}): Promise<number> {
         return 15;
     }
 

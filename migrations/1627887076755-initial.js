@@ -58,8 +58,6 @@ module.exports.up = async function (next) {
       await client.release()
       await pool.end()
     }
-
-    next()
 }
 
 module.exports.down = async function (next) {
@@ -69,5 +67,4 @@ module.exports.down = async function (next) {
   await client.query('DROP TABLE IF EXISTS "user"');
   await client.release()
   await pool.end()
-  next();
 }

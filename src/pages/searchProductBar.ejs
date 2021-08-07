@@ -1,7 +1,9 @@
 <div class="search-bar-container">
     <div class="search-bar">
-        <form class="" action="/search" method="GET">
-            <input value="<%= searchTerm %>" type="text" name="phrase" placeholder="Tìm kiếm"></input>
+        <form class="" action="/" method="GET">
+            <input style="display:none;" type="text" name="categories" value="<%= query.categories %>"></input>
+            <input value="<%= query.phrase %>" type="text" name="phrase" placeholder="Tìm kiếm"></input>
+            <input type="submit" style="display:none" hidefocus="true" />
         </form>
     </div>
 </div>

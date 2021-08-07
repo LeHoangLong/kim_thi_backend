@@ -29,24 +29,28 @@ $('#quantity-and-unit-selection .background').click(function() {
     $('#quantity-and-unit-selection').addClass('quantity-and-unit-selection-hidden'); 
 })
 
+function updateCartQuantity(itemName, productCount) {
+    if (!isNaN(productCount)) { 
+        if (cart[itemName] === undefined) {
+            cart[itemName] = {
+                detail: context.productDetail,
+                count: productCount,
+                isSelected: true,
+            }
+        } else {
+            cart[itemName].count += productCount
+        }
+        cartUpdated()
+        $('#quantity-and-unit-selection').addClass('quantity-and-unit-selection-hidden'); 
+    }
+}
+
 $('#confirm-buy-button').click(function() {
     if (addToCartButtonClicked) {
         let unit = $('#unit-select').val();
         let productCount = parseInt($('#quantity-input').val());
-        if (!isNaN(productCount)) { 
-            let itemName = context.productDetail.product.id + '__' + unit
-            if (cart[itemName] === undefined) {
-                cart[itemName] = {
-                    detail: context.productDetail,
-                    count: productCount,
-                    isSelected: true,
-                }
-            } else {
-                cart[itemName].count += productCount
-            }
-            cartUpdated()
-            $('#quantity-and-unit-selection').addClass('quantity-and-unit-selection-hidden'); 
-        }
+        let itemName = context.productDetail.product.id + '__' + unit
+        updateCartQuantity(itemName, productCount)
     } else {
 
     }
@@ -179,7 +183,6 @@ $('#remove-cart-item-button').click(function() {
 })
 
 function displayCartTotal() {
-    console.log('display cart total')
     let total = 0
     for (let key in cart) {
         let unit = key.split('__')[1]
@@ -191,3 +194,16 @@ function displayCartTotal() {
 
     $('#total').text(total.toLocaleString() + ' đ')
 }
+
+$('#add-quantity-button').click(function() {
+    console.log('add quantity')
+    let productCount = parseInt($('#quantity-input').val());
+    $('#quantity-input').val(productCount + 1)
+})
+
+$('#remove-quantity-button').click(function() {
+    let productCount = parseInt($('#quantity-input').val());
+    if (productCount > 1) {
+        $('#quantity-input').val(productCount - 1)
+    } 
+})

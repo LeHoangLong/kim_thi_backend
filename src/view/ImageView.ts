@@ -3,7 +3,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from '../types';
 import express, { CookieOptions } from 'express';
 import { ProductImageController } from '../controller/ImageController';
-import config from '../config';
+const config = require('../config').config;
 import fileUpload from  "express-fileupload"
 import { NotFound } from '../exception/NotFound';
 

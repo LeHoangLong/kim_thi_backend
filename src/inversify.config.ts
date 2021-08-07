@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { Pool } from 'pg';
 import { TYPES } from './types';
 import { Container } from 'inversify';
-import config from './config';
+const config = require('./config').config;
 import { UserRepositoryPostgres } from "./repository/UserRepositoryPostgres";
 import { UserController } from "./controller/UserController";
 import { JwtAuthenticator } from "./middleware/JwtAuthenticator";
@@ -28,6 +28,8 @@ import { IProductCategoryRepository } from "./repository/IProductCategoryReposit
 import { ProductCategoryRepositoryPostgres } from "./repository/ProductCategoryRepositoryPostgres";
 import { ProductCategoryController } from "./controller/ProductCategoryController";
 import { ProductCategoryView } from "./view/ProductCategoryView";
+import { AreaTransportFeeRepositoryPostgres } from "./repository/AreaTransportFeeRepositoryPostgres";
+import { IAreaTransportFeeRepository } from "./repository/IAreaTransportFeeRepository";
 
 
 export const myContainer = new Container();
@@ -53,5 +55,6 @@ myContainer.bind<IConnectionFactory>(TYPES.CONNECTION_FACTORY).toConstantValue(n
 myContainer.bind<IProductCategoryRepository>(TYPES.PRODUCT_CATEGORY_REPOSITORY).to(ProductCategoryRepositoryPostgres)
 myContainer.bind<ProductCategoryController>(TYPES.PRODUCT_CATEGORY_CONTROLLER).to(ProductCategoryController)
 myContainer.bind<ProductCategoryView>(TYPES.PRODUCT_CATEGORY_VIEW).to(ProductCategoryView)
+myContainer.bind<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY).to(AreaTransportFeeRepositoryPostgres)
 
 export default myContainer

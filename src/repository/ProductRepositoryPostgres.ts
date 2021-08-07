@@ -1,12 +1,12 @@
 import { inject, injectable } from "inversify";
-import { Pool, PoolClient } from "pg";
+import { Pool, PoolClient, QueryResult } from "pg";
 import { NotFound } from "../exception/NotFound";
 import { Product } from "../model/Product";
 import { ProductCategory } from "../model/ProductCategory";
 import { ProductPrice } from "../model/ProductPrice";
 import { PostgresConnectionFactory } from "../services/PostgresConnectionFactory";
 import { TYPES } from "../types";
-import { IProductRepository } from "./IProductRepository";
+import { IProductRepository, ProductSearchFilter } from "./IProductRepository";
 var PgError = require("pg-error")
 
 @injectable()
@@ -80,10 +80,24 @@ export class ProductRepositoryPostgres implements IProductRepository{
         return products;
     }
 
-    async fetchNumberOfProducts(): Promise<number> {
-        var result = await this.client.query(`
-            SELECT COUNT(*) FROM "product" WHERE is_deleted = FALSE
-        `);
+    async fetchNumberOfProducts(filter: ProductSearchFilter = {}): Promise<number> {
+        var result: QueryResult<any>
+        if (filter.category) {
+            result = await this.client.query(`
+            SELECT COUNT(DISTINCT p.id) FROM "product" p 
+            JOIN "product_product_category" pc
+            ON p.id = pc.product_id
+            AND  LOWER(pc.category) = LOWER($1)
+            AND ( $2::text IS NULL OR LOWER(p.name) LIKE LOWER($2) )
+            WHERE p.is_deleted = FALSE
+            `, [filter.category, filter.name? `%${filter.name}%` : null]);
+        } else {
+            result = await this.client.query(`
+                SELECT COUNT(DISTINCT p.id) FROM "product" p 
+                WHERE p.is_deleted = FALSE
+                    AND ( $1::text IS NULL OR LOWER(p.name) LIKE LOWER($1) )
+            `, [filter.name? `%${filter.name}%` : null])
+        }
         return parseInt(result.rows[0].count)
     }
 
@@ -126,11 +140,11 @@ export class ProductRepositoryPostgres implements IProductRepository{
                 id, serial_number, name, is_deleted, avatar_id,
                 rank, created_time
             FROM "product"
-            WHERE name LIKE $1 AND is_deleted = FALSE
+            WHERE LOWER(name) LIKE $1 AND is_deleted = FALSE
             ORDER BY rank DESC, created_time DESC
             LIMIT $2
             OFFSET $3
-        `, [`%${name}%`, limit, offset]);
+        `, [`%${name}%`.toLowerCase(), limit, offset]);
         let ret : Product[] = [];
         for (let i = 0; i < response.rows.length; i++) {
             let result = response.rows[i];
@@ -139,24 +153,42 @@ export class ProductRepositoryPostgres implements IProductRepository{
         return ret;
     }
     
-    async fetchProductsByCategory(category: string, limit: number, offset: number) : Promise<Product[]> {
+    async fetchProductsByCategory(category: string, limit: number, offset: number, name?: string) : Promise<Product[]> {
         let ret : Product[] = [];
         await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
-            let response = await connection.query(`
-                SELECT 
-                    id, serial_number, name, is_deleted, avatar_id,
-                    rank, created_time
-                FROM "product" INNER JOIN "product_product_category" cat
-                ON is_deleted = FALSE AND cat.product_id = id AND cat.category = $1
-                ORDER BY rank DESC, created_time DESC
-                LIMIT $2
-                OFFSET $3
-            `, [category, limit, offset]);
+            let response: QueryResult<any>;
+            if (name === undefined) {
+                response = await connection.query(`
+                    SELECT 
+                        id, serial_number, name, is_deleted, avatar_id,
+                        rank, created_time
+                    FROM "product" INNER JOIN "product_product_category" cat
+                    ON is_deleted = FALSE AND cat.product_id = id AND cat.category = $1
+                    ORDER BY rank DESC, created_time DESC
+                    LIMIT $2
+                    OFFSET $3
+                `, [category, limit, offset]);
+            } else {
+                response = await connection.query(`
+                    SELECT 
+                        id, serial_number, name, is_deleted, avatar_id,
+                        rank, created_time
+                    FROM "product" INNER JOIN "product_product_category" cat
+                    ON is_deleted = FALSE 
+                        AND cat.product_id = id 
+                        AND cat.category = $1
+                        AND LOWER(name) LIKE LOWER($2)
+                    ORDER BY rank DESC, created_time DESC
+                    LIMIT $3
+                    OFFSET $4
+                `, [category, `%${name}%`, limit, offset]);
+            }
             for (let i = 0; i < response.rows.length; i++) {
                 let result = response.rows[i];
                 ret.push(this._jsonToProduct(result))
             }
         })
+
         return ret;
     }
 

@@ -3,15 +3,15 @@
   "migrations": [
     {
       "title": "1627887076755-initial.js",
-      "timestamp": 1628330785144
+      "timestamp": 1627889450096
     },
     {
       "title": "1627888292203-create_product_price_and_image.js",
-      "timestamp": 1628330785156
+      "timestamp": 1627889450159
     },
     {
       "title": "1627888299291-create_transport_fee.js",
-      "timestamp": 1628330785164
+      "timestamp": 1627889450175
     }
   ]
 }

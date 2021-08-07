@@ -17,9 +17,9 @@
                     <% if (categories) {
                         for (var i = 0; i < categories.length; i++) { 
                             if (categories[i].isSelected) { %>
-                                <a class="category selected" href="?categories=<%= categories[i].category %>">
+                                <a class="category selected" href="/?phrase=<%= query.phrase %>">
                             <% } else { %>
-                                <a class="category" href="?categories=<%= categories[i].category %>">
+                                <a class="category" href="/?categories=<%= categories[i].category %>&phrase=<%= query.phrase %>">
                             <% } %>
                                 <h6>
                                     <strong>
@@ -32,14 +32,8 @@
                 </nav>
 
                 <div>
-                    <%- include('searchProductBar', {searchTerm: searchTerm}) %>
-                    <nav class="product-summaries">
-                        <% for (var i = 0; i < products.length; i++) { %>
-                            <a href="/products/<%= products[i].product.id %>">
-                                <%- include('productSummaryCard', products[i]) %>
-                            </a>    
-                        <% } %>                
-                    </nav>
+                    <%- include('searchProductBar', { searchTerm: searchTerm, categories: categories}) %>
+                    <%- include('productSummaries', { products: products }) %>
                 </div>
 
                 <footer class="page-numbering">

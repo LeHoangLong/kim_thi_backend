@@ -613,3 +613,9 @@ input[type=number] {
     margin-left: var(--m3);
     color: var(--primary-color);
 }
+
+.icon-button {
+    border: none;
+    border-radius: 50%;
+    box-shadow: none;
+}

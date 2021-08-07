@@ -4,7 +4,7 @@ import { TYPES } from '../types';
 import express, { CookieOptions } from 'express';
 import { ProductImageController } from '../controller/ImageController';
 import { ProductController } from '../controller/ProductController';
-import config from '../config';
+const config = require('../config').config;
 import { UnrecognizedEnumValue } from '../exception/UnrecognizedEnumValue';
 import { EProductUnit, EProductUnitToString, ProductPrice, stringToEProductUnit } from '../model/ProductPrice';
 import { NotFound } from '../exception/NotFound';
@@ -59,7 +59,11 @@ export class ProductView {
         } catch (exception) {
             console.log('exception')
             console.log(exception)
-            return response.status(500).send(exception)
+            if (exception instanceof NotFound) {
+                return response.status(404).send()
+            } else {
+                return response.status(500).send(exception)
+            }
         }
     }
     

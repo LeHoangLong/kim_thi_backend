@@ -1,4 +1,4 @@
-export const config = {
+const config = {
     "postgres": {
         "user": "admin",
         "password": "~admin~124679~",
@@ -18,4 +18,4 @@ export const config = {
         "maxSize": 50
     }
 }
-export default config;
+exports.config = config

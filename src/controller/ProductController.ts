@@ -7,7 +7,7 @@ import { ProductCategory } from "../model/ProductCategory";
 import { EProductUnit, ProductPrice } from "../model/ProductPrice";
 import { IProductPriceRepository } from "../repository/IPriceRepository";
 import { IProductCategoryRepository } from "../repository/IProductCategoryRepository";
-import { IProductRepository } from "../repository/IProductRepository";
+import { IProductRepository, ProductSearchFilter } from "../repository/IProductRepository";
 import { IConnectionFactory } from "../services/IConnectionFactory";
 import { TYPES } from "../types";
 import { ImageWithPath, ProductImageController } from "./ImageController";
@@ -82,6 +82,8 @@ export class ProductController {
             }
             categories = await this.productRepository.createProductCategory(product.id!, categoryStr)
         })
+        console.log('categories')
+        console.log(categories)
         let avatar = await this.productImageController.fetchImageWithPath(product.avatarId)
         return {
             product: product,
@@ -117,8 +119,8 @@ export class ProductController {
         return this._productsToProductSummaries(products);
     }
 
-    async fetchProductsByCategory(category: string, offset: number, limit: number) : Promise<ProductSummary[]> {
-        let products = await this.productRepository.fetchProductsByCategory(category, limit, offset);
+    async fetchProductsByCategory(category: string, offset: number, limit: number, name?: string) : Promise<ProductSummary[]> {
+        let products = await this.productRepository.fetchProductsByCategory(category, limit, offset, name);
         return this._productsToProductSummaries(products);
     }
 
@@ -136,8 +138,8 @@ export class ProductController {
         }
     }
 
-    async fetchNumberOfProducts() : Promise<number> {
-        return this.productRepository.fetchNumberOfProducts();
+    async fetchNumberOfProducts(filter: ProductSearchFilter = {}) : Promise<number> {
+        return this.productRepository.fetchNumberOfProducts(filter);
     }
 
     async updateProduct(id: number, args: CreateProductArgs) : Promise<ProductWithPricesAndImages> {

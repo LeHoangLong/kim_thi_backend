@@ -171,7 +171,7 @@ describe('Product view test', async function() {
         let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
         await productView.fetchProductsCount(context.request as Request, context.response as Response)
         sinon.assert.calledOnceWithExactly(context.statusSpy, 200)
-        sinon.assert.calledOnceWithExactly(context.sendSpy, 15)
+        sinon.assert.calledOnceWithExactly(context.sendSpy, "15")
         
     })
 
@@ -203,7 +203,7 @@ describe('Product view test', async function() {
                     }
                 ],
                 rank: 0,
-                categories: ["cat_1", "cat_2"]
+                categories: [{category: "cat_1"}, {category: "cat_2"}]
             }
         }
         await productView.createProduct(context.request as Request, context.response as Response)
@@ -339,21 +339,79 @@ describe('Product view test', async function() {
 
     it('update product categories', async function() {
         let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
-        context.request.body.categories = ['cat_2', 'cat_3']
-        context.request.body.productId = 1
+        context.request.body.categories = [{category: 'cat_2'}, {category: 'cat_3'}]
+        context.request.body.prices = []
+        context.request.body.defaultPrice = {
+            unit: 'KG',
+            defaultPrice: 0,
+            priceLevels: [],
+        }
+        context.request.body.alternativePrices = [],
+        context.request.body.avatar = {
+            id: 'test_avatar',
+        }
+        context.request.params.id = 1
         await productView.updateProduct(context.request, context.response)
         sinon.assert.calledOnceWithExactly(context.statusSpy, 200)
-        sinon.assert.calledOnceWithExactly(context.sendSpy, [
-            { category: 'cat_2' },
-            { category: 'cat_3' },
-        ])
-        
+        sinon.assert.calledOnceWithExactly(context.sendSpy, {
+            product: {
+              id: 0,
+              serialNumber: undefined,
+              name: undefined,
+              isDeleted: false,
+              avatarId: 'test_avatar',
+              createdTimeStamp: context.now,
+              rank: undefined
+            },
+            prices: [
+              {
+                id: 0,
+                unit: 'KG',
+                isDeleted: false,
+                defaultPrice: 101,
+                priceLevels: [{
+                    minQuantity: 15,
+                    price: 50
+                }],
+                isDefault: true
+              },
+              {
+                id: 1,
+                unit: 'KG',
+                isDeleted: false,
+                defaultPrice: 101,
+                priceLevels: [{
+                    minQuantity: 15,
+                    price: 50
+                }],
+                isDefault: false
+              }
+            ],
+            images: [],
+            avatar: {
+              id: 'test_avatar',
+              isDeleted: false,
+              createdTimeStamp: context.now,
+              path: 'product_images_test_avatar'
+            },
+            categories: [ { category: 'cat_2' }, { category: 'cat_3' } ]
+        })
     })
 
     it('update not found product return 404', async function() {
         let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
         context.request.body.categories = ['cat_2', 'cat_3']
-        context.request.body.productId = 2
+        context.request.body.prices = []
+        context.request.body.defaultPrice = {
+            unit: 'KG',
+            defaultPrice: 0,
+            priceLevels: [],
+        }
+        context.request.body.alternativePrices = [],
+        context.request.body.avatar = {
+            id: 'test_avatar',
+        }
+        context.request.params.id = 2 // url params
         context.productRepository.notFoundId.push(2)
         await productView.updateProduct(context.request, context.response)
         sinon.assert.calledOnceWithExactly(context.statusSpy, 404)

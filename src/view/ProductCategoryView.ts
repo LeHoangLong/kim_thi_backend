@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { ProductCategoryController } from "../controller/ProductCategoryController";
 import { TYPES } from "../types";
 import express from 'express';
-import config from "../config";
+const config = require('../config').config;
 
 @injectable()
 export class ProductCategoryView {

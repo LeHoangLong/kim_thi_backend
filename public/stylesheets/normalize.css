@@ -377,3 +377,8 @@
     outline: none;
     border-color: red;
   }
+
+  button {
+    border: none;
+    box-shadow: 2px 2px 4px 2px var(--shadow-color);
+  }

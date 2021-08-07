@@ -3,7 +3,7 @@
 const { Client, Pool } = require("pg");
 const config = require('../src/config').config
 
-module.exports.up = async function (next) {
+module.exports.up = async function () {
     let pool = new Pool(config.postgres)
     let client = await pool.connect();
     await client.query('BEGIN');
@@ -79,7 +79,6 @@ module.exports.up = async function (next) {
         await client.release()
         await pool.end()
     }
-    next()
 }
 
 module.exports.down = async function (next) {
@@ -101,5 +100,4 @@ module.exports.down = async function (next) {
         await client.release()
         await pool.end()
     }
-    next()
 }

@@ -23,12 +23,12 @@
                         </div>
                         <label for="quantity-input">Số lượng</label>
                         <div class="quantity-input-container input">
-                            <button class="change-quantity-button">
-                                <i class="fas fa-plus"></i>
+                            <button class="icon-button change-quantity-button">
+                                <i id="add-quantity-button" class="fas fa-plus"></i>
                             </button>
                             <input id="quantity-input" type="number" value="1"></input>
-                            <button class="change-quantity-button">
-                                <i class="fas fa-minus"></i>
+                            <button class="icon-button change-quantity-button">
+                                <i id="remove-quantity-button" class="fas fa-minus"></i>
                             </button>
                         </div>
                     </div>
@@ -74,6 +74,7 @@
                     Sản phẩm khác
                 </h4>
                 <%- include('searchProductBar', { searchTerm: '' }) %>
+                <%- include('productSummaries', { products: products } )%>
             </section>
 
             <section>
@@ -105,10 +106,6 @@
     </main>
 
     <script>
-        var context = {
-            productDetail: <%- JSON.stringify(product) %>,
-        }    
-        console.log('context')
-        console.log(context)
+        context.productDetail = <%- JSON.stringify(product) %>
     </script>
 <%- include('footer') %>
