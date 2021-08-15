@@ -52,7 +52,7 @@ describe('Postgres connection factory test', async function() {
     it('transaction success', async function() {
         let factory = myContainer.get<PostgresConnectionFactory>(TYPES.CONNECTION_FACTORY)
     
-        await factory.startTransaction([1], async function() {
+        await factory.startTransaction(0, [1], async function() {
             await factory.getConnection(1, async function(connection: PoolClient) {
                 await connection.query(`INSERT INTO "test"(id) VALUES (1)`);
                 let response = await connection.query(`SELECT COUNT(*) FROM "test"`)
@@ -71,7 +71,7 @@ describe('Postgres connection factory test', async function() {
     
         let exceptionRaise = 0
         try {
-            await factory.startTransaction([1], async function() {
+            await factory.startTransaction(0, [1], async function() {
                 await factory.getConnection(1, async function(connection: PoolClient) {
                     await connection.query(`INSERT INTO "test"(id) VALUES (1)`);
                     let response = await connection.query(`SELECT COUNT(*) FROM "test"`)
@@ -92,7 +92,7 @@ describe('Postgres connection factory test', async function() {
 
         exceptionRaise = 0
         try {
-            await factory.startTransaction([1], async function() {
+            await factory.startTransaction(0, [1], async function() {
                 await factory.getConnection(1, async function(connection: PoolClient) {
                     await connection.query(`INSERT INTO "test"(id) VALUES (1)`);
                     let response = await connection.query(`SELECT COUNT(*) FROM "test"`)
@@ -110,5 +110,37 @@ describe('Postgres connection factory test', async function() {
             let response = await connection.query(`SELECT COUNT(*) FROM "test"`)
             chai.expect(parseInt(response.rows[0].count)).equals(0)
         })
+    })
+
+    it('nested transaction', async () => {
+        let factory = myContainer.get<PostgresConnectionFactory>(TYPES.CONNECTION_FACTORY)
+        try {
+            await factory.startTransaction(0, [1], async function() {
+                await factory.startTransaction(0, [1], async () => {
+                    await factory.getConnection(1, async function(connection: PoolClient) {
+                        await connection.query(`INSERT INTO "test"(id) VALUES (1)`);
+                        let response = await connection.query(`SELECT COUNT(*) FROM "test"`)
+                        chai.expect(parseInt(response.rows[0].count)).equals(1)
+                    })    
+                })
+                // should be in same transaction
+                await factory.getConnection(1, async function(connection: PoolClient) {
+                    let response = await connection.query(`SELECT COUNT(*) FROM "test"`)
+                    chai.expect(parseInt(response.rows[0].count)).equals(1)
+                })    
+                // thus, if we throw here, transaction should not be committed
+                throw new Error("abc")
+            })
+        } catch (exception) {
+
+        }
+
+        // should not be commited
+        await factory.getConnection(1, async function(connection: PoolClient) {
+            let response = await connection.query(`SELECT COUNT(*) FROM "test"`)
+            chai.expect(parseInt(response.rows[0].count)).equals(0)
+        })    
+
+
     })
 })

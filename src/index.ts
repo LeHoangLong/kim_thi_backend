@@ -6,6 +6,7 @@ import userRoutes from './routes/UserRoute';
 import productRoutes from './routes/ProductRoute';
 import imageRoutes from './routes/ImageRoute';
 import pageRoutes from './routes/PageRoute';
+import transportFeeRoutes from './routes/TransportFeeRoute';
 import productCategoryRoutes from './routes/ProductCategoryRoute';
 import { myContainer } from './inversify.config';
 import { JwtAuthenticator } from './middleware/JwtAuthenticator';
@@ -39,6 +40,7 @@ app.use('/backend/user', userRoutes)
 app.use('/backend/products', productRoutes)
 app.use('/backend/images', imageRoutes)
 app.use('/backend/categories', productCategoryRoutes)
+app.use('/backend/transportFeeRoutes', transportFeeRoutes)
 app.use('/', pageRoutes)
 
 

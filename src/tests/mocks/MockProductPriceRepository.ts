@@ -56,7 +56,7 @@ export class MockProductPriceRepository implements IProductPriceRepository {
                 id: 1,
                 unit: EProductUnit.KG,
                 isDeleted: false,
-                defaultPrice: 101,
+                defaultPrice: 102,
                 priceLevels: [{
                     minQuantity: 15,
                     price: 50

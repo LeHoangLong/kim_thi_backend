@@ -5,7 +5,7 @@ import { IConnectionFactory } from "./IConnectionFactory";
 
 class TransactionObjects {
     constructor(
-        public readonly objects: any[],
+        public objects: any[],
         public readonly connection: PoolClient,
     ) {}
 
@@ -78,24 +78,52 @@ export class PostgresConnectionFactory implements IConnectionFactory{
         return this.pool.totalCount - this.pool.idleCount
     }
 
-    async startTransaction(objects: any[], callback: () => void) {
-        let connection = await this.pool.connect()
-        let transactionObjects = new TransactionObjects(
-            objects,
-            connection, 
-        )
-        await connection.query('BEGIN')
-        try {
-            this.transactionObjects.push(transactionObjects)
+    async startTransaction(caller: any, objects: any[], callback: () => void) {
+        let transactionObjects : TransactionObjects | undefined;
+        let isRootTransaction = false
+        objects.push(caller)
+        for (let j = 0; j < objects.length; j++) {
+            let object = objects[j]
+            for (let i = 0; i < this.transactionObjects.length; i++) {
+                if (this.transactionObjects[i].doesContain(object)) {
+                    transactionObjects = this.transactionObjects[i]
+                }
+            }
+        }
+
+        if (transactionObjects === undefined) {
+            isRootTransaction = true
+            let connection = await this.pool.connect()
+            transactionObjects = new TransactionObjects(
+                objects,
+                connection, 
+            )
+        }
+
+        for (let i = 0; i < objects.length; i++) {
+            if (!transactionObjects.doesContain(objects[i])) {
+                transactionObjects.objects.push(objects[i])
+            }
+        }
+
+        let connection = transactionObjects.connection
+        if (isRootTransaction) {
+            await connection.query('BEGIN')
+            try {
+                this.transactionObjects.push(transactionObjects)
+                await callback()
+                await connection.query('COMMIT')
+            } catch (exception) {
+                await connection.query('ROLLBACK')
+                throw exception
+            } finally {
+                let index = this.transactionObjects.indexOf(transactionObjects)
+                this.transactionObjects.splice(index, 1)
+                await connection.release()
+            }
+        } else {
+            // do not handle any begin or commit as the root transaction will do that
             await callback()
-            await connection.query('COMMIT')
-        } catch (exception) {
-            await connection.query('ROLLBACK')
-            throw exception
-        } finally {
-            let index = this.transactionObjects.indexOf(transactionObjects)
-            this.transactionObjects.splice(index, 1)
-            await connection.release()
         }
     }
 }

@@ -1,5 +1,6 @@
 import { inject, injectable } from "inversify";
 import { Pool, PoolClient, QueryResult } from "pg";
+import SQL from "sql-template-strings";
 import { NotFound } from "../exception/NotFound";
 import { Product } from "../model/Product";
 import { ProductCategory } from "../model/ProductCategory";
@@ -237,11 +238,39 @@ export class ProductRepositoryPostgres implements IProductRepository{
     async updateProductCategories(productId: number, categories: string[]) : Promise<ProductCategory[]> {
         let ret : ProductCategory[] = []
         await this.connectionFactory.getConnection(this, async (connection) => {
-            await this.client.query(`
+            await connection.query(`
                 DELETE FROM "product_product_category" WHERE product_id = $1
             `, [productId])
             ret = await this.createProductCategory(productId, categories)
         })
+        return ret
+    }
+
+
+    async fetchProductsByAreaTransportFee(areaTransportFeeId: number, limit: number, offset: number, ignoreDeleted: boolean = true) : Promise<Product[]> {
+        let ret: Product[] = []
+        await this.connectionFactory.getConnection(this, async (connection) => {
+            let response = await connection.query(SQL`
+                SELECT
+                    id, serial_number, name, is_deleted, avatar_id,
+                    rank, created_time
+                FROM "product"
+                JOIN "product_area_transport_fee" patf
+                ON patf.transport_fee_id = ${areaTransportFeeId}
+                    AND  id = patf.product_id
+                    AND (${ignoreDeleted} = FALSE OR is_deleted = FALSE)
+                ORDER BY created_time DESC, id DESC
+                LIMIT ${limit}
+                OFFSET ${offset}
+            `)
+
+
+            for (let i = 0; i < response.rows.length; i++) {
+                let result = response.rows[i];
+                ret.push(this._jsonToProduct(result))
+            }
+        })
+
         return ret
     }
 }

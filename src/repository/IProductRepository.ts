@@ -20,5 +20,5 @@ export interface IProductRepository {
     updateProductCategories(productId: number, categories: string[]) : Promise<ProductCategory[]>;
     fetchProductCategories(productId: number) : Promise<ProductCategory[]>;
     createProductCategory(productId: number, categories: string[]) : Promise<ProductCategory[]>;
-    fetchProductsByAreaTransportFee(areaTransportFeeId: number, limit: number, offset: number) : Promise<Product[]>;
+    fetchProductsByAreaTransportFee(areaTransportFeeId: number, limit: number, offset: number, ignoreDeleted?: boolean) : Promise<Product[]>;
 }

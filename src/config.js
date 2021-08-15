@@ -16,6 +16,10 @@ const config = {
     "pagination": {
         "defaultSize": 10,
         "maxSize": 50
+    },
+    "geocoder": {
+        "provider": 'google',
+        "apiKey": 'AIzaSyA30V1U6ANKqisXXm4V6hIaewF6qbyZSkI'
     }
 }
 exports.config = config

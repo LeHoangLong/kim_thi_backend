@@ -30,6 +30,9 @@ import { ProductCategoryController } from "./controller/ProductCategoryControlle
 import { ProductCategoryView } from "./view/ProductCategoryView";
 import { AreaTransportFeeRepositoryPostgres } from "./repository/AreaTransportFeeRepositoryPostgres";
 import { IAreaTransportFeeRepository } from "./repository/IAreaTransportFeeRepository";
+import { TransportFeeController } from "./controller/TransportFeeController";
+import { TransportFeeView } from "./view/TransportFeeView";
+import node_geocoder, { Geocoder } from "node-geocoder";
 
 
 export const myContainer = new Container();
@@ -56,5 +59,8 @@ myContainer.bind<IProductCategoryRepository>(TYPES.PRODUCT_CATEGORY_REPOSITORY).
 myContainer.bind<ProductCategoryController>(TYPES.PRODUCT_CATEGORY_CONTROLLER).to(ProductCategoryController)
 myContainer.bind<ProductCategoryView>(TYPES.PRODUCT_CATEGORY_VIEW).to(ProductCategoryView)
 myContainer.bind<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY).to(AreaTransportFeeRepositoryPostgres)
+myContainer.bind<TransportFeeController>(TYPES.TRANSPORT_FEE_CONTROLLER).to(TransportFeeController)
+myContainer.bind<TransportFeeView>(TYPES.TRANSPORT_FEE_VIEW).to(TransportFeeView)
+myContainer.bind<Geocoder>(TYPES.GOOGLE_GEOCODER).toConstantValue(node_geocoder(config.geocoder))
 
 export default myContainer

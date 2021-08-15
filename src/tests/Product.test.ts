@@ -29,6 +29,12 @@ import { PriceRepositoryPostgres } from '../repository/PriceRepositoryPostgres';
 import { ImageRepositoryPostgres } from '../repository/ImageRepositoryPostgres';
 import { BinaryRepositoryFileSystem } from '../repository/BinaryRepositoryFilesystem';
 import { ProductCategoryRepositoryPostgres } from '../repository/ProductCategoryRepositoryPostgres';
+import { IAreaTransportFeeRepository } from '../repository/IAreaTransportFeeRepository';
+import Decimal from 'decimal.js';
+import { AreaTransportFee } from '../model/AreaTransportFee';
+import { MockAreaTransportFeeRepository } from './mocks/MockAreaTransportFeeRepository';
+import { AreaTransportFeeRepositoryPostgres } from '../repository/AreaTransportFeeRepositoryPostgres';
+import { CreateProductArgs, ProductController, ProductWithPricesAndImages } from '../controller/ProductController';
 chai.use(chaiAsPromised);
 chai.use(chaiSubset)
 
@@ -42,12 +48,14 @@ describe('Product view test', async function() {
         const mockProductRepository = new MockProductRepository()
         const mockProductPriceRepository = new MockProductPriceRepository()
         const mockProductCategoryRepository = new MockProductCategoryRepository()
+        const mockAreaTransportFeeRepository = new MockAreaTransportFeeRepository()
 
         myContainer.rebind<IProductRepository>(TYPES.PRODUCT_REPOSITORY).toConstantValue(mockProductRepository)
         myContainer.rebind<IProductPriceRepository>(TYPES.PRODUCT_PRICE_REPOSITORY).toConstantValue(mockProductPriceRepository)
         myContainer.rebind<IImageRepository>(TYPES.IMAGE_REPOSITORY).toConstantValue(mockImageRepository)
         myContainer.rebind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).toConstantValue(mockBinaryRepository)
         myContainer.rebind<IProductCategoryRepository>(TYPES.PRODUCT_CATEGORY_REPOSITORY).toConstantValue(mockProductCategoryRepository)
+        myContainer.rebind<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY).toConstantValue(mockAreaTransportFeeRepository)
 
         let request = {
             body: {
@@ -73,12 +81,36 @@ describe('Product view test', async function() {
         context.mockProductPriceRepository = mockProductPriceRepository
         context.mockImageRepository = mockImageRepository
         context.mockProductCategoryRepository = mockProductCategoryRepository
+        context.mockAreaTransportFeeRepository = mockAreaTransportFeeRepository
         context.request = request
         context.response = response
         context.now = now
 
         context.statusSpy = sinon.spy(context.response, "status")
         context.sendSpy = sinon.spy(context.response, "send")
+
+        let fee_1 = await mockAreaTransportFeeRepository.createFee({
+            areaCity: 'city_0',
+            name: "fee_0",
+            billBasedTransportFee: [],
+            basicFee: new Decimal("10.05"),
+            originLatitude: new Decimal("0.000002"),
+            originLongitude: new Decimal("0.000001"),
+            isDeleted: false
+        })
+
+        let fee_2 = await mockAreaTransportFeeRepository.createFee({
+            areaCity: 'city_1',
+            name: "fee_1",
+            billBasedTransportFee: [],
+            basicFee: new Decimal("10.05"),
+            originLatitude: new Decimal("1.000002"),
+            originLongitude: new Decimal("1.000001"),
+            isDeleted: false
+        })
+
+        mockAreaTransportFeeRepository.feesByProductId.set(0, [fee_1.id,fee_2.id])
+        context.fee_1 = fee_1
     })
 
     this.afterAll(async function() {
@@ -87,6 +119,7 @@ describe('Product view test', async function() {
         myContainer.rebind<IImageRepository>(TYPES.IMAGE_REPOSITORY).to(ImageRepositoryPostgres)
         myContainer.rebind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).to(BinaryRepositoryFileSystem)
         myContainer.rebind<IProductCategoryRepository>(TYPES.PRODUCT_CATEGORY_REPOSITORY).to(ProductCategoryRepositoryPostgres)
+        myContainer.rebind<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY).to(AreaTransportFeeRepositoryPostgres)
     })
 
     it('Fetch multiple products', async function() {
@@ -182,7 +215,7 @@ describe('Product view test', async function() {
                 serialNumber: 'serial_number',
                 name: "product_name",
                 avatar: {
-                    id: 0,
+                    id: "0",
                 },
                 defaultPrice: {
                     unit: "KG",
@@ -195,7 +228,7 @@ describe('Product view test', async function() {
                 alternativePrices: [
                     {
                         unit: "KG",
-                        defaultPrice: 101,
+                        defaultPrice: 102,
                         priceLevels: [{
                             minQuantity: 15,
                             price: 50
@@ -203,21 +236,64 @@ describe('Product view test', async function() {
                     }
                 ],
                 rank: 0,
-                categories: [{category: "cat_1"}, {category: "cat_2"}]
+                categories: [{category: "cat_1"}, {category: "cat_2"}],
+                areaTransportFeeIds: [0, 1],
             }
         }
+        
+        let oldFn = productView.productController.createProduct
+        sinon.stub(productView.productController, "createProduct").callsFake(async (args) : Promise<ProductWithPricesAndImages> => {
+            let expectedCreateArgs : CreateProductArgs = {
+                serialNumber: "serial_number",
+                name: "product_name",
+                avatarId: "0",
+                defaultPrice: {
+                    id: null,
+                    unit: EProductUnit.KG,
+                    defaultPrice: 101,
+                    priceLevels: [{
+                        minQuantity: 15,
+                        price: 50
+                    }],
+                    isDeleted: false,
+                    isDefault: true,
+                },
+                alternativePrices: [{
+                    id: null,
+                    unit: EProductUnit.KG,
+                    defaultPrice: 102,
+                    priceLevels: [{
+                        minQuantity: 15,
+                        price: 50
+                    }],
+                    isDeleted: false,
+                    isDefault: false,
+                }],
+                rank: 0,
+                categories: [{category: "cat_1"}, {category: "cat_2"}],
+                areaTransportFeeIds: [0, 1],
+            }
+            chai.expect(args.defaultPrice).to.be.eql(expectedCreateArgs.defaultPrice)
+            chai.expect(args.alternativePrices).to.be.eql(expectedCreateArgs.alternativePrices)
+            chai.expect(args.categories).to.be.eql(expectedCreateArgs.categories)
+            chai.expect(args.areaTransportFeeIds).to.be.eql(expectedCreateArgs.areaTransportFeeIds)
+            chai.expect(args).to.be.eql(expectedCreateArgs)
+            return oldFn.call(productView.productController, args)
+        })
+
         await productView.createProduct(context.request as Request, context.response as Response)
+
         sinon.assert.calledOnceWithExactly(context.statusSpy, 201)
         // mock price repo will return a predefined set of prices
         // thus the returned values here dont match
         // but it is ok, we only need to check that prices are actually returned
-        sinon.assert.calledOnceWithExactly(context.sendSpy, {
+        sinon.assert.calledOnceWithMatch(context.sendSpy, {
             product: {
                 id: 0,
                 serialNumber: 'serial_number',
                 name: 'product_name',
                 isDeleted: false,
-                avatarId: 0,
+                avatarId: '0',
                 createdTimeStamp: context.now,
                 rank: 0
             },
@@ -237,7 +313,7 @@ describe('Product view test', async function() {
                 id: 1,
                 unit: 'KG',
                 isDeleted: false,
-                defaultPrice: 101,
+                defaultPrice: 102,
                 priceLevels: [{
                     minQuantity: 15,
                     price: 50
@@ -247,7 +323,7 @@ describe('Product view test', async function() {
             ],
             images: [],
             avatar: {
-              id: 0,
+              id: "0",
               isDeleted: false,
               createdTimeStamp: context.now,
               path: 'product_images_0'
@@ -255,13 +331,14 @@ describe('Product view test', async function() {
             categories: [
                 { category: 'cat_1' },
                 { category: 'cat_2' },
-            ]
+            ],
         })
 
         // check that data was actually saved
         let mockProductPriceRepository = context.mockProductPriceRepository as MockProductPriceRepository;
         chai.expect(mockProductPriceRepository.pricesByProductId.size).to.equals(1)
-        chai.expect(mockProductPriceRepository.pricesByProductId.get(0)).to.deep.equals([
+        
+        chai.expect(mockProductPriceRepository.pricesByProductId.get(0)).to.eql([
             {
                 id: 0,
                 unit: EProductUnit.KG,
@@ -276,7 +353,7 @@ describe('Product view test', async function() {
             {
                 id: 1,
                 unit: EProductUnit.KG,
-                defaultPrice: 101,
+                defaultPrice: 102,
                 priceLevels: [{
                     minQuantity: 15,
                     price: 50
@@ -290,6 +367,8 @@ describe('Product view test', async function() {
 
 
     it('Fetch product detail', async function() {
+        context.mockAreaTransportFeeRepository.feesByProductId.set(1, [context.fee_1.id])
+
         let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
         context.request.params.id = 1
         await productView.fetchProductDetailById(context.request as Request, context.response as Response)
@@ -353,49 +432,49 @@ describe('Product view test', async function() {
         context.request.params.id = 1
         await productView.updateProduct(context.request, context.response)
         sinon.assert.calledOnceWithExactly(context.statusSpy, 200)
-        sinon.assert.calledOnceWithExactly(context.sendSpy, {
-            product: {
-              id: 0,
-              serialNumber: undefined,
-              name: undefined,
-              isDeleted: false,
-              avatarId: 'test_avatar',
-              createdTimeStamp: context.now,
-              rank: undefined
-            },
-            prices: [
-              {
-                id: 0,
-                unit: 'KG',
-                isDeleted: false,
-                defaultPrice: 101,
-                priceLevels: [{
-                    minQuantity: 15,
-                    price: 50
-                }],
-                isDefault: true
-              },
-              {
-                id: 1,
-                unit: 'KG',
-                isDeleted: false,
-                defaultPrice: 101,
-                priceLevels: [{
-                    minQuantity: 15,
-                    price: 50
-                }],
-                isDefault: false
-              }
-            ],
-            images: [],
-            avatar: {
-              id: 'test_avatar',
-              isDeleted: false,
-              createdTimeStamp: context.now,
-              path: 'product_images_test_avatar'
-            },
-            categories: [ { category: 'cat_2' }, { category: 'cat_3' } ]
+        chai.expect(context.sendSpy.getCall(0).args[0].product).to.be.eql({
+            id: 0,
+            serialNumber: undefined,
+            name: undefined,
+            isDeleted: false,
+            avatarId: 'test_avatar',
+            createdTimeStamp: context.now,
+            rank: undefined
         })
+
+        chai.expect(context.sendSpy.getCall(0).args[0].prices).to.be.eql([
+            {
+              id: 0,
+              unit: 'KG',
+              isDeleted: false,
+              defaultPrice: 101,
+              priceLevels: [{
+                  minQuantity: 15,
+                  price: 50
+              }],
+              isDefault: true
+            },
+            {
+              id: 1,
+              unit: 'KG',
+              isDeleted: false,
+              defaultPrice: 102,
+              priceLevels: [{
+                  minQuantity: 15,
+                  price: 50
+              }],
+              isDefault: false
+            }
+        ])
+
+        chai.expect(context.sendSpy.getCall(0).args[0].images).to.be.eql([])
+        chai.expect(context.sendSpy.getCall(0).args[0].avatar).to.be.eql({
+            id: 'test_avatar',
+            isDeleted: false,
+            createdTimeStamp: context.now,
+            path: 'product_images_test_avatar'
+        },)
+        chai.expect(context.sendSpy.getCall(0).args[0].categories).to.be.eql([ { category: 'cat_2' }, { category: 'cat_3' } ])
     })
 
     it('update not found product return 404', async function() {
@@ -458,14 +537,52 @@ describe('Postgres product repository test', async function() {
                 exceptionCalled++
             }
             chai.expect(exceptionCalled).to.eql(1)
-            
         })
+
+        /*
+        describe('Create product transport fee', async () => {
+            it('Should succeed', async () => {
+                let factoryConnection = myContainer.get<PostgresConnectionFactory>(TYPES.CONNECTION_FACTORY)
+
+                await factoryConnection.getConnection(this, async (connection) => {
+                    await connection.query(`DELETE FROM "product_area_transport_fee"`)
+                    let response = await connection.query(`SELECT COUNT(*) FROM "product_area_transport_fee"`)
+                    chai.expect(parseInt(response.rows[0].count)).to.be.equal(0)
+                })
+
+                let areaTransportFeeRepository = myContainer.get<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY)
+                let areaTransportFee_1 = await areaTransportFeeRepository.createFee({
+                    areaCity: "city_1",
+                    name: "fee_1",
+                    billBasedTransportFee: [],
+                    originLatitude: new Decimal(0),
+                    originLongitude: new Decimal(0),
+                    isDeleted: false
+                })
+                let areaTransportFee_2 = await areaTransportFeeRepository.createFee({
+                    areaCity: "city_2",
+                    name: "fee_2",
+                    billBasedTransportFee: [],
+                    originLatitude: new Decimal(0),
+                    originLongitude: new Decimal(0),
+                    isDeleted: false
+                })
+                await productRepository.setAreaTransportFee(product.id!, [areaTransportFee_1.id, areaTransportFee_2.id])
+                
+                await factoryConnection.getConnection(this, async (connection) => {
+                    let response = await connection.query(`SELECT COUNT(*) FROM "product_area_transport_fee"`)
+                    chai.expect(parseInt(response.rows[0].count)).to.be.equal(2)
+                })
+            })
+        })
+        */
     })
     
     describe('Fetch product', async function() {
         let product : Product
         let productRepository: IProductRepository
         let image: Image
+        let areaTransportFee_1: AreaTransportFee
         beforeEach(async function() {
             productRepository = myContainer.get<IProductRepository>(TYPES.PRODUCT_REPOSITORY)
             let imageRepository = myContainer.get<IImageRepository>(TYPES.IMAGE_REPOSITORY)
@@ -474,6 +591,16 @@ describe('Postgres product repository test', async function() {
             await productCategoryRepository.createProductCategory('cat_1')
             await productCategoryRepository.createProductCategory('cat_2')
             
+            let areaTransportFeeRepository = myContainer.get<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY)
+            areaTransportFee_1 = await areaTransportFeeRepository.createFee({
+                areaCity: "city_1",
+                name: "fee_1",
+                billBasedTransportFee: [],
+                originLatitude: new Decimal(0),
+                originLongitude: new Decimal(0),
+                isDeleted: false
+            })
+
             for (let i = 0; i < 5; i++) {
                 product = await productRepository.createProduct({
                     id: null,
@@ -488,8 +615,10 @@ describe('Postgres product repository test', async function() {
                     await productRepository.createProductCategory(product.id!, ['cat_1'])
                 } else {
                     await productRepository.createProductCategory(product.id!, ['cat_2'])
+                    // await productRepository.setAreaTransportFee(product.id!, [areaTransportFee_1.id])
                 }
             }
+
 
             let factory = myContainer.get<PostgresConnectionFactory>(TYPES.CONNECTION_FACTORY)
         })
@@ -591,11 +720,10 @@ describe('Postgres product repository test', async function() {
             })
             chai.expect(fetchedProducts[0]).to.have.property('id')
             chai.expect(fetchedProducts[0]).to.have.property('createdTimeStamp')
-            
         })
     })
 
-    describe('Delete product', async function() {
+    describe('Update and delete product', async function() {
         let product : Product
         let productRepository: IProductRepository
         let image: Image
@@ -632,7 +760,6 @@ describe('Postgres product repository test', async function() {
             })
             count = await productRepository.fetchNumberOfProducts()
             chai.expect(count).eql(4)
-            
         })
     })
 })

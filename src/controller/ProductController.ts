@@ -1,10 +1,12 @@
 import { inject, injectable } from "inversify";
 import { v4 } from "uuid";
 import { UnrecognizedEnumValue } from "../exception/UnrecognizedEnumValue";
+import { AreaTransportFee } from "../model/AreaTransportFee";
 import { Image } from "../model/Image";
 import { Product } from "../model/Product";
 import { ProductCategory } from "../model/ProductCategory";
 import { EProductUnit, ProductPrice } from "../model/ProductPrice";
+import { IAreaTransportFeeRepository } from "../repository/IAreaTransportFeeRepository";
 import { IProductPriceRepository } from "../repository/IPriceRepository";
 import { IProductCategoryRepository } from "../repository/IProductCategoryRepository";
 import { IProductRepository, ProductSearchFilter } from "../repository/IProductRepository";
@@ -21,7 +23,8 @@ export interface CreateProductArgs {
     defaultPrice: ProductPrice,
     alternativePrices: ProductPrice[],
     rank: number,
-    categories: ProductCategory[]
+    categories: ProductCategory[],
+    areaTransportFeeIds: number[],
 }
 
 export interface ProductSummary {
@@ -45,7 +48,7 @@ export class ProductController {
         @inject(TYPES.PRODUCT_REPOSITORY) private productRepository: IProductRepository,
         @inject(TYPES.PRODUCT_PRICE_REPOSITORY) private productPriceRepository: IProductPriceRepository,
         @inject(TYPES.PRODUCT_IMAGE_CONTROLLER) private productImageController: ProductImageController,
-        @inject(TYPES.PRODUCT_CATEGORY_REPOSITORY) private productCategoryRepository: IProductCategoryRepository,
+        @inject(TYPES.AREA_TRANSPORT_FEE_REPOSITORY) private areaTransportFeeRepository: IAreaTransportFeeRepository,
     ){}
 
     async createProduct(args: CreateProductArgs) : Promise<ProductWithPricesAndImages> {
@@ -70,20 +73,20 @@ export class ProductController {
         
         let productPrices : ProductPrice[] = [];
         let categories : ProductCategory[] = [];
-        await this.connectionFactory.startTransaction([
+        let areaTransportFees : AreaTransportFee[] = []
+        await this.connectionFactory.startTransaction(this, [
             this.productRepository,
             this.productPriceRepository
         ], async () => {
             product = await this.productRepository.createProduct(product);
             productPrices = await this.productPriceRepository.createProductPrice(product.id!, pricesToCreate)
+            
             let categoryStr : string[] = []
             for (let i = 0; i < args.categories.length; i++) {
                 categoryStr.push(args.categories[i].category)
             }
             categories = await this.productRepository.createProductCategory(product.id!, categoryStr)
         })
-        console.log('categories')
-        console.log(categories)
         let avatar = await this.productImageController.fetchImageWithPath(product.avatarId)
         return {
             product: product,
@@ -146,9 +149,13 @@ export class ProductController {
         let currentProduct = await this.productRepository.fetchProductById(id)
         let prices = await this.productPriceRepository.fetchPricesByProductId(id)
         let createdProduct : ProductWithPricesAndImages | null = null
-        if (this.shouldUpdateProduct(currentProduct, args) || this.shouldUpdatePrice(prices, args)) {
-            await this.connectionFactory.startTransaction([this.productRepository, this.productPriceRepository], async () => {
+        if (this.shouldUpdateProduct(currentProduct, args) ||
+         this.shouldUpdatePrice(prices, args)) {
+            await this.connectionFactory.startTransaction(this, [this.productRepository, this.productPriceRepository], async () => {
                 await this.productRepository.deleteProduct(id)
+                // shouldn't need to do this as price is associated to immutable product, just like 
+                // transport fee.
+                // TODO: remove in the future
                 for (let i = 0; i < prices.length; i++) {
                     await this.productPriceRepository.deletePrice(prices[i].id!)
                 }
@@ -200,6 +207,19 @@ export class ProductController {
         }
         return false
     }
+
+    private shouldUpdateTransportFee(currentAreaTransportFee: AreaTransportFee[], args: CreateProductArgs) : boolean {
+        if (currentAreaTransportFee.length !== args.areaTransportFeeIds.length) {
+            return true;
+        } else {
+            for (let i = 0; i < currentAreaTransportFee.length; i++) {
+                if (args.areaTransportFeeIds.indexOf(currentAreaTransportFee[i].id) === -1) {
+                    return true
+                }
+            }
+            return false
+        }
+    } 
 
     private shouldUpdateProductCategories(currentProductCategories: ProductCategory[], args: CreateProductArgs) : boolean {
         if (currentProductCategories.length !== args.categories.length) {

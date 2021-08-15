@@ -8,22 +8,28 @@ module.exports.up = async function (next) {
   let client = await pool.connect();
   await client.query('BEGIN');
   try {
+    await client.query('DROP TYPE IF EXISTS bill_based_fee')
+    await client.query(`
+      CREATE TYPE bill_based_fee AS (
+        min_bill_value DECIMAL(11, 2),
+        fraction_of_bill DECIMAL(4, 4),
+        fraction_of_total_transport_fee DECIMAL(4, 4),
+        basic_fee DECIMAL(11, 2)
+      )
+    `)
     await client.query(`CREATE TABLE IF NOT EXISTS "area_transport_fee" (
       id SERIAL PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
       area_city TEXT NOT NULL,
       basic_fee DECIMAL(11, 2) DEFAULT NULL,
-      fraction_of_bill_fee DECIMAL(11, 2) DEFAULT NULL,
+      bill_based_fee bill_based_fee[],
       distance_fee_per_km DECIMAL(11, 2) DEFAULT NULL,
       origin_latitude DECIMAL(9, 6) NOT NULL,
       origin_longitude DECIMAL(9, 6) NOT NULL,
-      is_deleted BOOLEAN DEFAULT FALSE NOT NULL
+      is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
+      created_time TIMESTAMPTZ DEFAULT NOW() NOT NULL
     )`)
-    await client.query(`CREATE TABLE IF NOT EXISTS "product_area_transport_fee" (
-      product_id INTEGER REFERENCES "product"(id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL ,
-      transport_fee_id INTEGER REFERENCES "area_transport_fee"(id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL,
-      PRIMARY KEY (product_id, transport_fee_id)
-    )`)
-    await client.query(`CREATE INDEX IF NOT EXISTS product_area_transport_fee_index ON "product_area_transport_fee" (transport_fee_id)`)
+
     await client.query('COMMIT')
   } catch (exception) {
     await client.query(`ROLLBACK`)

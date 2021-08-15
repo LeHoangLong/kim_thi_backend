@@ -9,6 +9,12 @@ export class MockProductRepository implements IProductRepository {
     constructor() {
         this.products = new Map()
     }
+    async setAreaTransportFee(productId: number, areaTransportFeeId: number[]): Promise<void> {
+
+    }
+    fetchProductsByAreaTransportFee(areaTransportFeeId: number, limit: number, offset: number): Promise<Product[]> {
+        return this.fetchProducts(offset, limit - 1) // if use limit, test will loop forever
+    }
 
     fetchAllCategories(limit: number, offset: number): Promise<ProductCategory[]> {
         throw new Error("Method not implemented.");
@@ -53,8 +59,6 @@ export class MockProductRepository implements IProductRepository {
 
     async createProductCategory(productId: number, categories: string[]): Promise<ProductCategory[]> {
         let ret: ProductCategory[] = []
-        console.log('categories 1')
-        console.log(categories)
         for (let i = 0; i< categories.length; i++) {
             ret.push({ category: categories[i] })
         }

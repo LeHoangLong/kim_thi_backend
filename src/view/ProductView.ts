@@ -3,7 +3,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from '../types';
 import express, { CookieOptions } from 'express';
 import { ProductImageController } from '../controller/ImageController';
-import { ProductController } from '../controller/ProductController';
+import { CreateProductArgs, ProductController } from '../controller/ProductController';
 const config = require('../config').config;
 import { UnrecognizedEnumValue } from '../exception/UnrecognizedEnumValue';
 import { EProductUnit, EProductUnitToString, ProductPrice, stringToEProductUnit } from '../model/ProductPrice';
@@ -13,7 +13,7 @@ import { NotFound } from '../exception/NotFound';
 export class ProductView {
     constructor(
         @inject(TYPES.PRODUCT_IMAGE_CONTROLLER) private imageController : ProductImageController,
-        @inject(TYPES.PRODUCT_CONTROLLER) private productController: ProductController,
+        @inject(TYPES.PRODUCT_CONTROLLER) public productController: ProductController,
     ) {}
 
     async fetchProducts(request: express.Request, response: express.Response) {
@@ -50,15 +50,15 @@ export class ProductView {
                 alternativePrices: alternativePrices,
                 rank: request.body.rank,
                 categories: request.body.categories,
+                areaTransportFeeIds: request.body.areaTransportFeeIds,
             })
             productWithPrices.prices.forEach((e) => {
                 let unitStr = EProductUnitToString(e.unit)
                 e.unit = unitStr as any
             })
+
             return response.status(200).send(productWithPrices)
         } catch (exception) {
-            console.log('exception')
-            console.log(exception)
             if (exception instanceof NotFound) {
                 return response.status(404).send()
             } else {
@@ -82,23 +82,40 @@ export class ProductView {
     private convertPrice(body: any) : [ProductPrice[],ProductPrice] {
         let defaultPrice = {
             ...body.defaultPrice,
-            unit: stringToEProductUnit(body.defaultPrice.unit)
+            unit: stringToEProductUnit(body.defaultPrice.unit),
+            isDefault: true,
         }
 
         let alternativePrices : ProductPrice[] = []
         for (let i = 0; i < body.alternativePrices.length; i++) {
             alternativePrices.push({
                 ...body.alternativePrices[i],
-                unit: stringToEProductUnit(body.alternativePrices[i].unit)
+                unit: stringToEProductUnit(body.alternativePrices[i].unit),
+                isDefault: false,
             })
+            if (alternativePrices[i].id === undefined) {
+                alternativePrices[i].id = null
+            }
+
+            if (alternativePrices[i].isDeleted === undefined) {
+                alternativePrices[i].isDeleted = false
+            }
         }
+
+        if (defaultPrice.id === undefined) {
+            defaultPrice.id = null
+        }
+        if (defaultPrice.isDeleted === undefined) {
+            defaultPrice.isDeleted = false
+        }
+
         return [alternativePrices, defaultPrice]
     }
 
     async createProduct(request: express.Request, response: express.Response) {
         try {
             let [alternativePrices, defaultPrice] = this.convertPrice(request.body)
-            let productWithPrices = await this.productController.createProduct({
+            let args: CreateProductArgs = {
                 serialNumber: request.body.serialNumber,
                 name: request.body.name,
                 avatarId: request.body.avatar.id,
@@ -106,18 +123,23 @@ export class ProductView {
                 alternativePrices: alternativePrices,
                 rank: request.body.rank,
                 categories: request.body.categories,
-            })
+                areaTransportFeeIds: request.body.areaTransportFeeIds,
+            }
+
+            let productWithPrices = await this.productController.createProduct(args)
 
             productWithPrices.prices.forEach((e) => {
                 let unitStr = EProductUnitToString(e.unit)
                 e.unit = unitStr as any
             })
+
             return response.status(201).send(productWithPrices)
         } catch (exception) {
+            console.log('exception')
+            console.log(exception)
             if (exception instanceof UnrecognizedEnumValue) {
                 return response.status(400).send("Unsupported unit")
             } else {
-                console.log(exception)
                 return response.status(500).send(exception)
             }
         }
