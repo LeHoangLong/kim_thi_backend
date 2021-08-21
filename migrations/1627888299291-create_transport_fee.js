@@ -19,16 +19,37 @@ module.exports.up = async function (next) {
     `)
     await client.query(`CREATE TABLE IF NOT EXISTS "area_transport_fee" (
       id SERIAL PRIMARY KEY,
-      name TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
       area_city TEXT NOT NULL,
       basic_fee DECIMAL(11, 2) DEFAULT NULL,
       bill_based_fee bill_based_fee[],
       distance_fee_per_km DECIMAL(11, 2) DEFAULT NULL,
-      origin_latitude DECIMAL(9, 6) NOT NULL,
-      origin_longitude DECIMAL(9, 6) NOT NULL,
       is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
       created_time TIMESTAMPTZ DEFAULT NOW() NOT NULL
     )`)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "transport_origin" (
+        id SERIAL PRIMARY KEY,
+        address TEXT NOT NULL,
+        latitude DECIMAL(9, 6) NOT NULL,
+        longitude DECIMAL(9, 6) NOT NULL,
+        is_deleted BOOLEAN DEFAULT FALSE,
+        created_time TIMESTAMPTZ DEFAULT NOW() NOT NULL
+      )
+    `)
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "area_transport_fee_transport_origin" (
+        area_transport_fee_id INTEGER REFERENCES "area_transport_fee"(id) ON DELETE CASCADE ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED NOT NULL,
+        transport_origin_id INTEGER REFERENCES "transport_origin"(id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL,
+        PRIMARY KEY(area_transport_fee_id, transport_origin_id)
+      )
+    `)
+
+    await client.query(`
+        CREATE INDEX IF NOT EXISTS "area_transport_fee_transport_origin_index" 
+        ON "area_transport_fee_transport_origin"(transport_origin_id)
+    `)
 
     await client.query('COMMIT')
   } catch (exception) {
@@ -42,7 +63,19 @@ module.exports.up = async function (next) {
 
 module.exports.down = async function (next) {
   let pool = new Pool(config.postgres)
-  await pool.query(`DROP TABLE IF EXISTS "product_area_transport_fee"`)
-  await pool.query(`DROP TABLE IF EXISTS "area_transport_fee"`)
-  await pool.end()
+  let client = await pool.connect();
+  await client.query('BEGIN');
+  try {
+    await client.query(`DROP TABLE IF EXISTS "area_transport_fee_transport_origin"`)
+    await client.query(`DROP TABLE IF EXISTS "transport_origin"`)
+    await client.query(`DROP TABLE IF EXISTS "product_area_transport_fee"`)
+    await client.query(`DROP TABLE IF EXISTS "area_transport_fee"`)
+    await client.query('COMMIT')
+  } catch (exception) {
+    await client.query('ROLLBACK')
+    throw exception
+  } finally {
+    await client.release()
+    await pool.end()
+  }
 }

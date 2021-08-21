@@ -40,7 +40,7 @@ app.use('/backend/user', userRoutes)
 app.use('/backend/products', productRoutes)
 app.use('/backend/images', imageRoutes)
 app.use('/backend/categories', productCategoryRoutes)
-app.use('/backend/transportFeeRoutes', transportFeeRoutes)
+app.use('/backend/transport_fees', transportFeeRoutes)
 app.use('/', pageRoutes)
 
 

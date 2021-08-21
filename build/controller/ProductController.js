@@ -52,7 +52,6 @@ let ProductController = class ProductController {
             let productPrices = [];
             let categories = [];
             yield this.connectionFactory.startTransaction([
-                this,
                 this.productRepository,
                 this.productPriceRepository
             ], () => __awaiter(this, void 0, void 0, function* () {

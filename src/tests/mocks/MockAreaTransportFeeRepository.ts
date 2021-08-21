@@ -1,11 +1,48 @@
 import Decimal from "decimal.js";
-import { AreaTransportFee } from "../../model/AreaTransportFee";
-import { CreateFeeArgs, IAreaTransportFeeRepository } from "../../repository/IAreaTransportFeeRepository";
+import { NotFound } from "../../exception/NotFound";
+import { AreaTransportFee, TransportOrigin } from "../../model/AreaTransportFee";
+import { CreateFeeArgs, CreateTransportOriginArgs, IAreaTransportFeeRepository } from "../../repository/IAreaTransportFeeRepository";
 
 export class MockAreaTransportFeeRepository implements IAreaTransportFeeRepository {
     public fees : AreaTransportFee[] = []
+    public origins:TransportOrigin[] = []
     public feesByProductId : Map<number, number[]> = new Map()
     public counter: number = 0 
+
+    async fetchTransportOriginsById(ids: number[]): Promise<TransportOrigin[]> {
+        let ret : TransportOrigin[] = []
+        for (let i = 0; i < ids.length; i++) {
+            let origin = this.origins.find(e => e.id === ids[i])
+            if (origin)  {
+                ret.push(origin)
+            }
+        } 
+        return ret
+    }
+
+    async fetchNumberOfOrigins(): Promise<number> {
+        return this.origins.length
+    }
+
+    async fetchTransportOrigins(limit: number, offset: number, ignoreDeleted?: boolean): Promise<TransportOrigin[]> {
+        return this.origins.slice(offset, offset + limit)
+    }
+    
+    async createTransportOrigin(args: CreateTransportOriginArgs): Promise<TransportOrigin> {
+        this.origins.push({
+            id: this.origins.length,
+            isDeleted: false,
+            latitude: args.latitude,
+            longitude: args.longitude,
+            address: args.address,
+        })
+        return this.origins[this.origins.length - 1]
+    }
+
+    deleteTransportOriginById(id: number): Promise<number> {
+        throw new Error("Method not implemented.");
+    }
+
 
     async fetchNumberOfFees(): Promise<number> {
         let count = 0
@@ -25,8 +62,7 @@ export class MockAreaTransportFeeRepository implements IAreaTransportFeeReposito
             name: args.name,
             billBasedTransportFee: args.billBasedTransportFee,
             distanceFeePerKm: args.distanceFeePerKm,
-            originLatitude: args.originLatitude,
-            originLongitude: args.originLongitude,
+            transportOriginIds: args.transportOriginIds,
             isDeleted: args.isDeleted,
         }
         this.fees.push(newFee)
@@ -54,19 +90,11 @@ export class MockAreaTransportFeeRepository implements IAreaTransportFeeReposito
         return ret
     }
 
-    
-    async fetchAreaTransportFeesByProductId(productId: number, limit: number, offset: number, ignoreDeleted?: boolean): Promise<AreaTransportFee[]> {
-        let ret: AreaTransportFee[] = []
-        let ids = this.feesByProductId.get(productId)
-        if (ids) {
-            for (let i = offset; i < offset + limit && i < ids.length; i++) {
-                let fee = this.fees.find(e => e.id === ids![i])
-                if (fee && (!ignoreDeleted || fee.isDeleted)) {
-                    ret.push(fee)
-                }
-            }
+    async fetchFeeById(id: number) : Promise<AreaTransportFee> {
+        let fee = this.fees.find(e => e.id === id)
+        if (!fee) {
+            throw new NotFound("fee", "id", id.toString())
         }
-        return ret
+        return fee
     }
-    
 }

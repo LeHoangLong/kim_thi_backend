@@ -94,8 +94,7 @@ describe('Product view test', async function() {
             name: "fee_0",
             billBasedTransportFee: [],
             basicFee: new Decimal("10.05"),
-            originLatitude: new Decimal("0.000002"),
-            originLongitude: new Decimal("0.000001"),
+            transportOriginIds: [],
             isDeleted: false
         })
 
@@ -104,8 +103,7 @@ describe('Product view test', async function() {
             name: "fee_1",
             billBasedTransportFee: [],
             basicFee: new Decimal("10.05"),
-            originLatitude: new Decimal("1.000002"),
-            originLongitude: new Decimal("1.000001"),
+            transportOriginIds: [],
             isDeleted: false
         })
 
@@ -591,13 +589,13 @@ describe('Postgres product repository test', async function() {
             await productCategoryRepository.createProductCategory('cat_1')
             await productCategoryRepository.createProductCategory('cat_2')
             
+
             let areaTransportFeeRepository = myContainer.get<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY)
             areaTransportFee_1 = await areaTransportFeeRepository.createFee({
                 areaCity: "city_1",
                 name: "fee_1",
                 billBasedTransportFee: [],
-                originLatitude: new Decimal(0),
-                originLongitude: new Decimal(0),
+                transportOriginIds: [],
                 isDeleted: false
             })
 
@@ -618,7 +616,6 @@ describe('Postgres product repository test', async function() {
                     // await productRepository.setAreaTransportFee(product.id!, [areaTransportFee_1.id])
                 }
             }
-
 
             let factory = myContainer.get<PostgresConnectionFactory>(TYPES.CONNECTION_FACTORY)
         })

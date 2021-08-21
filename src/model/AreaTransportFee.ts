@@ -7,6 +7,14 @@ export interface BillBasedTransportFee {
     fractionOfTotalTransportFee?: Decimal,
 }
 
+export interface TransportOrigin {
+    id: number,
+    address: string,
+    latitude: Decimal,
+    longitude: Decimal,
+    isDeleted: boolean,
+}
+
 export interface AreaTransportFee {
     id: number,
     name: string,
@@ -14,7 +22,12 @@ export interface AreaTransportFee {
     basicFee?: Decimal,
     billBasedTransportFee: BillBasedTransportFee[],
     distanceFeePerKm?: Decimal,
-    originLatitude: Decimal,
-    originLongitude: Decimal,
+    transportOriginIds: number[],
     isDeleted: boolean,
+}
+
+export interface AreaTransportFeeSummary {
+    id: number,
+    name: string,
+    areaCity: string,
 }
