@@ -1,14 +1,11 @@
 import { inject, injectable } from "inversify";
 import { v4 } from "uuid";
-import { UnrecognizedEnumValue } from "../exception/UnrecognizedEnumValue";
 import { AreaTransportFee } from "../model/AreaTransportFee";
-import { Image } from "../model/Image";
 import { Product } from "../model/Product";
 import { ProductCategory } from "../model/ProductCategory";
-import { EProductUnit, ProductPrice } from "../model/ProductPrice";
+import { ProductPrice } from "../model/ProductPrice";
 import { IAreaTransportFeeRepository } from "../repository/IAreaTransportFeeRepository";
 import { IProductPriceRepository } from "../repository/IPriceRepository";
-import { IProductCategoryRepository } from "../repository/IProductCategoryRepository";
 import { IProductRepository, ProductSearchFilter } from "../repository/IProductRepository";
 import { IConnectionFactory } from "../services/IConnectionFactory";
 import { TYPES } from "../types";
@@ -70,7 +67,7 @@ export class ProductController {
         args.defaultPrice.isDefault = true
         pricesToCreate.forEach(e => e.isDefault = false)
         pricesToCreate.push(args.defaultPrice)
-        
+
         let productPrices : ProductPrice[] = [];
         let categories : ProductCategory[] = [];
         let areaTransportFees : AreaTransportFee[] = []
@@ -80,7 +77,7 @@ export class ProductController {
         ], async () => {
             product = await this.productRepository.createProduct(product);
             productPrices = await this.productPriceRepository.createProductPrice(product.id!, pricesToCreate)
-            
+
             let categoryStr : string[] = []
             for (let i = 0; i < args.categories.length; i++) {
                 categoryStr.push(args.categories[i].category)
@@ -153,7 +150,7 @@ export class ProductController {
          this.shouldUpdatePrice(prices, args)) {
             await this.connectionFactory.startTransaction(this, [this.productRepository, this.productPriceRepository], async () => {
                 await this.productRepository.deleteProduct(id)
-                // shouldn't need to do this as price is associated to immutable product, just like 
+                // shouldn't need to do this as price is associated to immutable product, just like
                 // transport fee.
                 // TODO: remove in the future
                 for (let i = 0; i < prices.length; i++) {
@@ -219,7 +216,7 @@ export class ProductController {
             }
             return false
         }
-    } 
+    }
 
     private shouldUpdateProductCategories(currentProductCategories: ProductCategory[], args: CreateProductArgs) : boolean {
         if (currentProductCategories.length !== args.categories.length) {
