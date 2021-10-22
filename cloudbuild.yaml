@@ -1,0 +1,43 @@
+steps:
+  - name: 'gcr.io/cloud-builders/git'
+    secretEnv: ['SSH_KEY']
+    entrypoint: 'bash'
+    args:
+      - -c
+      - |
+        ssh-keyscan github.com >> /root/.ssh/known_hosts
+        echo "$$SSH_KEY" >> /root/.ssh/id_rsa
+        chmod 400 /root/.ssh/id_rsa
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+  - name: 'gcr.io/cloud-builders/git'
+    args:
+      - submodule
+      - init
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+  - name: 'gcr.io/cloud-builders/git'
+    args:
+      - submodule
+      - update
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - -t
+      - gcr.io/kimthi/github.com/lehoanglong/kim_thi_backend:$COMMIT_SHA
+      - .
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/kimthi/github.com/lehoanglong/kim_thi_backend:$COMMIT_SHA']
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: ['run', 'deploy', 'kim-thi', '--image', 'gcr.io/kimthi/github.com/lehoanglong/kim_thi_backend:$COMMIT_SHA', '--region', 'asia-southeast1']
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/878404965327/secrets/SSH_KEY/versions/1
+      env: 'SSH_KEY'

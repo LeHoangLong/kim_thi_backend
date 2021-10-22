@@ -6,7 +6,8 @@
   "scripts": {
     "test": "mocha --exit -r ts-node/register --file ./src/setupTest.ts src/tests/**/*.test.ts",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "prod": "tsc && node ./build/src/index.js"
+    "build": "tsc",
+    "prod": "node ./build/src/index.js"
   },
   "author": "le.hoang.long@outlook.com",
   "license": "",
