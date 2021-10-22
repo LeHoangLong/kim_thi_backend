@@ -10,4 +10,6 @@ COPY . .
 
 RUN npm run build
 
+ENV PORT 80
+
 CMD npm start
