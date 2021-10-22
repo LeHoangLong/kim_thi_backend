@@ -10,6 +10,4 @@ COPY . .
 
 RUN npm run build
 
-ENV PORT 80
-
-CMD npm start
+CMD sleep infinity
