@@ -37,7 +37,7 @@ steps:
     args:
       - -c
       - |
-        echo $PORT
+        echo "$PORT"
 
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
