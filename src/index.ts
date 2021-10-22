@@ -16,7 +16,7 @@ var migrate = require('migrate')
 var path = require('path')
 
 const app = express();
-const port = 8080;
+const port = 80;
 const jwtAuthentication = myContainer.get<JwtAuthenticator>(TYPES.JWT_AUTHENTICATOR);
 
 app.set('view engine', 'ejs');
