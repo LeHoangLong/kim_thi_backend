@@ -35,7 +35,7 @@ steps:
     args: ['push', 'gcr.io/kimthi/github.com/lehoanglong/kim_thi_backend:$COMMIT_SHA']
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
-    args: ['run', 'deploy', 'kim-thi', '--image', 'gcr.io/kimthi/github.com/lehoanglong/kim_thi_backend:$COMMIT_SHA', '--region', 'asia-southeast1']
+    args: ['run', 'deploy', 'kim-thi-backend', '--image', 'gcr.io/kimthi/github.com/lehoanglong/kim_thi_backend:$COMMIT_SHA', '--region', 'asia-southeast1']
 
 availableSecrets:
   secretManager:
