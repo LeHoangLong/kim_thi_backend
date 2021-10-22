@@ -12,4 +12,4 @@ RUN npm run build
 
 ENV PORT 80
 
-CMD sleep infinity
+CMD npm run prod
