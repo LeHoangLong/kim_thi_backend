@@ -12,6 +12,7 @@ import { myContainer } from './inversify.config';
 import { JwtAuthenticator } from './middleware/JwtAuthenticator';
 import fileUpload from 'express-fileupload'
 
+console.log('start asdasdasdasdsadas')
 var migrate = require('migrate')
 var path = require('path')
 
@@ -55,8 +56,11 @@ app.listen(port, async () => {
       stateStore: './migrations-state/.migrate-development'
     }, function(err: any, set: any) {
       if (err) {
+        console.log('err')
+        console.log(err)
           throw err;
       } else {
+          console.log('migrate up')
           set.up(function() {
             resolve(true)
           });

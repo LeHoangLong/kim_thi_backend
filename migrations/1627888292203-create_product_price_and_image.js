@@ -3,6 +3,7 @@
 const { Client, Pool } = require("pg");
 const config = require('../src/config').config
 
+console.log('migration 2')
 module.exports.up = async function () {
     let pool = new Pool(config.postgres)
     let client = await pool.connect();

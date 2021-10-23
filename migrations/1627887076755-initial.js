@@ -6,6 +6,7 @@ const { NotFound } = require("../build/src/exception/NotFound");
 const { Client, Pool } = require("pg");
 const config = require('../src/config').config
 
+console.log('initial migration')
 module.exports.up = async function (next) {
     let pool = new Pool(config.postgres)
     let client = await pool.connect();
