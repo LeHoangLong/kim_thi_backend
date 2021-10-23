@@ -44,6 +44,7 @@
     "express-fileupload": "^1.2.1",
     "fs": "0.0.1-security",
     "jsonwebtoken": "^8.5.1",
+    "migrate": "^1.7.0",
     "mocha": "^8.4.0",
     "node-geocoder": "^3.27.0",
     "pg": "^8.6.0",
