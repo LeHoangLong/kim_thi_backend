@@ -8,6 +8,7 @@ const config = require('../src/config').config
 
 console.log('initial migration')
 module.exports.up = async function (next) {
+    console.log('initial migration up')
     let pool = new Pool(config.postgres)
     let client = await pool.connect();
     await client.query('BEGIN');
@@ -62,6 +63,7 @@ module.exports.up = async function (next) {
 }
 
 module.exports.down = async function (next) {
+  console.log('initial migration down')
   let pool = new Pool(config.postgres)
   let client = await pool.connect();
   await client.query('DROP TABLE IF EXISTS "permission"');

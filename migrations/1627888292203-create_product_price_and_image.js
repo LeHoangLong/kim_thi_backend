@@ -5,6 +5,7 @@ const config = require('../src/config').config
 
 console.log('migration 2')
 module.exports.up = async function () {
+    console.log('migration 2 up')
     let pool = new Pool(config.postgres)
     let client = await pool.connect();
     await client.query('BEGIN');
@@ -74,15 +75,19 @@ module.exports.up = async function () {
         `)
         await client.query('COMMIT');
     } catch (exception) {
+        console.log('migration 2 error')
+        console.log(exception)
         await client.query('ROLLBACK');
         throw exception
     }  finally {
+        console.log('migration 2 completed')
         await client.release()
         await pool.end()
     }
 }
 
 module.exports.down = async function (next) {
+    console.log('migration 2 down')
     let pool = new Pool(config.postgres)
     let client = await pool.connect();
     await client.query('BEGIN');
