@@ -22,4 +22,14 @@ const config = {
         "apiKey": 'AIzaSyA30V1U6ANKqisXXm4V6hIaewF6qbyZSkI'
     }
 }
+
+if (!process.env.CLOUD) {
+    config.postgres = {
+        host: '/cloudsql/kimthi:asia-southeast1:kim-thi-main',
+        user: 'postgres',
+        password: 'kimthi1346',
+        database: 'kimthi',
+    }
+}
+
 exports.config = config
