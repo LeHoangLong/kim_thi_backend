@@ -9,6 +9,8 @@ const config = require('../src/config').config
 console.log('initial migration')
 module.exports.up = async function (next) {
     console.log('initial migration up')
+    console.log('config.postgres')
+    console.log(config.postgres)
     let pool = new Pool(config.postgres)
     console.log('initial migration connecting')
     let client = await pool.connect();
