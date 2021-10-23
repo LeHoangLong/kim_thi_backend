@@ -8,7 +8,7 @@ module.exports.up = async function (next) {
   let client = await pool.connect();
   await client.query('BEGIN');
   try {
-    await client.query('DROP TYPE IF EXISTS bill_based_fee')
+    await client.query('DROP TYPE IF EXISTS bill_based_fee CASCADE')
     await client.query(`
       CREATE TYPE bill_based_fee AS (
         min_bill_value DECIMAL(11, 2),

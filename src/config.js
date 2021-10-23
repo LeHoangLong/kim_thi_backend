@@ -23,7 +23,7 @@ const config = {
     }
 }
 
-if (!process.env.CLOUD) {
+if (process.env.CLOUD) {
     config.postgres = {
         host: '/cloudsql/kimthi:asia-southeast1:kim-thi-main',
         user: 'postgres',
