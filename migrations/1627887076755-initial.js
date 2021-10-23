@@ -67,7 +67,8 @@ module.exports.up = async function (next) {
       await pool.end()
     }
 
-    next()
+    console.log('next migration')
+    await next()
 }
 
 module.exports.down = async function (next) {

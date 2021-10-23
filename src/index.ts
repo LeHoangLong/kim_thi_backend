@@ -62,6 +62,7 @@ app.listen(port, async () => {
       } else {
           console.log('migrate up')
           set.up('1627888299291-create_transport_fee', function() {
+            console.log('migration finished')
             resolve(true)
           });
       }
