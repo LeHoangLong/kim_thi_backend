@@ -50,24 +50,26 @@ app.use(function (error: any, req: express.Request, res: express.Response, next:
   res.status(500).send(error)
 })
 
-app.listen(port, async () => {
-  await new Promise((resolve, reject) => {
-    migrate.load({
-      stateStore: './migrations-state/.migrate-development'
-    }, function(err: any, set: any) {
-      if (err) {
-        console.log('err')
-        console.log(err)
-          throw err;
-      } else {
-          console.log('migrate up')
-          set.up('1627888299291-create_transport_fee', function() {
-            console.log('migration finished')
-            resolve(true)
-          });
-      }
-    })
-  })
+  app.listen(port, async () => {
+    if (!process.env.CLOUD) {
+      await new Promise((resolve, reject) => {
+        migrate.load({
+          stateStore: './migrations-state/.migrate-development'
+        }, function(err: any, set: any) {
+          if (err) {
+            console.log('err')
+            console.log(err)
+              throw err;
+          } else {
+              console.log('migrate up')
+              set.up('1627888299291-create_transport_fee', function() {
+                console.log('migration finished')
+                resolve(true)
+              });
+          }
+        })
+      })
 
-  return console.log(`server is listening on ${port}`);
-});
+      return console.log(`server is listening on ${port}`);
+    }
+  });
