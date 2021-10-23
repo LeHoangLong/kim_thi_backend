@@ -66,6 +66,8 @@ module.exports.up = async function (next) {
       await client.release()
       await pool.end()
     }
+
+    next()
 }
 
 module.exports.down = async function (next) {
