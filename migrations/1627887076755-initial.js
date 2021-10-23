@@ -10,7 +10,9 @@ console.log('initial migration')
 module.exports.up = async function (next) {
     console.log('initial migration up')
     let pool = new Pool(config.postgres)
+    console.log('initial migration connecting')
     let client = await pool.connect();
+    console.log('initial migration connected')
     await client.query('BEGIN');
     try {
       await client.query(`
