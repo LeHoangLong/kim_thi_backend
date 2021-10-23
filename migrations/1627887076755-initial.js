@@ -51,12 +51,14 @@ module.exports.up = async function (next) {
           throw exception;
         }
       }
+      console.log('initial migration success')
       await client.query('COMMIT');
     } catch (exception) {
       console.log('rollback')
       await client.query('ROLLBACK');
       throw exception;
     } finally {
+      console.log('initial migration done')
       await client.release()
       await pool.end()
     }
