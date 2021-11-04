@@ -38,7 +38,7 @@ import { CreateProductArgs, ProductController, ProductWithPricesAndImages } from
 chai.use(chaiAsPromised);
 chai.use(chaiSubset)
 
-describe('Product view test', async function() {
+describe('Product view and controller test', async function() {
     let context : any = {}
     this.beforeEach(async function() {
         var now = new Date();
@@ -118,6 +118,28 @@ describe('Product view test', async function() {
         myContainer.rebind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).to(BinaryRepositoryFileSystem)
         myContainer.rebind<IProductCategoryRepository>(TYPES.PRODUCT_CATEGORY_REPOSITORY).to(ProductCategoryRepositoryPostgres)
         myContainer.rebind<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY).to(AreaTransportFeeRepositoryPostgres)
+    })
+
+    it('Controller update product with different wholesale price', async function() {
+        let controller = myContainer.get<ProductController>(TYPES.PRODUCT_CONTROLLER)
+        let repository = myContainer.get<IProductRepository>(TYPES.PRODUCT_REPOSITORY)
+        let priceRepository = myContainer.get<IProductPriceRepository>(TYPES.PRODUCT_PRICE_REPOSITORY)
+        let product = await repository.fetchProductById(0)
+        let defaultPrice = await priceRepository.fetchDefaultPriceByProductId(0)
+        let otherPrices = await priceRepository.fetchPricesByProductId(0)
+        let index = otherPrices.findIndex(e => e.isDefault)
+        if (index !== -1) {
+            otherPrices.splice(index, 1)
+        }
+        let createSpy = sinon.spy(repository, 'createProduct')
+        await controller.updateProduct(0, {
+            ...product,
+            defaultPrice: defaultPrice,
+            alternativePrices: otherPrices,
+            categories: [],
+            wholesalePrices: ['new wholesale price']
+        })
+        sinon.assert.calledOnce(createSpy)
     })
 
     it('Fetch multiple products', async function() {
@@ -302,13 +324,11 @@ describe('Product view test', async function() {
                 }],
                 rank: 0,
                 categories: [{category: "cat_1"}, {category: "cat_2"}],
-                areaTransportFeeIds: [0, 1],
                 wholesalePrices: ['wholesale_price_1'],
             }
             chai.expect(args.defaultPrice).to.be.eql(expectedCreateArgs.defaultPrice)
             chai.expect(args.alternativePrices).to.be.eql(expectedCreateArgs.alternativePrices)
             chai.expect(args.categories).to.be.eql(expectedCreateArgs.categories)
-            chai.expect(args.areaTransportFeeIds).to.be.eql(expectedCreateArgs.areaTransportFeeIds)
             chai.expect(args).to.be.eql(expectedCreateArgs)
             return oldFn.call(productView.productController, args)
         })

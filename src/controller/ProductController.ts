@@ -21,7 +21,6 @@ export interface CreateProductArgs {
     alternativePrices: ProductPrice[],
     rank: number,
     categories: ProductCategory[],
-    areaTransportFeeIds: number[],
     wholesalePrices: string[],
 }
 
@@ -159,6 +158,7 @@ export class ProductController {
                     await this.productPriceRepository.deletePrice(prices[i].id!)
                 }
             })
+
             createdProduct = await this.createProduct(args)
         }
 
@@ -182,10 +182,24 @@ export class ProductController {
     }
 
     private shouldUpdateProduct(currentProductDetail: Product, args: CreateProductArgs) : boolean {
+        let wholesalePricesDifferent = false
+        if (currentProductDetail.wholesalePrices.length !== args.wholesalePrices.length) {
+            wholesalePricesDifferent = true
+        } else {
+            for (let i = 0; i < currentProductDetail.wholesalePrices.length; i++) {
+                if (args.wholesalePrices.indexOf(currentProductDetail.wholesalePrices[i]) === -1) {
+                    wholesalePricesDifferent = true
+                    break
+                }
+            }
+        }
+
         if (currentProductDetail.name !== args.name ||
              currentProductDetail.serialNumber !== args.serialNumber ||
              currentProductDetail.avatarId !== args.avatarId ||
-             currentProductDetail.rank !== args.rank) {
+             currentProductDetail.rank !== args.rank ||
+             wholesalePricesDifferent
+        ) {
             return true
         }
         return false
@@ -205,19 +219,6 @@ export class ProductController {
             }
         }
         return false
-    }
-
-    private shouldUpdateTransportFee(currentAreaTransportFee: AreaTransportFee[], args: CreateProductArgs) : boolean {
-        if (currentAreaTransportFee.length !== args.areaTransportFeeIds.length) {
-            return true;
-        } else {
-            for (let i = 0; i < currentAreaTransportFee.length; i++) {
-                if (args.areaTransportFeeIds.indexOf(currentAreaTransportFee[i].id) === -1) {
-                    return true
-                }
-            }
-            return false
-        }
     }
 
     private shouldUpdateProductCategories(currentProductCategories: ProductCategory[], args: CreateProductArgs) : boolean {

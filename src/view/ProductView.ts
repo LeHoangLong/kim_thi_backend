@@ -35,6 +35,21 @@ export class ProductView {
         response.status(200).send(numberOfProducts.toString())
     }
 
+    private _validateCreateOrUpdateInput(request: express.Request, response: express.Response) :  boolean {
+        let productId = parseInt(request.params.id)
+        let valid = true
+        if (isNaN(productId)) {
+            valid = false
+        }
+
+        if (request.params.serialNumber === undefined) {
+            valid = false
+        }        
+
+
+        return true
+    }
+
     async updateProduct(request: express.Request, response: express.Response) {
         try {
             let productId = parseInt(request.params.id)
@@ -50,7 +65,6 @@ export class ProductView {
                 alternativePrices: alternativePrices,
                 rank: request.body.rank,
                 categories: request.body.categories,
-                areaTransportFeeIds: request.body.areaTransportFeeIds,
                 wholesalePrices: request.body.wholesalePrices?? [],
             })
             productWithPrices.prices.forEach((e) => {
@@ -124,7 +138,6 @@ export class ProductView {
                 alternativePrices: alternativePrices,
                 rank: request.body.rank,
                 categories: request.body.categories,
-                areaTransportFeeIds: request.body.areaTransportFeeIds,
                 wholesalePrices: request.body.wholesalePrices,
             }
 
