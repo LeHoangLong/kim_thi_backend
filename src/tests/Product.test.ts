@@ -129,7 +129,8 @@ describe('Product view test', async function() {
             isDeleted: false,
             avatarId: '0',
             createdTimeStamp: context.now,
-            rank: 0
+            rank: 0,
+            wholesalePrices: ['wholesale_price_1']
         })
         await myContainer.get<IProductRepository>(TYPES.PRODUCT_REPOSITORY).createProduct({
             id: 3,
@@ -138,12 +139,41 @@ describe('Product view test', async function() {
             isDeleted: false,
             avatarId: '0',
             createdTimeStamp: context.now,
-            rank: 0
+            rank: 0,
+            wholesalePrices: ['wholesale_price_1'],
         })
         let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
         await productView.fetchProducts(context.request as Request, context.response as Response)
         sinon.assert.calledOnceWithExactly(context.statusSpy, 200)
-        sinon.assert.calledOnceWithExactly(context.sendSpy, [
+        chai.expect(context.sendSpy.getCall(0).args[0][0]).to.eql({
+            product: {
+                id: 2,
+                serialNumber: '2',
+                name: 'name_2',
+                isDeleted: false,
+                avatarId: '0',
+                createdTimeStamp: context.now,
+                rank: 0,
+                wholesalePrices: ['wholesale_price_1']
+            },
+            defaultPrice: {
+              id: 0,
+              unit: 0,
+              isDeleted: false,
+              defaultPrice: 100,
+              priceLevels: [],
+              isDefault: true
+            },
+            avatar: {
+                id: '0',
+                isDeleted: false,
+                createdTimeStamp: context.now,
+                path: 'product_images_0'
+            }
+        },)
+        sinon.assert.calledOnce(context.sendSpy)
+        
+        chai.expect(context.sendSpy.getCall(0).args[0]).to.eql([
             {
                 product: {
                     id: 2,
@@ -152,7 +182,8 @@ describe('Product view test', async function() {
                     isDeleted: false,
                     avatarId: '0',
                     createdTimeStamp: context.now,
-                    rank: 0
+                    rank: 0,
+                    wholesalePrices: ['wholesale_price_1']
                 },
                 defaultPrice: {
                   id: 0,
@@ -177,7 +208,8 @@ describe('Product view test', async function() {
                     isDeleted: false,
                     avatarId: '0',
                     createdTimeStamp: context.now,
-                    rank: 0
+                    rank: 0,
+                    wholesalePrices: ['wholesale_price_1'],
                 },
                 defaultPrice: {
                   id: 0,
@@ -236,6 +268,7 @@ describe('Product view test', async function() {
                 rank: 0,
                 categories: [{category: "cat_1"}, {category: "cat_2"}],
                 areaTransportFeeIds: [0, 1],
+                wholesalePrices: ['wholesale_price_1',],
             }
         }
         
@@ -270,6 +303,7 @@ describe('Product view test', async function() {
                 rank: 0,
                 categories: [{category: "cat_1"}, {category: "cat_2"}],
                 areaTransportFeeIds: [0, 1],
+                wholesalePrices: ['wholesale_price_1'],
             }
             chai.expect(args.defaultPrice).to.be.eql(expectedCreateArgs.defaultPrice)
             chai.expect(args.alternativePrices).to.be.eql(expectedCreateArgs.alternativePrices)
@@ -285,7 +319,7 @@ describe('Product view test', async function() {
         // mock price repo will return a predefined set of prices
         // thus the returned values here dont match
         // but it is ok, we only need to check that prices are actually returned
-        sinon.assert.calledOnceWithMatch(context.sendSpy, {
+        chai.expect(context.sendSpy.getCall(0).args[0]).to.eql({
             product: {
                 id: 0,
                 serialNumber: 'serial_number',
@@ -293,7 +327,8 @@ describe('Product view test', async function() {
                 isDeleted: false,
                 avatarId: '0',
                 createdTimeStamp: context.now,
-                rank: 0
+                rank: 0,
+                wholesalePrices: ['wholesale_price_1',],
             },
             prices: [
               {
@@ -379,7 +414,8 @@ describe('Product view test', async function() {
               isDeleted: false,
               avatarId: '0',
               createdTimeStamp: context.now,
-              rank: 0
+              rank: 0,
+              wholesalePrices: ['wholesale_price_1',],
             },
             prices: [
               {
@@ -437,7 +473,8 @@ describe('Product view test', async function() {
             isDeleted: false,
             avatarId: 'test_avatar',
             createdTimeStamp: context.now,
-            rank: undefined
+            rank: undefined,
+            wholesalePrices: [],
         })
 
         chai.expect(context.sendSpy.getCall(0).args[0].prices).to.be.eql([
@@ -475,7 +512,7 @@ describe('Product view test', async function() {
         chai.expect(context.sendSpy.getCall(0).args[0].categories).to.be.eql([ { category: 'cat_2' }, { category: 'cat_3' } ])
     })
 
-    it('update not found product return 404', async function() {
+    it('Update not found product return 404', async function() {
         let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
         context.request.body.categories = ['cat_2', 'cat_3']
         context.request.body.prices = []
@@ -497,13 +534,14 @@ describe('Product view test', async function() {
 })
 
 describe('Postgres product repository test', async function() {
-    describe('create product', async function() {
+    describe('Create product', async function() {
         let product : Product
         let productRepository: IProductRepository
+        let image: Image
         beforeEach(async function() {
             productRepository = myContainer.get<IProductRepository>(TYPES.PRODUCT_REPOSITORY)
             let imageRepository = myContainer.get<IImageRepository>(TYPES.IMAGE_REPOSITORY)
-            let image = await imageRepository.createImage()
+            image = await imageRepository.createImage()
             product = await productRepository.createProduct({
                 id: null,
                 serialNumber: '',
@@ -512,6 +550,7 @@ describe('Postgres product repository test', async function() {
                 avatarId: image.id,
                 createdTimeStamp: null,
                 rank: 0,
+                wholesalePrices: ['wholesale_price_1', 'wholesale_price_2'],
             })
             
         })
@@ -523,6 +562,16 @@ describe('Postgres product repository test', async function() {
             await productRepository.createProductCategory(product.id!, ['cat_1', 'cat_2'])
             let categories = await productRepository.fetchProductCategories(product.id!)
             chai.expect(categories.length).to.eql(2)
+            chai.expect(product).to.eql({
+                id: product.id,
+                serialNumber: '',
+                name: 'product_1',
+                isDeleted: false,
+                avatarId: image.id,
+                createdTimeStamp: product.createdTimeStamp,
+                rank: 0,
+                wholesalePrices: ['wholesale_price_1', 'wholesale_price_2'],
+            })
             
         })
     
@@ -608,6 +657,7 @@ describe('Postgres product repository test', async function() {
                     avatarId: image.id,
                     createdTimeStamp: null,
                     rank: 0,
+                    wholesalePrices: ['wholesale_price_1']
                 })
                 if (i % 2 == 1) {
                     await productRepository.createProductCategory(product.id!, ['cat_1'])
@@ -743,6 +793,7 @@ describe('Postgres product repository test', async function() {
                     avatarId: image.id,
                     createdTimeStamp: null,
                     rank: 0,
+                    wholesalePrices: ['wholesale_price_1'],
                 })
             }
         })

@@ -6,4 +6,5 @@ export interface Product {
     avatarId: string,
     createdTimeStamp: Date | null,
     rank: number, // rank is to indicate which product to prioritize for showing
+    wholesalePrices: string[],
 }

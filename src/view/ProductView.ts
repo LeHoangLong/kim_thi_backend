@@ -51,6 +51,7 @@ export class ProductView {
                 rank: request.body.rank,
                 categories: request.body.categories,
                 areaTransportFeeIds: request.body.areaTransportFeeIds,
+                wholesalePrices: request.body.wholesalePrices?? [],
             })
             productWithPrices.prices.forEach((e) => {
                 let unitStr = EProductUnitToString(e.unit)
@@ -124,6 +125,7 @@ export class ProductView {
                 rank: request.body.rank,
                 categories: request.body.categories,
                 areaTransportFeeIds: request.body.areaTransportFeeIds,
+                wholesalePrices: request.body.wholesalePrices,
             }
 
             let productWithPrices = await this.productController.createProduct(args)

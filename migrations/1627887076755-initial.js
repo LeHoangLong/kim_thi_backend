@@ -6,15 +6,9 @@ const { NotFound } = require("../build/src/exception/NotFound");
 const { Client, Pool } = require("pg");
 const config = require('../src/config').config
 
-console.log('initial migration')
 module.exports.up = async function (next) {
-    console.log('initial migration up')
-    console.log('config.postgres')
-    console.log(config.postgres)
     let pool = new Pool(config.postgres)
-    console.log('initial migration connecting')
     let client = await pool.connect();
-    console.log('initial migration connected')
     await client.query('BEGIN');
     try {
       await client.query(`
@@ -55,24 +49,19 @@ module.exports.up = async function (next) {
           throw exception;
         }
       }
-      console.log('initial migration success')
       await client.query('COMMIT');
     } catch (exception) {
-      console.log('rollback')
       await client.query('ROLLBACK');
       throw exception;
     } finally {
-      console.log('initial migration done')
       await client.release()
       await pool.end()
     }
 
-    console.log('next migration')
     await next()
 }
 
 module.exports.down = async function (next) {
-  console.log('initial migration down')
   let pool = new Pool(config.postgres)
   let client = await pool.connect();
   await client.query('DROP TABLE IF EXISTS "permission"');

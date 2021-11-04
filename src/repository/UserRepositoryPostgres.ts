@@ -45,7 +45,7 @@ export class UserRepositoryPostgres implements IUserRepository {
                 
             await connection.query('COMMIT');
             return user;
-        } catch (error) {
+        } catch (error: any) {
             await connection.query('ROLLBACK');
             if (error.message === 'USERNAME_ALREADY_EXISTS') {
                 throw new DuplicateResource("user", "username", username);

@@ -94,6 +94,7 @@ export class MockProductRepository implements IProductRepository {
             avatarId: '0',
             createdTimeStamp: new Date(),
             rank: 0,
+            wholesalePrices: ['wholesale_price_1',]
         }
     }
 
@@ -108,6 +109,7 @@ export class MockProductRepository implements IProductRepository {
                 avatarId: '0',
                 createdTimeStamp: new Date(),
                 rank: 0,
+                wholesalePrices: ['wholesale_price_1',]
             })
         }
         return ret

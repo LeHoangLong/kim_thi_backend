@@ -19,17 +19,14 @@ beforeEach(async () => {
             stateStore: './migrations-state/.migrate-test'
         }, function(err: any, set: any) {
             if (err) {
-                console.log(err);
                 throw err;
             } else {
                 set.down(function(err: any) {
                     if (err) {
-                        console.log(err);
                         throw err;
                     }
                     set.up(function(err: any) {
                         if (err) {
-                            console.log(err);
                             throw err;
                         }
                         resolve(true)

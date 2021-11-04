@@ -22,6 +22,7 @@ export interface CreateProductArgs {
     rank: number,
     categories: ProductCategory[],
     areaTransportFeeIds: number[],
+    wholesalePrices: string[],
 }
 
 export interface ProductSummary {
@@ -61,6 +62,7 @@ export class ProductController {
             avatarId: args.avatarId,
             createdTimeStamp: new Date(),
             rank: args.rank,
+            wholesalePrices: args.wholesalePrices,
         }
 
         let pricesToCreate = args.alternativePrices

@@ -3,9 +3,7 @@
 const { Pool } = require("pg");
 const config = require('../src/config').config
 
-console.log('migration 3')
 module.exports.up = async function (next) {
-  console.log('migration 3 up')
   let pool = new Pool(config.postgres)
   let client = await pool.connect();
   await client.query('BEGIN');
@@ -55,19 +53,15 @@ module.exports.up = async function (next) {
 
     await client.query('COMMIT')
   } catch (exception) {
-    console.log('migration 3 error')
-    console.log(exception)
     await client.query(`ROLLBACK`)
     throw exception
   } finally {
-    console.log('migration 3 completed')
     await client.release()
     await pool.end()
   }
 }
 
 module.exports.down = async function (next) {
-  console.log('migration 3 down')
   let pool = new Pool(config.postgres)
   let client = await pool.connect();
   await client.query('BEGIN');

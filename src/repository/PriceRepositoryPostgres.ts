@@ -53,7 +53,7 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
                 ret.push(price)
             }
             return ret
-        } catch (exception) {
+        } catch (exception: any) {
             throw exception.message
         }
     }
@@ -88,7 +88,7 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
                 }
                 return ret
             }
-        } catch (exception) {
+        } catch (exception: any) {
             throw exception.message
         }
     }
@@ -132,7 +132,7 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
     
                 return price
             }
-        } catch (exception) {
+        } catch (exception: any) {
             throw exception.message
         }
     }
@@ -147,7 +147,7 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
                 UPDATE "product_price_level" SET is_deleted = TRUE WHERE product_price_id = $1
             `, [id])
             return result.rowCount
-        } catch (exception) {
+        } catch (exception: any) {
             throw exception.message
         }
     }

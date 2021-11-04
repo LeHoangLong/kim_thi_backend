@@ -3,9 +3,7 @@
 const { Client, Pool } = require("pg");
 const config = require('../src/config').config
 
-console.log('migration 2')
 module.exports.up = async function () {
-    console.log('migration 2 up')
     let pool = new Pool(config.postgres)
     let client = await pool.connect();
     await client.query('BEGIN');
@@ -25,7 +23,8 @@ module.exports.up = async function () {
                 is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
                 avatar_id TEXT REFERENCES image(id) ON DELETE NO ACTION ON UPDATE CASCADE NOT NULL,
                 rank INTEGER NOT NULL CHECK(rank >= 0),
-                created_time TIMESTAMPTZ DEFAULT NOW() NOT NULL
+                created_time TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+                wholesale_prices TEXT[] DEFAULT '{}' NOT NULL
             )
         `)
 
@@ -75,19 +74,15 @@ module.exports.up = async function () {
         `)
         await client.query('COMMIT');
     } catch (exception) {
-        console.log('migration 2 error')
-        console.log(exception)
         await client.query('ROLLBACK');
         throw exception
     }  finally {
-        console.log('migration 2 completed')
         await client.release()
         await pool.end()
     }
 }
 
 module.exports.down = async function (next) {
-    console.log('migration 2 down')
     let pool = new Pool(config.postgres)
     let client = await pool.connect();
     await client.query('BEGIN');

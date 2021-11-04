@@ -79,7 +79,7 @@ describe('Postgres connection factory test', async function() {
                     throw new Error("abc")
                 })    
             })
-        } catch (exception) {
+        } catch (exception: any) {
             chai.expect(exception.toString()).to.equal("Error: abc")
             exceptionRaise = 1
         }
@@ -100,7 +100,7 @@ describe('Postgres connection factory test', async function() {
                 })    
                 throw new Error("abc")
             })
-        } catch (exception) {
+        } catch (exception: any) {
             chai.expect(exception.toString()).to.equal("Error: abc")
             exceptionRaise = 1
         }

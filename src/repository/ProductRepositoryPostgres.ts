@@ -22,18 +22,41 @@ export class ProductRepositoryPostgres implements IProductRepository{
     async createProduct(product: Product): Promise<Product> {
         let ret : Product
         await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
-            var results = await connection.query(`
+            let query = SQL`
                 INSERT INTO "product" (
-                    serial_number, name, rank, avatar_id
+                    serial_number, 
+                    name, 
+                    rank, 
+                    avatar_id, 
+                    wholesale_prices
                 ) VALUES (
-                    $1, $2, $3, $4
-                ) RETURNING id, created_time, is_deleted
-            `, [ product.serialNumber, product.name, product.rank, product.avatarId ]);
+                    ${product.serialNumber}, 
+                    ${product.name}, 
+                    ${product.rank}, 
+                    ${product.avatarId}, 
+                    ARRAY[
+            `
+
+            for (let i = 0; i < product.wholesalePrices.length; i++) {
+                query.append(SQL`
+                    ${product.wholesalePrices[i]}
+                `)
+                if (i !== product.wholesalePrices.length - 1) {
+                    query.append(',')
+                }
+            }
+
+            query.append(SQL`
+                    ]::text[]
+                ) RETURNING id, created_time
+            `)
+            var results = await connection.query(query);
             let newProduct = {...product};
             newProduct.id = results.rows[0].id;
             newProduct.serialNumber = product.serialNumber;
             newProduct.createdTimeStamp = results.rows[0].created_time;
-            newProduct.isDeleted = results.rows[0].is_deleted;
+            newProduct.isDeleted = false;
+            newProduct.wholesalePrices = product.wholesalePrices
             ret = newProduct;
         })
         return ret!;
@@ -51,7 +74,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
     }
 
     _jsonToProduct(json: any) : Product {
-        return {
+        let newProduct : Product = {
             id: json['id'],
             serialNumber: json['serial_number'],
             name: json['name'],
@@ -59,14 +82,17 @@ export class ProductRepositoryPostgres implements IProductRepository{
             avatarId: json['avatar_id'],
             createdTimeStamp: json['created_time'],
             rank: json['rank'],
+            wholesalePrices: json['wholesale_prices'],
         }
+
+        return newProduct
     }  
 
     async fetchProducts(offset: number, limit: number): Promise<Product[]> {
         var results = await this.client.query(`
             SELECT 
                 id, serial_number, name, is_deleted, avatar_id,
-                rank, created_time
+                rank, created_time, wholesale_prices
             FROM "product"
             WHERE is_deleted = FALSE
             ORDER BY created_time DESC
@@ -106,7 +132,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
         var result = await this.client.query(`
             SELECT 
                 id, serial_number, name, is_deleted, avatar_id,
-                rank, created_time
+                rank, created_time, wholesale_prices
             FROM "product"
             WHERE is_deleted = FALSE AND id = $1
         `, [id])
@@ -114,15 +140,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
             throw new NotFound("product", "id", id.toString())
         } else {
             let row = result.rows[0]
-            return {
-                id: row['id'],
-                serialNumber: row['serial_number'],
-                name: row['name'],
-                isDeleted: row['is_deleted'],
-                avatarId: row['avatar_id'],
-                createdTimeStamp: row['created_time'],
-                rank: row['rank'],
-            }
+            return this._jsonToProduct(row)
         }
     }
 
@@ -139,7 +157,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
         let response = await this.client.query(`
             SELECT 
                 id, serial_number, name, is_deleted, avatar_id,
-                rank, created_time
+                rank, created_time, wholesale_prices
             FROM "product"
             WHERE LOWER(name) LIKE $1 AND is_deleted = FALSE
             ORDER BY rank DESC, created_time DESC
@@ -162,7 +180,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
                 response = await connection.query(`
                     SELECT 
                         id, serial_number, name, is_deleted, avatar_id,
-                        rank, created_time
+                        rank, created_time, wholesale_prices
                     FROM "product" INNER JOIN "product_product_category" cat
                     ON is_deleted = FALSE AND cat.product_id = id AND cat.category = $1
                     ORDER BY rank DESC, created_time DESC
@@ -173,7 +191,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
                 response = await connection.query(`
                     SELECT 
                         id, serial_number, name, is_deleted, avatar_id,
-                        rank, created_time
+                        rank, created_time, wholesale_prices
                     FROM "product" INNER JOIN "product_product_category" cat
                     ON is_deleted = FALSE 
                         AND cat.product_id = id 
@@ -253,7 +271,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
             let response = await connection.query(SQL`
                 SELECT
                     id, serial_number, name, is_deleted, avatar_id,
-                    rank, created_time
+                    rank, created_time, wholesale_prices
                 FROM "product"
                 JOIN "product_area_transport_fee" patf
                 ON patf.transport_fee_id = ${areaTransportFeeId}
