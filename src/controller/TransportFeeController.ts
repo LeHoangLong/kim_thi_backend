@@ -2,7 +2,6 @@ import Decimal from "decimal.js";
 import { inject, injectable } from "inversify";
 import { CreateFeeArgs, IAreaTransportFeeRepository } from "../repository/IAreaTransportFeeRepository";
 import { TYPES } from "../types";
-import node_geocoder, { Geocoder } from "node-geocoder";
 import { AreaTransportFee, TransportOrigin } from "../model/AreaTransportFee";
 import { NotFound } from "../exception/NotFound";
 import { IConnectionFactory } from "../services/IConnectionFactory";
@@ -12,6 +11,7 @@ import { Product } from "../model/Product";
 import { ProductCategory } from "../model/ProductCategory";
 import { ProductPrice } from "../model/ProductPrice";
 import { IProductPriceRepository } from "../repository/IPriceRepository";
+import { GeocoderController } from "./GeocoderController";
 
 export interface CreatAreaTransportFeeArgs {
     name: string,
@@ -30,22 +30,18 @@ export class TransportFeeController {
         @inject(TYPES.PRODUCT_CONTROLLER) public readonly productController: ProductController,
         @inject(TYPES.PRODUCT_REPOSITORY) private productRepository: IProductRepository,
         @inject(TYPES.PRODUCT_PRICE_REPOSITORY) private productPriceRepository: IProductPriceRepository,
-        @inject(TYPES.GOOGLE_GEOCODER) private geocoder: Geocoder,
+        @inject(TYPES.GEOCODER_CONTROLLER) private geocoder: GeocoderController,
     ) {
     }
 
     async createTransportOrigin(address: string) : Promise<TransportOrigin> {
         let decodedAddress = await this.geocoder.geocode(address)
-        if (!decodedAddress[0].latitude) {
-            throw new NotFound("address", "latitude", address)
-        } else if (!decodedAddress[0].longitude) {
-            throw new NotFound("address", "longitude", address)
-        }
 
         return this.repository.createTransportOrigin({
             address: address,
-            latitude: new Decimal(decodedAddress[0].latitude),
-            longitude: new Decimal(decodedAddress[0].longitude),
+            latitude: decodedAddress.latitude,
+            longitude: decodedAddress.longitude,
+            city: decodedAddress.city,
         })
     }
 
@@ -63,13 +59,10 @@ export class TransportFeeController {
 
     async createTransportFee(args : CreatAreaTransportFeeArgs) : Promise<AreaTransportFee> {
         const cityRes = await this.geocoder.geocode(args.city);
-        if (!cityRes[0].city) {
-            throw new NotFound("address", "city", args.city)
-        } 
 
         let createArgsFee : CreateFeeArgs = {
             name: args.name,
-            areaCity: cityRes[0].city,
+            areaCity: cityRes.city,
             basicFee: args.basicFee,
             billBasedTransportFee: [],
             distanceFeePerKm: args.distanceFeePerKm,

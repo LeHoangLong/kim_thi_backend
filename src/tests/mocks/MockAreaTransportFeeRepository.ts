@@ -35,6 +35,7 @@ export class MockAreaTransportFeeRepository implements IAreaTransportFeeReposito
             latitude: args.latitude,
             longitude: args.longitude,
             address: args.address,
+            city: args.city,
         })
         return this.origins[this.origins.length - 1]
     }

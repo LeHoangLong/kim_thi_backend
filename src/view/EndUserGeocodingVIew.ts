@@ -22,6 +22,7 @@ export class EndUserGeocodingView {
                 return response.status(200).send({
                     latitude: address.latitude.toString(),
                     longitude: address.longitude.toString(),
+                    city: address.city,
                 })
             } catch (exception) {
                 response.status(404).send()

@@ -248,6 +248,7 @@ export class AreaTransportFeeRepositoryPostgres implements IAreaTransportFeeRepo
                     address,
                     latitude,
                     longitude,
+                    city,
                     is_deleted
                 FROM "transport_origin"
                 WHERE is_deleted = FALSE
@@ -281,6 +282,7 @@ export class AreaTransportFeeRepositoryPostgres implements IAreaTransportFeeRepo
                     address,
                     latitude,
                     longitude,
+                    city,
                     is_deleted
                 FROM "transport_origin"
                 WHERE (${ignoreDeleted} = FALSE OR is_deleted = FALSE)
@@ -297,13 +299,15 @@ export class AreaTransportFeeRepositoryPostgres implements IAreaTransportFeeRepo
     }
 
     private _jsonToTransportOrigin(json: any) : TransportOrigin {
-        return {
+        let ret : TransportOrigin = {
             id: json.id,
             address: json.address,
             latitude: new Decimal(json.latitude),
             longitude: new Decimal(json.longitude),
+            city: json.city,
             isDeleted: json.is_deleted,
         }
+        return ret 
     }
 
     async createTransportOrigin(args: CreateTransportOriginArgs) : Promise<TransportOrigin> {
@@ -313,11 +317,13 @@ export class AreaTransportFeeRepositoryPostgres implements IAreaTransportFeeRepo
                 INSERT INTO "transport_origin" (
                     address,
                     latitude,
-                    longitude
+                    longitude,
+                    city
                 ) VALUES (
                     ${args.address}, 
                     ${args.latitude.toString()}, 
-                    ${args.longitude.toString()}
+                    ${args.longitude.toString()},
+                    ${args.city}
                 ) RETURNING id
             `)
             createdTransportOrgin = this._jsonToTransportOrigin({

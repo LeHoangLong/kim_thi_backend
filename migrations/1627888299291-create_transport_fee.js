@@ -33,6 +33,7 @@ module.exports.up = async function (next) {
         address TEXT NOT NULL,
         latitude DECIMAL(9, 6) NOT NULL,
         longitude DECIMAL(9, 6) NOT NULL,
+        city TEXT NOT NULL,
         is_deleted BOOLEAN DEFAULT FALSE,
         created_time TIMESTAMPTZ DEFAULT NOW() NOT NULL
       )

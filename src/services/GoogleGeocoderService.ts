@@ -22,13 +22,19 @@ export class GoogleGeocoderService implements IGeocoderService {
                 if (error) {
                     reject(error)
                 } else {
-                    let found = false
                     for (let i = 0; i < data.length; i++) {
-                        if (data[i].latitude && data[i].longitude) {
+                        let city : string | null = null
+                        if (data[i].administrativeLevels?.level1short) {
+                            city = data[i].administrativeLevels?.level1short!
+                        } else if (data[i].administrativeLevels?.level1long) {
+                            city = data[i].administrativeLevels?.level1long!
+                        }
+                        if (data[i].latitude && data[i].longitude && city) {
                             resolve({
                                 id: -1,
                                 latitude: new Decimal(data[i].latitude!),
                                 longitude: new Decimal(data[i].longitude!),
+                                city: city,
                                 isDeleted: false,
                                 address: address,
                             })

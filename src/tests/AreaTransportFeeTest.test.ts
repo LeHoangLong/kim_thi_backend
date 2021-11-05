@@ -1,8 +1,7 @@
 import 'reflect-metadata';
-import sinon, { mock } from 'sinon';
+import sinon from 'sinon';
 import { TYPES } from '../types';
 import { myContainer } from "../inversify.config";
-import { ProductView } from '../view/ProductView';
 import { IProductRepository } from '../repository/IProductRepository';
 import { IProductPriceRepository } from '../repository/IPriceRepository';
 import { IImageRepository } from '../repository/IImageRepository';
@@ -11,31 +10,19 @@ import { MockProductRepository } from './mocks/MockProductRepository';
 import { MockProductPriceRepository } from './mocks/MockProductPriceRepository';
 import { MockImageRepository } from './mocks/MockImageRepository';
 import { MockBinaryRepository } from './mocks/MockBinaryRepository';
-import { request, Request, response, Response } from 'express';
 import chai from 'chai'
-import { EProductUnit } from '../model/ProductPrice';
 import { MockProductCategoryRepository } from './mocks/MockProductCategoryRepository';
 import { IProductCategoryRepository } from '../repository/IProductCategoryRepository';
-import { IConnectionFactory } from '../services/IConnectionFactory';
-import { PostgresConnectionFactory } from '../services/PostgresConnectionFactory';
-import { DatabaseError, PoolClient } from 'pg';
-import { Product } from '../model/Product';
 import chaiSubset from 'chai-subset';
 
 import chaiAsPromised from 'chai-as-promised'
-import { Image } from '../model/Image';
-import { ProductRepositoryPostgres } from '../repository/ProductRepositoryPostgres';
-import { PriceRepositoryPostgres } from '../repository/PriceRepositoryPostgres';
-import { ImageRepositoryPostgres } from '../repository/ImageRepositoryPostgres';
-import { BinaryRepositoryFileSystem } from '../repository/BinaryRepositoryFilesystem';
-import { ProductCategoryRepositoryPostgres } from '../repository/ProductCategoryRepositoryPostgres';
 import { IAreaTransportFeeRepository } from '../repository/IAreaTransportFeeRepository';
 import Decimal from 'decimal.js';
 import { MockAreaTransportFeeRepository } from './mocks/MockAreaTransportFeeRepository';
 import { TransportFeeView } from '../view/TransportFeeView';
-import { MockGeocoder } from './mocks/MockGeocoder';
-import { Geocoder } from 'node-geocoder';
-import { AreaTransportFeeRepositoryPostgres } from '../repository/AreaTransportFeeRepositoryPostgres';
+import { MockGeocodingService } from './mocks/MockGeocoderService';
+import { IGeocoderService } from '../services/IGeocoderService';
+import { GoogleGeocoderService } from '../services/GoogleGeocoderService';
 chai.use(chaiAsPromised);
 chai.use(chaiSubset)
 
@@ -53,11 +40,13 @@ describe('Area transport fee repository test', async function() {
                 address: 'city_1',
                 longitude: new Decimal('0.000001'),
                 latitude: new Decimal('0.000002'),
+                city: 'city-1',
             })
 
             chai.expect(origin.address).to.be.eql('city_1')
             chai.expect(origin.longitude.comparedTo(new Decimal('0.000001'))).to.be.eql(0)
             chai.expect(origin.latitude.comparedTo(new Decimal('0.000002'))).to.be.eql(0)
+            chai.expect(origin.city).to.eql('city-1')
         })
     })
 
@@ -67,11 +56,13 @@ describe('Area transport fee repository test', async function() {
                 address: 'city_1',
                 longitude: new Decimal('0.000001'),
                 latitude: new Decimal('0.000002'),
+                city: 'city-1',
             })
             context.origin_2 = await areaTransportFeeRepository.createTransportOrigin({
                 address: 'city_1',
                 longitude: new Decimal('0.000001'),
                 latitude: new Decimal('0.000002'),
+                city: 'city-1',
             })
 
         })
@@ -111,12 +102,14 @@ describe('Area transport fee repository test', async function() {
                 address: 'city_1',
                 longitude: new Decimal('0.000001'),
                 latitude: new Decimal('0.000002'),
+                city: 'city-1',
             })
 
             context.fee_2 = await areaTransportFeeRepository.createTransportOrigin({
                 address: 'city_2',
                 longitude: new Decimal('1.000001'),
                 latitude: new Decimal('1.000002'),
+                city: 'city-2',
             })
         })
 
@@ -204,7 +197,6 @@ describe('Area transport fee repository test', async function() {
 
     })
 
-
     describe('delete transport fee', function () {
         it('should succeed', async function() {
             let fee = await areaTransportFeeRepository.createFee({
@@ -230,6 +222,7 @@ describe('Area transport fee repository test', async function() {
                 address: 'city_1',
                 longitude: new Decimal('0.000001'),
                 latitude: new Decimal('0.000002'),
+                city: 'city-1',
             })
 
             let number = await areaTransportFeeRepository.deleteTransportOriginById(origin.id)
@@ -250,7 +243,7 @@ describe('Area transport fee view test', async () => {
         const mockProductPriceRepository = new MockProductPriceRepository()
         const mockProductCategoryRepository = new MockProductCategoryRepository()
         const mockAreaTransportFeeRepository = new MockAreaTransportFeeRepository()
-        const mockGeocoder = new MockGeocoder()
+        const mockGeocoderService = new MockGeocodingService()
 
         myContainer.rebind<IProductRepository>(TYPES.PRODUCT_REPOSITORY).toConstantValue(mockProductRepository)
         myContainer.rebind<IProductPriceRepository>(TYPES.PRODUCT_PRICE_REPOSITORY).toConstantValue(mockProductPriceRepository)
@@ -258,7 +251,7 @@ describe('Area transport fee view test', async () => {
         myContainer.rebind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).toConstantValue(mockBinaryRepository)
         myContainer.rebind<IProductCategoryRepository>(TYPES.PRODUCT_CATEGORY_REPOSITORY).toConstantValue(mockProductCategoryRepository)
         myContainer.rebind<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY).toConstantValue(mockAreaTransportFeeRepository)
-        myContainer.rebind<Geocoder>(TYPES.GOOGLE_GEOCODER).toConstantValue(mockGeocoder)
+        myContainer.rebind<IGeocoderService>(TYPES.GEOCODER_SERVICE).toConstantValue(mockGeocoderService)
 
         context.now = now
         context.areaTransportFeeRepository = mockAreaTransportFeeRepository
@@ -278,7 +271,11 @@ describe('Area transport fee view test', async () => {
         context.statusSpy = sinon.spy(context.response, "status")
         context.sendSpy = sinon.spy(context.response, "send")
         context.mockProductRepository = mockProductRepository
-        context.mockGeocoder = mockGeocoder
+        context.mockGeocoderService = mockGeocoderService
+    })
+
+    afterEach(() => {
+        myContainer.rebind<IGeocoderService>(TYPES.GEOCODER_SERVICE).to(GoogleGeocoderService)
     })
     describe('create area transport fee view', async () => {
         it('Should succeed', async () => {
@@ -456,6 +453,7 @@ describe('Area transport fee view test', async () => {
                 address: 'origin-1',
                 latitude: '10.000001',
                 longitude: '20.000001',
+                city: 'test-city',
                 isDeleted: false,
             })
         })
@@ -468,12 +466,14 @@ describe('Area transport fee view test', async () => {
                 address: 'address-1',
                 longitude: new Decimal('0.000001'),
                 latitude: new Decimal('0.000002'),
+                city: 'city-1',
             })
 
             context.origin_2 = await mockTransportFeeRepository.createTransportOrigin({
                 address: 'address-2',
                 longitude: new Decimal('1.000001'),
                 latitude: new Decimal('1.000002'),
+                city: 'city-2',
             })
         })
 
@@ -490,6 +490,7 @@ describe('Area transport fee view test', async () => {
                 {
                     id: 1,
                     address: 'address-2',
+                    city: 'city-2',
                     latitude: '1.000002',
                     longitude: '1.000001',
                     isDeleted: false,

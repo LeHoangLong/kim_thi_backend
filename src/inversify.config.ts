@@ -39,6 +39,7 @@ import { EndUserGeocodingView } from "./view/EndUserGeocodingVIew";
 import { EndUserGeocoderController } from "./controller/EndUserGeocoderController";
 import { IGeocoderService } from "./services/IGeocoderService";
 import { GoogleGeocoderService } from "./services/GoogleGeocoderService";
+import { GeocoderController } from "./controller/GeocoderController";
 
 
 export const myContainer = new Container();
@@ -67,7 +68,7 @@ myContainer.bind<ProductCategoryView>(TYPES.PRODUCT_CATEGORY_VIEW).to(ProductCat
 myContainer.bind<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY).to(AreaTransportFeeRepositoryPostgres)
 myContainer.bind<TransportFeeController>(TYPES.TRANSPORT_FEE_CONTROLLER).to(TransportFeeController)
 myContainer.bind<TransportFeeView>(TYPES.TRANSPORT_FEE_VIEW).to(TransportFeeView)
-myContainer.bind<Geocoder>(TYPES.GOOGLE_GEOCODER).toConstantValue(node_geocoder(config.geocoder))
+myContainer.bind<GeocoderController>(TYPES.GEOCODER_CONTROLLER).to(GeocoderController)
 myContainer.bind<EndUserProductView>(TYPES.END_USER_PRODUCT_VIEW).to(EndUserProductView)
 myContainer.bind<EndUserProductCategoryView>(TYPES.END_USER_PRODUCT_CATEGORY_VIEW).to(EndUserProductCategoryView)
 
@@ -75,7 +76,9 @@ myContainer.bind<EndUserGeocodingView>(TYPES.END_USER_GEOCODER_VIEW).to(EndUserG
 myContainer.bind<EndUserGeocoderController>(TYPES.END_USER_GEOCODER_CONTROLLER).to(EndUserGeocoderController)
 myContainer.bind<IGeocoderService>(TYPES.GEOCODER_SERVICE).to(GoogleGeocoderService)
 myContainer.bind<any>(TYPES.GOOGLE_GEOCODER_OPTION).toConstantValue({
-    apiKey: 'AIzaSyAPW61kcHMbEsIZaiBcfL3qyfhcRurm6bk'
+    apiKey: 'AIzaSyAPW61kcHMbEsIZaiBcfL3qyfhcRurm6bk',
+    language: 'vi'
 })
+myContainer.bind<string>(TYPES.GOOGLE_GEOCODER_API_KEY).toConstantValue('AIzaSyAPW61kcHMbEsIZaiBcfL3qyfhcRurm6bk')
 
 export default myContainer

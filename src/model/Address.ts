@@ -5,5 +5,6 @@ export interface Address {
     address: string,
     latitude: Decimal,
     longitude: Decimal,
+    city: string,
     isDeleted: boolean,
 }

@@ -15,6 +15,7 @@ export interface CreateTransportOriginArgs {
     address: string,
     latitude: Decimal,
     longitude: Decimal,
+    city: string,
 }
 export interface IAreaTransportFeeRepository {
     createFee(args: CreateFeeArgs) : Promise<AreaTransportFee>;
