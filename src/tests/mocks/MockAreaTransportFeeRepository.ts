@@ -8,6 +8,12 @@ export class MockAreaTransportFeeRepository implements IAreaTransportFeeReposito
     public origins:TransportOrigin[] = []
     public feesByProductId : Map<number, number[]> = new Map()
     public counter: number = 0 
+    public unsupportedCities: string[] = []
+
+    async isCitySupported(city: string) : Promise<boolean> {
+        let index = this.unsupportedCities.indexOf(city)
+        return index === -1
+    }
 
     async fetchTransportOriginsById(ids: number[]): Promise<TransportOrigin[]> {
         let ret : TransportOrigin[] = []

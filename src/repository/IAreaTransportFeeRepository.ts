@@ -23,6 +23,7 @@ export interface IAreaTransportFeeRepository {
     fetchFees(limit: number, offset: number, ignoreDeleted?: boolean) : Promise<AreaTransportFee[]>;
     fetchFeeById(id: number) : Promise<AreaTransportFee>
     fetchNumberOfFees() : Promise<number>;
+    isCitySupported(city: string) : Promise<boolean>
     // fetchAreaTransportFeesByProductId(productId: number, limit: number, offset: number, ignoreDeleted?: boolean) : Promise<AreaTransportFee[]>;
     
     fetchNumberOfOrigins() : Promise<number>

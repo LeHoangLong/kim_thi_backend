@@ -7,12 +7,13 @@ import { IGeocoderService } from '../../services/IGeocoderService'
 
 @injectable()
 export class MockGeocodingService implements IGeocoderService {
+    public city: string = 'test-city'
     async geocode(address: string) : Promise<Address> {
         return {
             id: -1,
             address: address,
             isDeleted: false,
-            city: 'test-city',
+            city: this.city,
             latitude: new Decimal('10.000001'),
             longitude: new Decimal('20.000001'),
         }

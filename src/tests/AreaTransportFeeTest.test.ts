@@ -195,6 +195,17 @@ describe('Area transport fee repository test', async function() {
             })
         })
 
+        describe('check if city is supported', async() => {
+            it('should say supported', async () => {
+                let isSupported = await areaTransportFeeRepository.isCitySupported('city')
+                chai.expect(isSupported).to.eql(true)
+            })
+
+            it('should say not supported', async () => {
+                let isSupported = await areaTransportFeeRepository.isCitySupported('unsupported-city')
+                chai.expect(isSupported).to.eql(false)
+            })
+        })
     })
 
     describe('delete transport fee', function () {

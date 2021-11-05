@@ -180,6 +180,23 @@ export class AreaTransportFeeRepositoryPostgres implements IAreaTransportFeeRepo
         return ret
     }
 
+
+    async isCitySupported(city: string) : Promise<boolean> {
+        let ret : boolean = false
+        await this.connectionFactory.getConnection(this, async (connection) => {
+            let response = await connection.query(sql`
+                SELECT EXISTS(
+                    SELECT 1 
+                    FROM  "area_transport_fee"
+                    WHERE (LOWER(area_city) = ${city.toLocaleLowerCase()})
+                )
+            `)
+
+            ret = response.rows[0].exists
+        })
+        return ret
+    }
+
     async fetchNumberOfFees() : Promise<number> {
         let ret : number = 0
         await this.connectionFactory.getConnection(this, async (connection) => {

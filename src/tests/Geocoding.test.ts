@@ -8,6 +8,8 @@ import { inject } from "inversify"
 import { EndUserGeocodingView } from "../view/EndUserGeocodingVIew"
 import sinon from "sinon"
 import { MockGeocodingService } from "./mocks/MockGeocoderService"
+import { IAreaTransportFeeRepository } from "../repository/IAreaTransportFeeRepository"
+import { MockAreaTransportFeeRepository } from "./mocks/MockAreaTransportFeeRepository"
 
 describe('Google geocoding test', async function() {
     it('Should give correct address', async function name() {
@@ -29,6 +31,9 @@ describe('Google geocoding test', async function() {
 
 describe('Geocoding view test', async function name() {
     let context: any = {}
+    let mockAreaTransportFee: MockAreaTransportFeeRepository
+    let mockGeocodingService: MockGeocodingService
+
     this.beforeEach(() => {
         let request: any = {}
         let response: any = {
@@ -40,7 +45,11 @@ describe('Geocoding view test', async function name() {
             },
         }
 
-        myContainer.rebind<IGeocoderService>(TYPES.GEOCODER_SERVICE).to(MockGeocodingService)
+        mockAreaTransportFee = new MockAreaTransportFeeRepository()
+        mockGeocodingService = new MockGeocodingService()
+
+        myContainer.rebind<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY).toConstantValue(mockAreaTransportFee)
+        myContainer.rebind<IGeocoderService>(TYPES.GEOCODER_SERVICE).toConstantValue(mockGeocodingService)
         
         context.request = request
         context.response = response
@@ -63,5 +72,17 @@ describe('Geocoding view test', async function name() {
             longitude: '20.000001',
             city: 'test-city',
         })
+    })
+
+    it('Should return 404 if city not supported', async function() {
+        mockGeocodingService.city = 'unsupported-city-address'
+        mockAreaTransportFee.unsupportedCities.push('unsupported-city-address')
+        let view = myContainer.get<EndUserGeocodingView>(TYPES.END_USER_GEOCODER_VIEW)
+        context.request.body = {
+            address: 'unsupported-city-address'
+        }
+        await view.geocode(context.request, context.response)
+        sinon.assert.calledOnceWithExactly(context.statusSpy, 404)
+        sinon.assert.calledOnce(context.sendSpy)
     })
 })
