@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { Address } from "./Address";
 
 export interface BillBasedTransportFee {
     minBillValue?: Decimal,
@@ -7,12 +8,7 @@ export interface BillBasedTransportFee {
     fractionOfTotalTransportFee?: Decimal,
 }
 
-export interface TransportOrigin {
-    id: number,
-    address: string,
-    latitude: Decimal,
-    longitude: Decimal,
-    isDeleted: boolean,
+export interface TransportOrigin extends Address {
 }
 
 export interface AreaTransportFee {
