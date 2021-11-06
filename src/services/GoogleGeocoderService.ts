@@ -22,18 +22,50 @@ export class GoogleGeocoderService implements IGeocoderService {
                 if (error) {
                     reject(error)
                 } else {
+                    let words = address.split(' ')
+                    let bestIndex = -1
+                    let bestScore = 0
                     for (let i = 0; i < data.length; i++) {
-                        let city : string | null = null
-                        if (data[i].administrativeLevels?.level1short) {
-                            city = data[i].administrativeLevels?.level1short!
-                        } else if (data[i].administrativeLevels?.level1long) {
-                            city = data[i].administrativeLevels?.level1long!
+                        if (data[i].formattedAddress) {
+                            let includedWord: Map<string, number> = new Map()
+                            for (let j = 0; j < words.length; j++) {
+                                if (!includedWord.has(words[j])) {
+                                    let matches = data[i].formattedAddress?.match(words[j])
+                                    if (matches) {
+                                        includedWord.set(words[j], matches.length)
+                                    } else {
+                                        includedWord.set(words[j], 0)
+                                    }
+                                }
+                            }
+                            
+                            let totalMatch = 0
+                            for (let count of includedWord.values()) {
+                                totalMatch += count
+                            }
+
+                            let formatedAddressWordCount = data[i].formattedAddress!.split(' ').length
+                            let score = totalMatch / formatedAddressWordCount
+                            if (score > bestScore || bestIndex == -1) {
+                                bestIndex = i
+                                bestScore = score
+                            }
                         }
-                        if (data[i].latitude && data[i].longitude && city) {
+                    }
+
+                    if (bestIndex > -1) {
+                        let city : string | null = null
+                        if (data[bestIndex].administrativeLevels?.level1short) {
+                            city = data[bestIndex].administrativeLevels?.level1short!
+                        } else if (data[bestIndex].administrativeLevels?.level1long) {
+                            city = data[bestIndex].administrativeLevels?.level1long!
+                        }
+
+                        if (data[bestIndex].latitude && data[bestIndex].longitude && city) {
                             resolve({
                                 id: -1,
-                                latitude: new Decimal(data[i].latitude!),
-                                longitude: new Decimal(data[i].longitude!),
+                                latitude: new Decimal(data[bestIndex].latitude!),
+                                longitude: new Decimal(data[bestIndex].longitude!),
                                 city: city,
                                 isDeleted: false,
                                 address: address,

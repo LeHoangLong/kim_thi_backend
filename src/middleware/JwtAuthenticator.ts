@@ -24,7 +24,7 @@ export class JwtAuthenticator {
 
     generateToken(username: string) {
         return jwt.sign({username: username}, this.secretKey, {
-            expiresIn: this.durationS
+            expiresIn: this.durationS,
         });
     }
 
@@ -42,7 +42,7 @@ export class JwtAuthenticator {
                         if (error instanceof NotFound) {
                             return response.status(403).send();
                         } else {
-                            return response.status(502).send(error.toString());
+                            return response.status(502).send(error);
                         }
                     }
                 } else {
@@ -55,7 +55,7 @@ export class JwtAuthenticator {
             if (error instanceof TokenExpiredError) {
                 return response.status(403).send();
             } else {
-                response.status(502).send(error.toString());
+                response.status(502).send(error);
                 throw error;
             }
         }

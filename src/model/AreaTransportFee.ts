@@ -15,7 +15,7 @@ export interface AreaTransportFee {
     id: number,
     name: string,
     areaCity: string,
-    basicFee?: Decimal,
+    basicFee: Decimal,
     billBasedTransportFee: BillBasedTransportFee[],
     distanceFeePerKm?: Decimal,
     transportOriginIds: number[],

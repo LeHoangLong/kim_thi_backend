@@ -27,6 +27,17 @@ describe('Google geocoding test', async function() {
         chai.expect(address.longitude).to.eql(new Decimal('106.6296638'))
         chai.expect(address.city).to.eql('Thành phố Hồ Chí Minh')
     })
+
+
+
+    it('Should give correct city with short name', async function name() {
+        let googleGeocoder = myContainer.get<IGeocoderService>(TYPES.GEOCODER_SERVICE)
+        let address = await googleGeocoder.geocode('Hồ Chí Minh')
+        chai.expect(address.city).to.eql('Thành phố Hồ Chí Minh')
+
+        address = await googleGeocoder.geocode('TPHCM')
+        chai.expect(address.city).to.eql('Thành phố Hồ Chí Minh')
+    })
 })
 
 describe('Geocoding view test', async function name() {

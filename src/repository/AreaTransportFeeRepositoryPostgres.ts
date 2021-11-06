@@ -90,6 +90,43 @@ export class AreaTransportFeeRepositoryPostgres implements IAreaTransportFeeRepo
         return fee!
     }
 
+    async fetchFeesByCity(city: string, limit: number, offset: number, ignoreDeleted: boolean = true) : Promise<AreaTransportFee[]> {
+        let ret : AreaTransportFee[] = []
+        await this.connectionFactory.getConnection(this, async (connection) => {
+            let response = await connection.query(sql`
+                SELECT * FROM 
+                    (SELECT 
+                        id,
+                        name,
+                        area_city,
+                        basic_fee,
+                        bill_based_fee,
+                        distance_fee_per_km,
+                        is_deleted
+                    FROM  "area_transport_fee"
+                    WHERE (${ignoreDeleted} = FALSE OR is_deleted = FALSE)
+                        AND LOWER(area_city) = ${city.toLowerCase()}
+                    ORDER BY created_time DESC, id DESC
+                    LIMIT ${limit}
+                    OFFSET ${offset}) transport
+                LEFT JOIN "area_transport_fee_transport_origin" origin
+                ON origin.area_transport_fee_id = transport.id
+            `)
+
+            for (let i = 0; i < response.rows.length; i++) {
+                let index = ret.findIndex(e => e.id === response.rows[i].id)
+                if (index === -1) {
+                    ret.push(this.__jsonToFee(response.rows[i]))
+                    index = ret.length - 1
+                }
+                if (response.rows[i].transport_origin_id !== null) {
+                    ret[index].transportOriginIds.push(response.rows[i].transport_origin_id)
+                }
+            }
+        })
+        return ret        
+    }
+
     private __jsonToFee(json: any) : AreaTransportFee {
         let ret: AreaTransportFee = {
             id: json.id,

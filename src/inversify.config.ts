@@ -40,6 +40,8 @@ import { EndUserGeocoderController } from "./controller/EndUserGeocoderControlle
 import { IGeocoderService } from "./services/IGeocoderService";
 import { GoogleGeocoderService } from "./services/GoogleGeocoderService";
 import { GeocoderController } from "./controller/GeocoderController";
+import { EndUserTransportFeeController } from "./controller/EndUserTransportFeeController";
+import { EndUserTransportFeeView } from "./view/EndUserTransportFeeView";
 
 
 export const myContainer = new Container();
@@ -49,7 +51,7 @@ myContainer.bind<string>(TYPES.JWT_SECRECT_KEY).toConstantValue("38BggaT/EYOza5y
 myContainer.bind<UserView>(TYPES.USER_VIEW).to(UserView);
 myContainer.bind<UserController>(TYPES.USER_CONTROLLER).to(UserController);
 myContainer.bind<IUserRepository>(TYPES.USER_REPOSITORY).to(UserRepositoryPostgres);
-myContainer.bind<number>(TYPES.JWT_DURATION_S).toConstantValue(24 * 3600 * 30);
+myContainer.bind<number>(TYPES.JWT_DURATION_S).toConstantValue(24 * 3600 * 30 * 1000);
 myContainer.bind<JwtAuthenticator>(TYPES.JWT_AUTHENTICATOR).to(JwtAuthenticator);
 myContainer.bind<UserAuthorizer>(TYPES.USER_AUTHORIZER).to(UserAuthorizer);
 myContainer.bind<IProductRepository>(TYPES.PRODUCT_REPOSITORY).to(ProductRepositoryPostgres);
@@ -80,5 +82,8 @@ myContainer.bind<any>(TYPES.GOOGLE_GEOCODER_OPTION).toConstantValue({
     language: 'vi'
 })
 myContainer.bind<string>(TYPES.GOOGLE_GEOCODER_API_KEY).toConstantValue('AIzaSyAPW61kcHMbEsIZaiBcfL3qyfhcRurm6bk')
+
+myContainer.bind<EndUserTransportFeeController>(TYPES.END_USER_TRANSPORT_FEE_CONTROLLER).to(EndUserTransportFeeController)
+myContainer.bind<EndUserTransportFeeView>(TYPES.END_USER_TRANSPORT_FEE_VIEW).to(EndUserTransportFeeView)
 
 export default myContainer

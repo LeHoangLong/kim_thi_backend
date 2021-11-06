@@ -9,6 +9,16 @@ export class MockAreaTransportFeeRepository implements IAreaTransportFeeReposito
     public feesByProductId : Map<number, number[]> = new Map()
     public counter: number = 0 
     public unsupportedCities: string[] = []
+    
+    async fetchFeesByCity(city: string, limit: number, offset: number, ignoreDeleted?: boolean): Promise<AreaTransportFee[]> {
+        let ret : AreaTransportFee[] = []
+        for (let i = offset; i < offset + limit && i < this.fees.length; i++) {
+            if ((!ignoreDeleted || !this.fees[i].isDeleted) && this.fees[i].areaCity === city) {
+                ret.push(this.fees[i])
+            }
+        }
+        return ret
+    }
 
     async isCitySupported(city: string) : Promise<boolean> {
         let index = this.unsupportedCities.indexOf(city)

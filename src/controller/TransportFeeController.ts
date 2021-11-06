@@ -17,7 +17,7 @@ export interface CreatAreaTransportFeeArgs {
     name: string,
     city: string,
     transportOriginIds: [],
-    basicFee?: Decimal,
+    basicFee: Decimal,
     fractionOfBill?: Decimal,
     distanceFeePerKm?: Decimal,
 }
@@ -58,6 +58,8 @@ export class TransportFeeController {
     }
 
     async createTransportFee(args : CreatAreaTransportFeeArgs) : Promise<AreaTransportFee> {
+        console.log('args.city')
+        console.log(args.city)
         const cityRes = await this.geocoder.geocode(args.city);
 
         let createArgsFee : CreateFeeArgs = {

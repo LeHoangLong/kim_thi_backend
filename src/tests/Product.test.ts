@@ -665,7 +665,8 @@ describe('Postgres product repository test', async function() {
                 name: "fee_1",
                 billBasedTransportFee: [],
                 transportOriginIds: [],
-                isDeleted: false
+                isDeleted: false,
+                basicFee: new Decimal(0),
             })
 
             for (let i = 0; i < 5; i++) {

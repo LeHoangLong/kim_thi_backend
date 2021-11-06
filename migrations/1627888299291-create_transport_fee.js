@@ -21,7 +21,7 @@ module.exports.up = async function (next) {
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
       area_city TEXT NOT NULL,
-      basic_fee DECIMAL(11, 2) DEFAULT NULL,
+      basic_fee DECIMAL(11, 2) DEFAULT 0,
       bill_based_fee bill_based_fee[],
       distance_fee_per_km DECIMAL(11, 2) DEFAULT NULL,
       is_deleted BOOLEAN DEFAULT FALSE NOT NULL,

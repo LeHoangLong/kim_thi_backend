@@ -4,7 +4,7 @@ import { AreaTransportFee, BillBasedTransportFee, TransportOrigin } from "../mod
 export interface CreateFeeArgs {
     areaCity: string,
     name: string,
-    basicFee?: Decimal,
+    basicFee: Decimal,
     billBasedTransportFee: BillBasedTransportFee[],
     distanceFeePerKm?: Decimal,
     transportOriginIds: number[],
@@ -24,6 +24,7 @@ export interface IAreaTransportFeeRepository {
     fetchFeeById(id: number) : Promise<AreaTransportFee>
     fetchNumberOfFees() : Promise<number>;
     isCitySupported(city: string) : Promise<boolean>
+    fetchFeesByCity(city: string, limit: number, offset: number, ignoreDeleted?: boolean) : Promise<AreaTransportFee[]>
     // fetchAreaTransportFeesByProductId(productId: number, limit: number, offset: number, ignoreDeleted?: boolean) : Promise<AreaTransportFee[]>;
     
     fetchNumberOfOrigins() : Promise<number>

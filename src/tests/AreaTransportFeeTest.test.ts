@@ -23,6 +23,14 @@ import { TransportFeeView } from '../view/TransportFeeView';
 import { MockGeocodingService } from './mocks/MockGeocoderService';
 import { IGeocoderService } from '../services/IGeocoderService';
 import { GoogleGeocoderService } from '../services/GoogleGeocoderService';
+import { ProductRepositoryPostgres } from '../repository/ProductRepositoryPostgres';
+import { PriceRepositoryPostgres } from '../repository/PriceRepositoryPostgres';
+import { ImageRepositoryPostgres } from '../repository/ImageRepositoryPostgres';
+import { BinaryRepositoryFileSystem } from '../repository/BinaryRepositoryFilesystem';
+import { ProductCategoryRepositoryPostgres } from '../repository/ProductCategoryRepositoryPostgres';
+import { AreaTransportFeeRepositoryPostgres } from '../repository/AreaTransportFeeRepositoryPostgres';
+import { EndUserTransportFeeController } from '../controller/EndUserTransportFeeController';
+import { EndUserTransportFeeView } from '../view/EndUserTransportFeeView';
 chai.use(chaiAsPromised);
 chai.use(chaiSubset)
 
@@ -206,6 +214,40 @@ describe('Area transport fee repository test', async function() {
                 chai.expect(isSupported).to.eql(false)
             })
         })
+
+        describe('fetch fee by city', async() => {
+            it('Should fetch city', async() => {
+                let cities = await areaTransportFeeRepository.fetchFeesByCity('City', 100, 0, true)
+                chai.expect(cities.length).to.eql(1)
+                chai.expect(cities[0]).to.eql({
+                    id: 1,
+                    name: 'fee_1',
+                    areaCity: 'city',
+                    basicFee: new Decimal('10000.05'),
+                    billBasedTransportFee: [
+                      {
+                        minBillValue: new Decimal('100.01'),
+                        fractionOfBill: new Decimal('0.02'),
+                        fractionOfTotalTransportFee: new Decimal('0.03'),
+                        basicFee: new Decimal('10.01'),
+                      },
+                      {
+                        minBillValue: new Decimal('100.02'),
+                        fractionOfBill: new Decimal('0.03'),
+                        fractionOfTotalTransportFee: new Decimal('0.04'),
+                        basicFee: new Decimal('10.02'),
+                      }
+                    ],
+                    distanceFeePerKm: new Decimal('10000.05'),
+                    transportOriginIds: [],
+                    isDeleted: false
+                })
+            })
+            it('Should not fetch city', async() => {
+                let cities = await areaTransportFeeRepository.fetchFeesByCity('not-city', 1000, 0, true)
+                chai.expect(cities.length).to.eql(0)
+            })
+        })
     })
 
     describe('delete transport fee', function () {
@@ -286,6 +328,12 @@ describe('Area transport fee view test', async () => {
     })
 
     afterEach(() => {
+        myContainer.rebind<IProductRepository>(TYPES.PRODUCT_REPOSITORY).to(ProductRepositoryPostgres)
+        myContainer.rebind<IProductPriceRepository>(TYPES.PRODUCT_PRICE_REPOSITORY).to(PriceRepositoryPostgres)
+        myContainer.rebind<IImageRepository>(TYPES.IMAGE_REPOSITORY).to(ImageRepositoryPostgres)
+        myContainer.rebind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).to(BinaryRepositoryFileSystem)
+        myContainer.rebind<IProductCategoryRepository>(TYPES.PRODUCT_CATEGORY_REPOSITORY).to(ProductCategoryRepositoryPostgres)
+        myContainer.rebind<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY).to(AreaTransportFeeRepositoryPostgres)
         myContainer.rebind<IGeocoderService>(TYPES.GEOCODER_SERVICE).to(GoogleGeocoderService)
     })
     describe('create area transport fee view', async () => {
@@ -536,6 +584,145 @@ describe('Area transport fee view test', async () => {
                     longitude: context.origin_2.longitude.toString(),
                 },
             ])
+        })
+    })
+
+    describe('End user transport view', async () => {
+        let areaTransportFeeRepository : MockAreaTransportFeeRepository
+        beforeEach(() => {
+            areaTransportFeeRepository = context.areaTransportFeeRepository
+            areaTransportFeeRepository.fees.push({
+                id: 0,
+                name: 'fee-1',
+                areaCity: 'city-1',
+                basicFee: new Decimal('100000'),
+                billBasedTransportFee: [{
+                    minBillValue: new Decimal('100')
+                }],
+                distanceFeePerKm: new Decimal('1000000'),
+                transportOriginIds: [0, 1],
+                isDeleted: false,
+            })
+        })
+        describe('get bill based transport fee', async () => {
+            it('Should succeed', async () => {
+                context.request.query = {
+                    city: 'city-1',
+                    latitude: '10.0001',
+                    longitude: '20.0001',
+                }
+                let endUserTransportView = myContainer.get<EndUserTransportFeeView>(TYPES.END_USER_TRANSPORT_FEE_VIEW)
+                await endUserTransportView.fetchBillBasedTransportFee(context.request, context.response)
+                sinon.assert.calledOnceWithExactly(context.statusSpy, 200)  
+                sinon.assert.calledOnce(context.sendSpy)
+                chai.expect(context.sendSpy.getCall(0).args[0]).to.eql([{
+                    minBillValue: new Decimal('100')
+                }])
+            })
+        })
+
+
+        describe('get area transport fee', async () => {
+            it('Should succeed', async () => {
+                context.request.query = {
+                    city: 'city-1',
+                    latitude: '10.0001',
+                    longitude: '20.0001',
+                }
+                let endUserTransportView = myContainer.get<EndUserTransportFeeView>(TYPES.END_USER_TRANSPORT_FEE_VIEW)
+                await endUserTransportView.fetchAreaTransportFee(context.request, context.response)
+                sinon.assert.calledOnceWithExactly(context.statusSpy, 200)  
+                sinon.assert.calledOnce(context.sendSpy)
+                chai.expect(context.sendSpy.getCall(0).args[0]).to.eql({
+                    addressId: 0,
+                    transportFee: new Decimal('100000')
+                })
+            })
+        })
+    })
+})
+
+describe('Transport fee controller test', async () => {
+    describe('End user transport fee controller test', async () => {
+        let controller: EndUserTransportFeeController
+        beforeEach(() => {
+            const mockAreaTransportFeeRepository = new MockAreaTransportFeeRepository()
+            myContainer.rebind<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY).toConstantValue(mockAreaTransportFeeRepository)
+        
+            mockAreaTransportFeeRepository.fees.push({
+                id: 0,
+                name: 'fee-1',
+                areaCity: 'city-1',
+                basicFee: new Decimal('100000'),
+                billBasedTransportFee: [],
+                distanceFeePerKm: new Decimal('100000'),
+                transportOriginIds: [0, 1],
+                isDeleted: false,
+            })
+
+            mockAreaTransportFeeRepository.fees.push({
+                id: 1,
+                name: 'fee-1',
+                areaCity: 'city-1',
+                basicFee: new Decimal('110000'),
+                billBasedTransportFee: [],
+                distanceFeePerKm: new Decimal('100000'),
+                transportOriginIds: [2],
+                isDeleted: false,
+            })
+
+
+            mockAreaTransportFeeRepository.fees.push({
+                id: 1,
+                name: 'fee-2',
+                areaCity: 'city-2',
+                basicFee: new Decimal('200000'),
+                billBasedTransportFee: [],
+                distanceFeePerKm: new Decimal('100000'),
+                transportOriginIds: [2],
+                isDeleted: false,
+            })
+
+            mockAreaTransportFeeRepository.origins.push({
+                id: 0,
+                latitude: new Decimal('30.000001'),
+                longitude: new Decimal('40.000001'),
+                address: 'origin-1',
+                city: 'city-2',
+                isDeleted: false
+            })
+            mockAreaTransportFeeRepository.origins.push({
+                id: 1,
+                latitude: new Decimal('10.000001'),
+                longitude: new Decimal('20.000001'),
+                address: 'origin-2',
+                city: 'city-2',
+                isDeleted: false
+            })
+            mockAreaTransportFeeRepository.origins.push({
+                id: 2,
+                latitude: new Decimal('11.000001'),
+                longitude: new Decimal('21.000001'),
+                address: 'origin-3',
+                city: 'city-3',
+                isDeleted: false
+            })
+            controller = myContainer.get<EndUserTransportFeeController>(TYPES.END_USER_TRANSPORT_FEE_CONTROLLER)
+        })
+        afterEach(() => {
+            myContainer.rebind<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY).to(AreaTransportFeeRepositoryPostgres)
+        })
+        describe('test find transport fee for location', async () => {
+            it('find best transport fee', async () => {
+                let [transportFee, transportOrigin] = await controller.findBestTransportFee('city-1', new Decimal('10.0000001'), new Decimal('20.0000001'))
+                chai.expect(transportFee.id).eql(0)
+                chai.expect(transportOrigin!.id).eql(1)
+            })
+            it('find transport fee for city-2', async () => {
+                let [transportFee, transportOrigin] = await controller.findBestTransportFee('city-2', new Decimal('10.0000001'), new Decimal('20.0000001'))
+                chai.expect(transportFee.id).eql(1)
+                chai.expect(transportOrigin!.id).eql(2)
+            })
         })
     })
 })
