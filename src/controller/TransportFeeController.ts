@@ -2,7 +2,7 @@ import Decimal from "decimal.js";
 import { inject, injectable } from "inversify";
 import { CreateFeeArgs, IAreaTransportFeeRepository } from "../repository/IAreaTransportFeeRepository";
 import { TYPES } from "../types";
-import { AreaTransportFee, TransportOrigin } from "../model/AreaTransportFee";
+import { AreaTransportFee, BillBasedTransportFee, TransportOrigin } from "../model/AreaTransportFee";
 import { NotFound } from "../exception/NotFound";
 import { IConnectionFactory } from "../services/IConnectionFactory";
 import { ProductController } from "./ProductController";
@@ -20,6 +20,7 @@ export interface CreatAreaTransportFeeArgs {
     basicFee: Decimal,
     fractionOfBill?: Decimal,
     distanceFeePerKm?: Decimal,
+    billBasedTransportFees: BillBasedTransportFee[]
 }
 
 @injectable()
@@ -58,15 +59,13 @@ export class TransportFeeController {
     }
 
     async createTransportFee(args : CreatAreaTransportFeeArgs) : Promise<AreaTransportFee> {
-        console.log('args.city')
-        console.log(args.city)
         const cityRes = await this.geocoder.geocode(args.city);
 
         let createArgsFee : CreateFeeArgs = {
             name: args.name,
             areaCity: cityRes.city,
             basicFee: args.basicFee,
-            billBasedTransportFee: [],
+            billBasedTransportFee: args.billBasedTransportFees,
             distanceFeePerKm: args.distanceFeePerKm,
             transportOriginIds: args.transportOriginIds,
             isDeleted: false,

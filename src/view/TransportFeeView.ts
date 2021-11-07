@@ -150,6 +150,7 @@ export class TransportFeeView {
             basicFee: json.basicFee !== undefined? new Decimal(json.basicFee) : new Decimal(0),
             fractionOfBill: json.fractionOfBill !== undefined? new Decimal(json.fractionOfBill) : undefined,
             distanceFeePerKm: json.distanceFeePerKm !== undefined? new Decimal(json.distanceFeePerKm) : undefined,
+            billBasedTransportFees: json.billBasedTransportFees !== undefined? json.billBasedTransportFees : []
         }
     }
 
