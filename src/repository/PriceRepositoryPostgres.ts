@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import { inject, injectable } from "inversify";
 import { Pool, PoolClient } from "pg";
 import { NotFound } from "../exception/NotFound";
@@ -14,44 +15,47 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
     ) {
     }
 
+    private jsonToPrices(json: any) : ProductPrice[] {
+        let ret: ProductPrice[] = []
+        for (let i = 0; i < json.length; i++) {
+            let row = json[i];
+            let price = ret.find(e => e.id === row.id)
+            if (price === undefined) {
+                price = {
+                    id: row['id'],
+                    unit: row['unit'],
+                    defaultPrice: row['default_price'],
+                    isDeleted: false,
+                    priceLevels: [],
+                    isDefault: row['is_default']
+                }
+                ret.push(price)
+            } 
+            
+            if (row.min_quantity !== null || row.price !== null) {
+                price.priceLevels.push({
+                    minQuantity: row.min_quantity,
+                    price: row.price,
+                })  
+            }              
+        }
+
+        return ret
+    }
+
     async fetchPricesByProductId(productId: number) : Promise<ProductPrice[]> {
         try {
             let results = await this.client.query(`
                 SELECT 
-                    id, unit, default_price, product_id, is_default
-                FROM "product_price"
-                WHERE product_id = $1 AND is_deleted = FALSE
+                    price.id, price.unit, price.default_price, price.product_id, price.is_default,
+                    level.min_quantity, level.price
+                FROM "product_price" price
+                LEFT JOIN "product_price_level" level
+                ON price.product_id = $1 AND price.is_deleted = FALSE
+                    AND level.product_price_id = price.id
                 ORDER BY id ASC
             `, [productId]);
-    
-            let ret : ProductPrice[] = []
-            for (let i = 0 ; i < results.rowCount; i++) {
-                let result = results.rows[i];
-                let price : ProductPrice = {
-                    id: result['id'],
-                    unit: result['unit'],
-                    defaultPrice: result['default_price'],
-                    isDeleted: false,
-                    priceLevels: [],
-                    isDefault: result['is_default']
-                }
-    
-                let priceLevelResult = await this.client.query(`
-                    SELECT
-                        min_quantity, price
-                    FROM "product_price_level"
-                    WHERE product_price_id = $1 AND is_deleted = FALSE
-                `, [price.id])
-    
-                for (let i = 0; i < priceLevelResult.rowCount; i++) {
-                    let priceLevelRow = priceLevelResult.rows[i]
-                    price.priceLevels.push({
-                        minQuantity: priceLevelRow.min_quantity,
-                        price: priceLevelRow.price
-                    })                
-                }
-                ret.push(price)
-            }
+            let ret = this.jsonToPrices(results.rows)
             return ret
         } catch (exception: any) {
             throw exception.message
@@ -62,31 +66,19 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
         try {
             let results = await this.client.query(`
                 SELECT 
-                    id, unit, default_price, product_id, is_default,
-                    pl.min_quantity as price_level_min_quantity, pl.price as product_price_level
-                FROM "product_price"
-                INNER JOIN "product_price_level" pl
-                WHERE id = $1 AND is_deleted = FALSE AND pl.product_price_id = id AND pl.is_deleted = FALSE
+                    price.id, price.unit, price.default_price, price.product_id, price.is_default,
+                    level.min_quantity, level.price
+                FROM "product_price" price
+                LEFT JOIN "product_price_level" level
+                ON product_id = $1 AND price.is_deleted = FALSE
+                    AND level.product_price_id = price.id
+                ORDER BY id ASC
             `, [id]);
-            if (results.rowCount == 0) {
+            if (results.rows.length == 0) {
                 throw new NotFound("product_price", "id", id.toString());
             } else {
-                let result = results.rows[0];
-                let ret : ProductPrice = {
-                    id: result['id'],
-                    unit: result['unit'],
-                    defaultPrice: result['default_price'],
-                    isDeleted: false,
-                    priceLevels: [],
-                    isDefault: result['is_default']
-                }
-                for (let i = 0; i < results.rowCount; i++) {
-                    ret.priceLevels.push({
-                        minQuantity: results.rows[i].price_level_min_quantity,
-                        price: results.rows[i].price_level_price
-                    })                
-                }
-                return ret
+                let ret = this.jsonToPrices(results.rows)
+                return ret[0]
             }
         } catch (exception: any) {
             throw exception.message
@@ -94,46 +86,12 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
     }
 
     async fetchDefaultPriceByProductId(productId: number) : Promise<ProductPrice> {
-        try {
-            var result = await this.client.query(`
-                SELECT 
-                    id, unit, default_price, product_id
-                FROM "product_price"
-                WHERE product_id = $1 AND is_deleted = FALSE AND is_default = TRUE
-            `, [productId])
-            if (result.rowCount === 0) {
-                console.log('not found')
-                throw new NotFound("product_price", "product_id", productId.toString())
-            } else {
-                let row = result.rows[0]
-                let price : ProductPrice = {
-                    id: row['id'],
-                    unit: row['unit'],
-                    defaultPrice: row['default_price'],
-                    isDeleted: false,
-                    priceLevels: [],
-                    isDefault: true
-                }
-                
-                let priceLevelResult = await this.client.query(`
-                    SELECT
-                        min_quantity, price
-                    FROM "product_price_level"
-                    WHERE product_price_id = $1 AND is_deleted = FALSE
-                `, [price.id])
-    
-                for (let i = 0; i < priceLevelResult.rowCount; i++) {
-                    let priceLevelRow = priceLevelResult.rows[i]
-                    price.priceLevels.push({
-                        minQuantity: priceLevelRow.min_quantity,
-                        price: priceLevelRow.price
-                    })                
-                }
-    
-                return price
-            }
-        } catch (exception: any) {
-            throw exception.message
+        let prices = await this.fetchPricesByProductId(productId)
+        let defaultPrice = prices.find(e => e.isDefault)
+        if (defaultPrice === undefined) {
+            throw new NotFound("product_price", "product_id", productId.toString())
+        } else {
+            return defaultPrice
         }
     }
 
@@ -168,7 +126,7 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
                     ) VALUES (
                         $1, $2, $3, $4
                     ) RETURNING id
-                `, [price.unit, price.defaultPrice, productId, price.isDefault])
+                `, [price.unit, price.defaultPrice.toString(), productId, price.isDefault])
     
                 let newPrice : ProductPrice = {
                     id: results.rows[0].id,
@@ -189,7 +147,7 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
                         ) VALUES (
                             $1, $2, $3
                         )
-                    `, [newPrice.id, priceLevel.minQuantity, priceLevel.price])
+                    `, [newPrice.id, priceLevel.minQuantity.toString(), priceLevel.price.toString()])
                     newPrice.priceLevels.push(priceLevel)
                 }
                 ret.push(newPrice)

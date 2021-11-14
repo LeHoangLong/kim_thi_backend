@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-import { myContainer } from "./inversify.config"
+import { myContainer, resetContainer } from "./inversify.config"
 import { TYPES } from "./types";
 import { IConnectionFactory } from "./services/IConnectionFactory";
 import { PostgresConnectionFactory } from "./services/PostgresConnectionFactory";
@@ -37,6 +37,7 @@ beforeEach(async () => {
     })  
 })
 
-after(async function() {
+afterEach(async function() {
     await myContainer.get<Pool>(TYPES.POSTGRES_DRIVER).end()
+    resetContainer()
 })

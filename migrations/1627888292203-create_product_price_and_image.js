@@ -51,7 +51,7 @@ module.exports.up = async function () {
             CREATE TABLE IF NOT EXISTS "product_price" (
                 id SERIAL PRIMARY KEY,
                 unit INTEGER CHECK (unit >= 0 AND unit < 1) NOT NULL,
-                default_price REAL NOT NULL,
+                default_price DECIMAL NOT NULL,
                 is_default BOOLEAN NOT NULL,
                 is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
                 product_id INTEGER REFERENCES "product"(id) ON DELETE NO ACTION ON UPDATE CASCADE NOT NULL
@@ -60,10 +60,10 @@ module.exports.up = async function () {
         await client.query(`
             CREATE TABLE IF NOT EXISTS "product_price_level" (
                 id SERIAL PRIMARY KEY,
-                min_quantity INTEGER CHECK (min_quantity >= 0) NOT NULL,
+                min_quantity DECIMAL CHECK (min_quantity >= 0) NOT NULL,
                 product_price_id INTEGER REFERENCES "product_price"(id) ON DELETE NO ACTION ON UPDATE CASCADE,
                 is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
-                price REAL NOT NULL
+                price DECIMAL NOT NULL
             )
         `)
         await client.query(`

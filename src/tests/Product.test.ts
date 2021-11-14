@@ -180,9 +180,9 @@ describe('Product view and controller test', async function() {
             },
             defaultPrice: {
               id: 0,
-              unit: 0,
+              unit: 'KG',
               isDeleted: false,
-              defaultPrice: 100,
+              defaultPrice: '100',
               priceLevels: [],
               isDefault: true
             },
@@ -209,9 +209,9 @@ describe('Product view and controller test', async function() {
                 },
                 defaultPrice: {
                   id: 0,
-                  unit: 0,
+                  unit: 'KG',
                   isDeleted: false,
-                  defaultPrice: 100,
+                  defaultPrice: '100',
                   priceLevels: [],
                   isDefault: true
                 },
@@ -235,9 +235,9 @@ describe('Product view and controller test', async function() {
                 },
                 defaultPrice: {
                   id: 0,
-                  unit: 0,
+                  unit: 'KG',
                   isDeleted: false,
-                  defaultPrice: 100,
+                  defaultPrice: '100',
                   priceLevels: [],
                   isDefault: true
                 },
@@ -271,19 +271,19 @@ describe('Product view and controller test', async function() {
                 },
                 defaultPrice: {
                     unit: "KG",
-                    defaultPrice: 101,
+                    defaultPrice: '101',
                     priceLevels: [{
-                        minQuantity: 15,
-                        price: 50
+                        minQuantity: '15',
+                        price: '50'
                     }]
                 },
                 alternativePrices: [
                     {
                         unit: "KG",
-                        defaultPrice: 102,
+                        defaultPrice: '102',
                         priceLevels: [{
-                            minQuantity: 15,
-                            price: 50
+                            minQuantity: '15',
+                            price: '50'
                         }]
                     }
                 ],
@@ -303,10 +303,10 @@ describe('Product view and controller test', async function() {
                 defaultPrice: {
                     id: null,
                     unit: EProductUnit.KG,
-                    defaultPrice: 101,
+                    defaultPrice: new Decimal(101),
                     priceLevels: [{
-                        minQuantity: 15,
-                        price: 50
+                        minQuantity: new Decimal(15),
+                        price: new Decimal(50)
                     }],
                     isDeleted: false,
                     isDefault: true,
@@ -314,10 +314,10 @@ describe('Product view and controller test', async function() {
                 alternativePrices: [{
                     id: null,
                     unit: EProductUnit.KG,
-                    defaultPrice: 102,
+                    defaultPrice: new Decimal(102),
                     priceLevels: [{
-                        minQuantity: 15,
-                        price: 50
+                        minQuantity: new Decimal(15),
+                        price: new Decimal(50),
                     }],
                     isDeleted: false,
                     isDefault: false,
@@ -355,10 +355,10 @@ describe('Product view and controller test', async function() {
                 id: 0,
                 unit: 'KG',
                 isDeleted: false,
-                defaultPrice: 101,
+                defaultPrice: '101',
                 priceLevels: [{
-                    minQuantity: 15,
-                    price: 50
+                    minQuantity: '15',
+                    price: '50'
                 }],
                 isDefault: true
               },
@@ -366,10 +366,10 @@ describe('Product view and controller test', async function() {
                 id: 1,
                 unit: 'KG',
                 isDeleted: false,
-                defaultPrice: 102,
+                defaultPrice: '102',
                 priceLevels: [{
-                    minQuantity: 15,
-                    price: 50
+                    minQuantity: '15',
+                    price: '50'
                 }],
                 isDefault: false
               }
@@ -395,10 +395,10 @@ describe('Product view and controller test', async function() {
             {
                 id: 0,
                 unit: EProductUnit.KG,
-                defaultPrice: 101,
+                defaultPrice: new Decimal('101'),
                 priceLevels: [{
-                    minQuantity: 15,
-                    price: 50
+                    minQuantity: new Decimal('15'),
+                    price: new Decimal('50'),
                 }],
                 isDefault: true,
                 isDeleted: false,
@@ -406,10 +406,10 @@ describe('Product view and controller test', async function() {
             {
                 id: 1,
                 unit: EProductUnit.KG,
-                defaultPrice: 102,
+                defaultPrice: new Decimal('102'),
                 priceLevels: [{
-                    minQuantity: 15,
-                    price: 50
+                    minQuantity: new Decimal('15'),
+                    price: new Decimal('50'),
                 }],
                 isDefault: false,
                 isDeleted: false,
@@ -442,7 +442,7 @@ describe('Product view and controller test', async function() {
                 id: 0,
                 unit: 'KG',
                 isDeleted: false,
-                defaultPrice: 100,
+                defaultPrice: '100',
                 priceLevels: [],
                 isDefault: true
               },
@@ -450,7 +450,7 @@ describe('Product view and controller test', async function() {
                 id: 1,
                 unit: 'KG',
                 isDeleted: false,
-                defaultPrice: 100,
+                defaultPrice: '100',
                 priceLevels: [],
                 isDefault: false
               }
@@ -502,10 +502,10 @@ describe('Product view and controller test', async function() {
               id: 0,
               unit: 'KG',
               isDeleted: false,
-              defaultPrice: 101,
+              defaultPrice: '101',
               priceLevels: [{
-                  minQuantity: 15,
-                  price: 50
+                  minQuantity: '15',
+                  price: '50'
               }],
               isDefault: true
             },
@@ -513,10 +513,10 @@ describe('Product view and controller test', async function() {
               id: 1,
               unit: 'KG',
               isDeleted: false,
-              defaultPrice: 102,
+              defaultPrice: '102',
               priceLevels: [{
-                  minQuantity: 15,
-                  price: 50
+                  minQuantity: '15',
+                  price: '50'
               }],
               isDefault: false
             }
@@ -538,7 +538,7 @@ describe('Product view and controller test', async function() {
         context.request.body.prices = []
         context.request.body.defaultPrice = {
             unit: 'KG',
-            defaultPrice: 0,
+            defaultPrice: '0',
             priceLevels: [],
         }
         context.request.body.alternativePrices = [],

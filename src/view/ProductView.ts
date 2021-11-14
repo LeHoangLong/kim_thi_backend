@@ -8,6 +8,8 @@ const config = require('../config').config;
 import { UnrecognizedEnumValue } from '../exception/UnrecognizedEnumValue';
 import { EProductUnit, EProductUnitToString, ProductPrice, stringToEProductUnit } from '../model/ProductPrice';
 import { NotFound } from '../exception/NotFound';
+import { normalizeProductPrice, parseProductPrice } from '../parsers/ProductPriceParser';
+import { parseProductSummary } from '../parsers/ProductParser';
 
 @injectable()
 export class ProductView {
@@ -27,6 +29,9 @@ export class ProductView {
         }
 
         let products = await this.productController.fetchProductSummaries(offset, limit);
+        for (let i = 0; i < products.length; i++) {
+            products[i] = parseProductSummary(products[i])
+        }
         return response.status(200).send(products);
     }
 
@@ -67,11 +72,11 @@ export class ProductView {
                 categories: request.body.categories,
                 wholesalePrices: request.body.wholesalePrices?? [],
             })
-            productWithPrices.prices.forEach((e) => {
-                let unitStr = EProductUnitToString(e.unit)
-                e.unit = unitStr as any
-            })
 
+            productWithPrices.prices = [...productWithPrices.prices]
+            for (let i = 0; i < productWithPrices.prices.length; i++) {
+                productWithPrices.prices[i] = parseProductPrice(productWithPrices.prices[i])
+            }
             return response.status(200).send(productWithPrices)
         } catch (exception) {
             if (exception instanceof NotFound) {
@@ -97,7 +102,6 @@ export class ProductView {
     private convertPrice(body: any) : [ProductPrice[],ProductPrice] {
         let defaultPrice = {
             ...body.defaultPrice,
-            unit: stringToEProductUnit(body.defaultPrice.unit),
             isDefault: true,
         }
 
@@ -105,7 +109,6 @@ export class ProductView {
         for (let i = 0; i < body.alternativePrices.length; i++) {
             alternativePrices.push({
                 ...body.alternativePrices[i],
-                unit: stringToEProductUnit(body.alternativePrices[i].unit),
                 isDefault: false,
             })
             if (alternativePrices[i].id === undefined) {
@@ -130,11 +133,14 @@ export class ProductView {
     async createProduct(request: express.Request, response: express.Response) {
         try {
             let [alternativePrices, defaultPrice] = this.convertPrice(request.body)
+            for (let i = 0 ; i < alternativePrices.length ; i ++) {
+                alternativePrices[i] = normalizeProductPrice(alternativePrices[i])
+            }
             let args: CreateProductArgs = {
                 serialNumber: request.body.serialNumber,
                 name: request.body.name,
                 avatarId: request.body.avatar.id,
-                defaultPrice: defaultPrice,
+                defaultPrice: normalizeProductPrice(defaultPrice),
                 alternativePrices: alternativePrices,
                 rank: request.body.rank,
                 categories: request.body.categories,
@@ -143,10 +149,10 @@ export class ProductView {
 
             let productWithPrices = await this.productController.createProduct(args)
 
-            productWithPrices.prices.forEach((e) => {
-                let unitStr = EProductUnitToString(e.unit)
-                e.unit = unitStr as any
-            })
+            productWithPrices.prices = [...productWithPrices.prices]
+            for (let i = 0; i < productWithPrices.prices.length; i++) {
+                productWithPrices.prices[i] = parseProductPrice(productWithPrices.prices[i])
+            }
 
             return response.status(201).send(productWithPrices)
         } catch (exception) {
@@ -166,7 +172,9 @@ export class ProductView {
         }
         let productId = parseInt(request.params.id)
         let productDetail = await this.productController.fetchProductDetailById(productId)
-        productDetail.prices.forEach(e => (e.unit as any) = EProductUnitToString(e.unit))
+        for (let i = 0; i < productDetail.prices.length; i++) {
+            productDetail.prices[i] = parseProductPrice(productDetail.prices[i])
+        }
         return response.status(200).send(productDetail)
     }
 }

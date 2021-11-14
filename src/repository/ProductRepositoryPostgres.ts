@@ -128,14 +128,14 @@ export class ProductRepositoryPostgres implements IProductRepository{
         return parseInt(result.rows[0].count)
     }
 
-    async fetchProductById(id: number) : Promise<Product> {
+    async fetchProductById(id: number, ignoreDeleted: boolean = true) : Promise<Product> {
         var result = await this.client.query(`
             SELECT 
                 id, serial_number, name, is_deleted, avatar_id,
                 rank, created_time, wholesale_prices
             FROM "product"
-            WHERE is_deleted = FALSE AND id = $1
-        `, [id])
+            WHERE ($2=FALSE OR ($2=TRUE AND is_deleted = FALSE)) AND id = $1
+        `, [id, ignoreDeleted])
         if (result.rowCount == 0) {
             throw new NotFound("product", "id", id.toString())
         } else {

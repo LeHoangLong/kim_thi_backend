@@ -7,6 +7,10 @@ import { IGeocoderService } from '../../services/IGeocoderService'
 
 @injectable()
 export class MockGeocodingService implements IGeocoderService {
+    reverseGeocode(latitude: Decimal, longitude: Decimal): Promise<Address> {
+        throw new Error("Method not implemented.");
+    }
+    
     public city: string = 'test-city'
     async geocode(address: string) : Promise<Address> {
         return {

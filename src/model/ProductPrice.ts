@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import { UnrecognizedEnumValue } from "../exception/UnrecognizedEnumValue";
 
 export enum EProductUnit {
@@ -5,13 +6,13 @@ export enum EProductUnit {
 }
 
 export interface PriceLevel {
-    minQuantity: number,
-    price: number,
+    minQuantity: Decimal,
+    price: Decimal,
 }
 export interface ProductPrice {
     id: number | null,
     unit: EProductUnit,
-    defaultPrice: number,
+    defaultPrice: Decimal,
     isDeleted: boolean,
     priceLevels: PriceLevel[],
     isDefault: boolean,
@@ -34,5 +35,7 @@ export function EProductUnitToString(unit: EProductUnit) {
     switch (unit) {
         case EProductUnit.KG:
             return "KG"
+        default:
+            throw new UnrecognizedEnumValue(unit)
     }
 }

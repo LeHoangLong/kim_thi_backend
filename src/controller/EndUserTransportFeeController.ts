@@ -54,8 +54,6 @@ export class EndUserTransportFeeController {
             }
         }
 
-        console.log('minTransportFeeCost')
-        console.log(minTransportFeeCost)
         if (ret === null) {
             throw new NotFound("AreaTransportFee", "city", city)
         } else {

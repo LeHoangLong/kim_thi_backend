@@ -10,6 +10,7 @@ import { Request, response, Response } from 'express';
 import { ImageView } from '../view/ImageView';
 import { MockResponse } from './mocks/MockResponse';
 import chai from 'chai'
+import { ImageRepositoryPostgres } from '../repository/ImageRepositoryPostgres';
 
 describe('Product view test', async function() {
     let context : any = {}

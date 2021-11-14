@@ -1,3 +1,4 @@
+import Decimal from "decimal.js"
 import { EProductUnit, PriceLevel, ProductPrice } from "../../model/ProductPrice"
 import { IProductPriceRepository } from "../../repository/IPriceRepository"
 
@@ -19,7 +20,7 @@ export class MockProductPriceRepository implements IProductPriceRepository {
             id: id,
             unit: EProductUnit.KG,
             isDeleted: false,
-            defaultPrice: 100,
+            defaultPrice: new Decimal('100'),
             priceLevels: [],
             isDefault: id == 0,
         }
@@ -30,7 +31,7 @@ export class MockProductPriceRepository implements IProductPriceRepository {
             id: 0,
             unit: EProductUnit.KG,
             isDeleted: false,
-            defaultPrice: 100,
+            defaultPrice: new Decimal('100'),
             priceLevels: [],
             isDefault: true,
         }
@@ -46,20 +47,20 @@ export class MockProductPriceRepository implements IProductPriceRepository {
                 id: 0,
                 unit: EProductUnit.KG,
                 isDeleted: false,
-                defaultPrice: 101,
+                defaultPrice: new Decimal('101'),
                 priceLevels: [{
-                    minQuantity: 15,
-                    price: 50
+                    minQuantity: new Decimal(15),
+                    price: new Decimal('50')
                 }],
                 isDefault: true,
             },{
                 id: 1,
                 unit: EProductUnit.KG,
                 isDeleted: false,
-                defaultPrice: 102,
+                defaultPrice: new Decimal('102'),
                 priceLevels: [{
-                    minQuantity: 15,
-                    price: 50
+                    minQuantity: new Decimal(15),
+                    price: new Decimal('50')
                 }],
                 isDefault: false,
             },

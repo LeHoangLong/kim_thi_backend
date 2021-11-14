@@ -12,7 +12,7 @@ export interface IProductRepository {
     createProduct(product: Product): Promise<Product>;
     fetchNumberOfProducts(filter?: ProductSearchFilter): Promise<number>;
     fetchProducts(offset: number, limit: number): Promise<Product[]>;
-    fetchProductById(id: number) : Promise<Product>;
+    fetchProductById(id: number, ignoreDeleted?: boolean) : Promise<Product>;
     deleteProduct(pk: number) : Promise<number>;
     fetchProductsCountWithName(name: string) : Promise<number>;
     findProductsByName(name: string, offset: number, limit: number) : Promise<Product[]>;

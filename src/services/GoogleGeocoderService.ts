@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
 import { inject, injectable } from "inversify";
-import NodeGeocoder from "node-geocoder";
+import NodeGeocoder, { Entry } from "node-geocoder";
 import { NotFound } from "../exception/NotFound";
 import { Address } from "../model/Address";
 import { TYPES } from "../types";
@@ -15,8 +15,60 @@ export class GoogleGeocoderService implements IGeocoderService {
         this.geocoder = NodeGeocoder(option)
     }
 
+
+    async reverseGeocode(iLatitude: Decimal, iLongitude: Decimal) : Promise<Address> {
+        return new Promise<Address>((resolve, reject) => {
+            this.geocoder.reverse({
+                lat: iLatitude.toNumber(),
+                lon: iLongitude.toNumber()
+            }, (error, data) => {
+                if (error) {
+                    reject(error)
+                } else {
+                    let city: string | undefined
+                    let latitude: number | undefined
+                    let longitude: number | undefined
+                    let formattedAddress: string | undefined
+                    if (data.length > 0) {
+                        if (data[0].administrativeLevels?.level1short) {
+                            city = data[0].administrativeLevels?.level1short!
+                        } else if (data[0].administrativeLevels?.level1long) {
+                            city = data[0].administrativeLevels?.level1long!
+                        }
+
+                        if (data[0].latitude) {
+                            latitude = data[0].latitude
+                        }
+
+                        if (data[0].longitude) {
+                            longitude = data[0].longitude
+                        }
+
+                        if (data[0].formattedAddress) {
+                            formattedAddress = data[0].formattedAddress
+                        }
+                    }
+
+                    if (city && latitude && longitude && formattedAddress) {
+                        resolve({
+                            id: -1,
+                            latitude: new Decimal(latitude),
+                            longitude: new Decimal(longitude),
+                            city: city,
+                            isDeleted: false,
+                            address: formattedAddress,
+                        })
+                    } else {
+                        reject(new NotFound('Address', 'lat;long', iLatitude.toString() + ";" + iLongitude.toString()))                   
+                    }
+                }
+            })
+
+        })
+    }
+
+
     async geocode(address: string) : Promise<Address> {
-        this.geocoder.geocode(address)
         return new Promise<Address>((resolve, reject) => {
             this.geocoder.geocode(address, (error, data) => {
                 if (error) {

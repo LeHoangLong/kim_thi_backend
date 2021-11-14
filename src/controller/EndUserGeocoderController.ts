@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import { inject, injectable } from "inversify";
 import { UnsupportedCity } from "../exception/UnsupportedCity";
 import { Address } from "../model/Address";
@@ -20,6 +21,15 @@ export class EndUserGeocoderController {
         let isSupported = await this.transportRepository.isCitySupported(decodedAddress.city)
         if (!isSupported) {
             throw new UnsupportedCity(`${address} is not supported`)
+        }
+        return decodedAddress
+    }
+
+    async reverseGeocode(iLatitude: Decimal, iLongitude: Decimal) : Promise<Address> {
+        let decodedAddress = await this.geocoderService.reverseGeocode(iLatitude, iLongitude)
+        let isSupported = await this.transportRepository.isCitySupported(decodedAddress.city)
+        if (!isSupported) {
+            throw new UnsupportedCity(`${iLatitude.toString()};${iLongitude.toString()} is not supported`)
         }
         return decodedAddress
     }

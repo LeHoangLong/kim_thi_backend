@@ -151,15 +151,13 @@ export class ProductController {
          this.shouldUpdatePrice(prices, args)) {
             await this.connectionFactory.startTransaction(this, [this.productRepository, this.productPriceRepository], async () => {
                 await this.productRepository.deleteProduct(id)
-                // shouldn't need to do this as price is associated to immutable product, just like
-                // transport fee.
+                // shouldn't need to do this as price is associated to immutable product
                 // TODO: remove in the future
                 for (let i = 0; i < prices.length; i++) {
                     await this.productPriceRepository.deletePrice(prices[i].id!)
                 }
+                createdProduct = await this.createProduct(args)
             })
-
-            createdProduct = await this.createProduct(args)
         }
 
         let currentProductCategories : ProductCategory[] = await this.productRepository.fetchProductCategories(id)
@@ -170,7 +168,7 @@ export class ProductController {
             }
             let categories = await this.productRepository.updateProductCategories(id, categoryStr)
             if (createdProduct !== null) {
-                createdProduct.categories = categories
+                (createdProduct as ProductWithPricesAndImages).categories = categories
             }
         }
 

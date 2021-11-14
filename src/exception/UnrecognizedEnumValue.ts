@@ -1,9 +1,9 @@
-export class UnrecognizedEnumValue {
+export class UnrecognizedEnumValue implements Error {
+    public readonly name: string = 'UnrecognizedEnumValue'
+    public readonly message: string
     constructor(
         public readonly value: number | string
-    ) {}
-
-    toString(): string {
-        return 'Unrecognized value: ' + this.value;
+    ) {
+        this.message = 'Unrecognized enum value: ' + this.value
     }
 }
