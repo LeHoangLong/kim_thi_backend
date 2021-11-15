@@ -8,6 +8,7 @@ import { CustomerContact } from '../model/CustomerContact';
 import SQL from 'sql-template-strings';
 import { PostgresError } from 'pg-error-enum';
 import { DuplicateResource } from '../exception/DuplicateResource';
+import { NotFound } from '../exception/NotFound';
 
 @injectable()
 export class CustomerContactRepositoryPostgres implements ICustomerContactRepository {
@@ -15,17 +16,47 @@ export class CustomerContactRepositoryPostgres implements ICustomerContactReposi
         @inject(TYPES.CONNECTION_FACTORY) private connectionFactory: PostgresConnectionFactory
     ) {}
 
-    async createCustomerContact(arg: {phoneNumber?: string, email?: string}) : Promise<CustomerContact> {
+    async findCustomerContactByPhoneNumber(phoneNumber: string): Promise<CustomerContact> {
+        let ret : CustomerContact
+        await this.connectionFactory.getConnection(this, async connection => {
+            let response = await connection.query(`
+                SELECT 
+                    id,
+                    email,
+                    name
+                FROM "customer_contact"
+                WHERE phone_number = $1
+                    AND is_deleted = FALSE
+            `, [phoneNumber])
+            if (response.rows.length > 0) {
+                ret = {
+                    id: response.rows[0].id,
+                    email: response.rows[0].email,
+                    name: response.rows[0].name,
+                    phoneNumber: phoneNumber,
+                    isDeleted: false,
+                }
+            } else {
+                throw new NotFound("customer_contact", "phone_number", phoneNumber)
+            }
+        })
+
+        return ret!
+    }
+
+    async createCustomerContact(arg: {phoneNumber?: string, email?: string, name?: string}) : Promise<CustomerContact> {
         let ret: CustomerContact
         try {
             await this.connectionFactory.getConnection(this, async (connection) => {
                 let response = await connection.query(SQL`
                     INSERT INTO "customer_contact" (
                         email,
-                        phone_number
+                        phone_number,
+                        name
                     ) VALUES (
                         ${arg.email},
-                        ${arg.phoneNumber}
+                        ${arg.phoneNumber},
+                        ${arg.name}
                     ) RETURNING id
                 `)
                 ret = {
@@ -39,6 +70,10 @@ export class CustomerContactRepositoryPostgres implements ICustomerContactReposi
 
                 if (arg.phoneNumber) {
                     ret.phoneNumber = arg.phoneNumber
+                }
+
+                if (arg.name) {
+                    ret.name = arg.name
                 }
             })
             return ret!

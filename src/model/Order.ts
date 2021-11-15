@@ -6,6 +6,7 @@ import { EProductUnit } from './ProductPrice'
 
 export interface OrderItem {
     id: number,
+    productId: number,
     price: Decimal,
     quantity: Decimal,
     unit: EProductUnit,

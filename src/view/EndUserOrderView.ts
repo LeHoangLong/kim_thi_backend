@@ -44,6 +44,7 @@ export class EndUserOrderView {
 
         let contact = {
             phoneNumber: request.body.customerContact.phoneNumber,
+            name: request.body.customerContact.name,
         }
 
         let expectedPrice = new Decimal(request.body.expectedPrice)

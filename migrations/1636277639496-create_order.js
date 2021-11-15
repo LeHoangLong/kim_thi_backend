@@ -25,9 +25,19 @@ module.exports.up = async function (next) {
           email TEXT UNIQUE,
           phone_number TEXT UNIQUE,
           CONSTRAINT constraint_1 CHECK(email IS NOT NULL OR phone_number IS NOT NULL),
-          is_deleted BOOLEAN DEFAULT FALSE
+          is_deleted BOOLEAN DEFAULT FALSE,
+          name TEXT
         )
     `)
+
+    await client.query(`
+        CREATE UNIQUE INDEX phone_number_idx ON "customer_contact"(phone_number) WHERE is_deleted = TRUE
+    `)
+
+    await client.query(`
+        CREATE UNIQUE INDEX email_idx ON "customer_contact"(email) WHERE is_deleted = TRUE
+    `)
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS "order" (
         id SERIAL PRIMARY KEY,
@@ -54,12 +64,15 @@ module.exports.up = async function (next) {
         order_id INTEGER REFERENCES "order"(id) ON UPDATE CASCADE ON DELETE NO ACTION,
         unit INTEGER,
         price DECIMAL NOT NULL,
-        quantity DECIMAL NOT NULL
+        quantity DECIMAL NOT NULL,
+        product_id INTEGER NOT NULL REFERENCES "product"(id) ON DELETE NO ACTION ON UPDATE CASCADE
       )
     `)
 
     await client.query('COMMIT')
   } catch (exception) {
+    console.log('exception')
+    console.log(exception)
     await client.query(`ROLLBACK`)
     throw exception
   } finally {

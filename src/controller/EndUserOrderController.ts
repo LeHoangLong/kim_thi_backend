@@ -1,9 +1,11 @@
 import Decimal from "decimal.js";
 import { inject, injectable } from "inversify";
+import { DuplicateResource } from "../exception/DuplicateResource";
 import { IncorrectValue } from "../exception/IncorrectValue";
 import { NotFound } from "../exception/NotFound";
 import { UnsupportedCity } from "../exception/UnsupportedCity";
 import { AreaTransportFee } from "../model/AreaTransportFee";
+import { CustomerContact } from "../model/CustomerContact";
 import { Order, OrderItem } from "../model/Order";
 import { EProductUnit } from "../model/ProductPrice";
 import { parseOrder } from "../parsers/OrderParser";
@@ -29,6 +31,7 @@ export interface CreateOrderArg {
         longitude: Decimal,
     },
     contact: {
+        name: string,
         phoneNumber: string,
     },
     expectedPrice: Decimal,
@@ -104,6 +107,7 @@ export class EndUserOrderController {
                     price: priceValue,
                     quantity: quantity,
                     unit: arg.items[i].unit,
+                    productId: arg.items[i].productId,
                 })
             }
 
@@ -126,7 +130,19 @@ export class EndUserOrderController {
                 }
             }
 
-            let contact = await this.customerContactRepository.createCustomerContact({phoneNumber: arg.contact.phoneNumber})
+            let contact : CustomerContact
+            try {
+                contact = await this.customerContactRepository.findCustomerContactByPhoneNumber(arg.contact.phoneNumber)
+            } catch (exception) {
+                if (exception instanceof NotFound) {
+                    contact = await this.customerContactRepository.createCustomerContact({
+                        phoneNumber: arg.contact.phoneNumber,
+                        name: arg.contact.name,
+                    })
+                } else {
+                    throw exception
+                }
+            }
 
             if (total.equals(arg.expectedPrice)) {
                 let order = await this.orderRepository.createOrder({
@@ -137,7 +153,7 @@ export class EndUserOrderController {
                     shippingAddress: address,
                     areaTransportFee: shippingFee,
                 })
-                await this.emailService.sendEmail(this.adminEmail, parseOrder(order).toString(), 'Đơn hàng mới')
+                await this.emailService.sendEmail(this.adminEmail, JSON.stringify(parseOrder(order), null, 2), 'Đơn hàng mới')
                 ret = order
             } else {
                 throw new IncorrectValue('Mismatch expected price')

@@ -33,6 +33,9 @@ describe('Test order repository', async () => {
     let customerContact: CustomerContact
     let address: Address
     let areaTransportFee: AreaTransportFee
+    let product: Product
+    let image: Image
+    
     describe('create order', async () => {
         beforeEach(async () => {
             let customerContactRepository = myContainer.get<ICustomerContactRepository>(TYPES.CUSTOMER_CONTACT_REPOSITORY)
@@ -54,6 +57,30 @@ describe('Test order repository', async () => {
                 transportOriginIds: [],
                 isDeleted: false,
             });
+
+            let imageRepository = myContainer.get<IImageRepository>(TYPES.IMAGE_REPOSITORY)
+            image = await imageRepository.createImage()
+
+            let productController = myContainer.get<ProductController>(TYPES.PRODUCT_CONTROLLER)
+            let productWithPricesAndImages = await productController.createProduct({
+                serialNumber: '0', 
+                name: 'product-0',
+                avatarId: image.id,
+                rank: 1,
+                wholesalePrices: ['wholesale-price-1', 'wholesale-price-2'],
+                defaultPrice: {
+                    id: null,
+                    unit: EProductUnit.KG,
+                    defaultPrice: new Decimal('100.05'),
+                    isDeleted: false,
+                    priceLevels: [],
+                    isDefault: true,
+                },
+                alternativePrices: [],
+                categories: [],
+            })
+
+            product = productWithPricesAndImages.product
         })
         it('should succeed', async () => {
             let orderRepository = myContainer.get<IOrderRepository>(TYPES.ORDER_REPOSITORY)
@@ -64,12 +91,14 @@ describe('Test order repository', async () => {
                         quantity: new Decimal(1),
                         price: new Decimal('100.05'),
                         unit: EProductUnit.KG,
+                        productId: product.id!,
                     },
                     {
                         id: -1,
                         quantity: new Decimal(2),
                         price: new Decimal('200.05'),
                         unit: EProductUnit.KG,
+                        productId: product.id!,
                     },
                 ],
                 message: 'message-1',
@@ -86,12 +115,14 @@ describe('Test order repository', async () => {
                         id: order.items[0].id,
                         quantity: new Decimal(1),
                         price: new Decimal('100.05'),
+                        productId: product.id,
                         unit: EProductUnit.KG,
                     },
                     {
                         id: order.items[1].id,
                         quantity: new Decimal(2),
                         price: new Decimal('200.05'),
+                        productId: product.id,
                         unit: EProductUnit.KG,
                     },
                 ],
@@ -220,6 +251,7 @@ describe('Test enduser order view', async () => {
                 },
                 customerContact: {
                     phoneNumber: '+84123456',
+                    name: 'name',
                 },
                 expectedPrice: '1110.505',
                 customerMessage: 'message-1'
@@ -232,6 +264,7 @@ describe('Test enduser order view', async () => {
             chai.expect(sendSpy.getCall(0).args[0].items).to.eql([{
                 id: 0,
                 unit: 'KG',
+                productId: product.id,
                 quantity: '10',
                 price: '100.05',
             }])
@@ -244,6 +277,7 @@ describe('Test enduser order view', async () => {
                 id: sendSpy.getCall(0).args[0].customerContact.id,
                 isDeleted: false,
                 phoneNumber: '+84123456',
+                name: 'name',
             })
             chai.expect(sendSpy.getCall(0).args[0].paymentAmount).to.eql('1110.505')
             chai.expect(sendSpy.getCall(0).args[0].address).to.eql({
@@ -270,6 +304,9 @@ describe('Test enduser order view', async () => {
             })
             chai.expect(mockOrderRepository.orders.length).to.eql(1)
             chai.expect(mockEmailService.sentEmails.length).to.eql(1)
+            console.log('mockEmailService.sentEmails[0]')
+            console.log(mockEmailService.sentEmails[0])
+            chai.expect(typeof(mockEmailService.sentEmails[0].content)).to.eql('string')
         })
         it('should fail if mismatch', async () => {
             
@@ -288,6 +325,7 @@ describe('Test enduser order view', async () => {
                 },
                 customerContact: {
                     phoneNumber: '+84123456',
+                    name: 'name',
                 },
                 expectedPrice: '1000.5001',
                 customerMessage: 'message-1'

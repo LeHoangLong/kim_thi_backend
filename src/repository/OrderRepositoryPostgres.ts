@@ -58,7 +58,8 @@ export class OrderRepositoryPostgres implements IOrderRepository {
                             order_id,
                             unit,
                             price,
-                            quantity
+                            quantity,
+                            product_id
                         ) VALUES
                     `
                     for (let i = 0; i < arg.items.length; i++) { 
@@ -67,7 +68,8 @@ export class OrderRepositoryPostgres implements IOrderRepository {
                                 ${ret.id},
                                 ${arg.items[i].unit},
                                 ${arg.items[i].price.toString()},
-                                ${arg.items[i].quantity.toString()}
+                                ${arg.items[i].quantity.toString()},
+                                ${arg.items[i].productId}
                             )
                         `)
 
@@ -92,6 +94,7 @@ export class OrderRepositoryPostgres implements IOrderRepository {
                         price: arg.items[i].price,
                         unit: arg.items[i].unit,
                         quantity: arg.items[i].quantity,
+                        productId: arg.items[i].productId,
                     })
                 }
             })

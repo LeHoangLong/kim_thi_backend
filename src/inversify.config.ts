@@ -110,7 +110,7 @@ export function resetContainer() {
     myContainer.bind<EndUserProductController>(TYPES.END_USER_PRODUCT_CONTROLLER).to(EndUserProductController)
 
     myContainer.bind<IEmailService>(TYPES.EMAIL_SERVICE).toConstantValue(new EMailService('gmail', 'erenjeager212121@gmail.com', 'whatisagoodpassword'));
-    myContainer.bind<string>(TYPES.ADMIN_EMAIL).toConstantValue('kimthi@gmail.com')
+    myContainer.bind<string>(TYPES.ADMIN_EMAIL).toConstantValue('le.hoang.long@outlook.com')
 }
 
 resetContainer()

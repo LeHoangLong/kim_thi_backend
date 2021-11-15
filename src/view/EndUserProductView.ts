@@ -5,6 +5,7 @@ import express from 'express';
 import { ProductController } from '../controller/ProductController';
 const config = require('../config').config;
 import { EProductUnitToString } from '../model/ProductPrice';
+import { NotFound } from '../exception/NotFound';
 
 @injectable()
 export class EndUserProductView {
@@ -35,14 +36,24 @@ export class EndUserProductView {
         if (request.params.id === undefined) {
             return response.status(400).send('Missing id')
         }
-        let productId = parseInt(request.params.id)
-        let productDetail = await this.productController.fetchProductDetailById(productId)
-        productDetail.prices.forEach(e => (e.unit as any) = EProductUnitToString(e.unit))
-        let ret :any = {...productDetail}
-        delete ret['prices']
-        ret.defaultPrice = productDetail.prices.find(e => e.isDefault)
-        ret.alternativePrices = productDetail.prices.filter(e => !e.isDefault)
-
-        return response.status(200).send(ret)
+        try {
+            let productId = parseInt(request.params.id)
+            let productDetail = await this.productController.fetchProductDetailById(productId)
+            productDetail.prices.forEach(e => (e.unit as any) = EProductUnitToString(e.unit))
+            let ret :any = {...productDetail}
+            delete ret['prices']
+            ret.defaultPrice = productDetail.prices.find(e => e.isDefault)
+            ret.alternativePrices = productDetail.prices.filter(e => !e.isDefault)
+            
+            return response.status(200).send(ret)
+        } catch (exception) {
+            if (exception instanceof NotFound) {
+                return response.status(404).send()
+            } else {
+                console.log('exception')
+                console.log(exception)
+                return response.status(500).send(exception)
+            }
+        }
     }
 }
