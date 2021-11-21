@@ -136,7 +136,10 @@ describe('Test order repository', async () => {
                 paymentAmount: new Decimal('100000.001'),
                 address: address,
                 areaTransportFee: areaTransportFee,
+                orderTime: order.orderTime,
             })
+
+            chai.expect(order.orderTime).to.be.instanceOf(Date)
         })
     })
 })

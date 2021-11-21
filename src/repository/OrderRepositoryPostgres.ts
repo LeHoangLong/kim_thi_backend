@@ -30,7 +30,7 @@ export class OrderRepositoryPostgres implements IOrderRepository {
                         ${arg.paymentAmount.toString()},
                         ${arg.areaTransportFee.id},
                         ${arg.customerContact.id}
-                    ) RETURNING id, payment_amount
+                    ) RETURNING id, payment_amount, order_time
                 `
 
                 let response = await connection.query(query)
@@ -49,6 +49,7 @@ export class OrderRepositoryPostgres implements IOrderRepository {
                     paymentAmount: new Decimal(row.payment_amount),
                     address: arg.shippingAddress,
                     areaTransportFee: arg.areaTransportFee,
+                    orderTime: row.order_time,
                 }
 
                 let orderItemIds : number[] = []

@@ -47,6 +47,7 @@ module.exports.up = async function (next) {
         is_paid BOOLEAN DEFAULT FALSE,
         is_cancelled BOOLEAN DEFAULT FALSE,
         start_delivery_time TIMESTAMPTZ,
+        order_time TIMESTAMPTZ DEFAULT NOW() NOT NULL,
         received_time TIMESTAMPTZ,
         payment_time TIMESTAMPTZ,
         cancel_time TIMESTAMPTZ,

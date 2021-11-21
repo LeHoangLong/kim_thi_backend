@@ -21,6 +21,7 @@ export class MockOrderRepository implements IOrderRepository {
             paymentAmount: arg.paymentAmount,
             address: arg.shippingAddress,
             areaTransportFee: arg.areaTransportFee,
+            orderTime: new Date(),
         }
 
         this.orders.push(ret)

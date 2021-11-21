@@ -29,4 +29,5 @@ export interface Order {
     paymentAmount: Decimal,
     address: Address,
     areaTransportFee: AreaTransportFee,
+    orderTime: Date,
 }
