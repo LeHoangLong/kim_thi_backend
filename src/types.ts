@@ -50,4 +50,7 @@ export const TYPES = {
 
     EMAIL_SERVICE: Symbol.for('EMAIL_SERVICE'),
     ADMIN_EMAIL: Symbol.for('ADMIN_EMAIL'),
+
+    ADMIN_ORDER_CONTROLLER: Symbol.for('ADMIN_ORDER_CONTROLLER'),
+    ADMIN_ORDER_VIEW: Symbol.for('ADMIN_ORDER_VIEW'),
 }

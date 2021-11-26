@@ -15,16 +15,12 @@ export class EndUserProductCategoryView {
     async fetchProductCategoriesView(request: express.Request, response: express.Response) {
         try {
             let limit = parseInt(request.query.limit as string)
-            console.log('limit')
-            console.log(limit)
             if (isNaN(limit)) {
                 limit = config.pagination.defaultSize
             }
 
             let offset = parseInt(request.query.offset as string)
 
-            console.log('offset')
-            console.log(offset)
             if (isNaN(offset)) {
                 offset = 0
             }

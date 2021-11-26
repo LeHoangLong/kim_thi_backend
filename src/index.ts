@@ -13,6 +13,7 @@ import endUserProductCategoryRoutes from './routes/EndUserProductCategoryRoute'
 import endUserGeocodingRoutes from './routes/EndUserGeocoderRoute'
 import endUserTransportFeeRoutes from './routes/EndUserAreaTransportFeeRoute'
 import endUserOrderRoutes from './routes/EndUserOrderRoute'
+import adminOrderRoutes from './routes/AdminOrderRoute'
 import { myContainer } from './inversify.config';
 import { JwtAuthenticator } from './middleware/JwtAuthenticator';
 import fileUpload from 'express-fileupload'
@@ -72,6 +73,7 @@ app.use('/backend/products', productRoutes)
 app.use('/backend/images', imageRoutes)
 app.use('/backend/categories', productCategoryRoutes)
 app.use('/backend/transport_fees', transportFeeRoutes)
+app.use('/backend/orders', adminOrderRoutes)
 app.use('/backend/enduser/products', endUserProductRoutes)
 app.use('/backend/enduser/categories', endUserProductCategoryRoutes)
 app.use('/backend/enduser/geocoding', endUserGeocodingRoutes)

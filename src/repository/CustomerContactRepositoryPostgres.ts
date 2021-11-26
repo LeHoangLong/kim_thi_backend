@@ -87,4 +87,40 @@ export class CustomerContactRepositoryPostgres implements ICustomerContactReposi
             throw exception
         }
     }
+
+
+    async findCustomerContactById(id: number): Promise<CustomerContact> {
+        let ret: CustomerContact
+        await this.connectionFactory.getConnection(this, async connection => {
+            let response = await connection.query(SQL`
+                SELECT
+                    email,
+                    phone_number,
+                    name
+                FROM "customer_contact"
+                WHERE id = ${id} AND is_deleted = FALSE
+            `)
+
+            if (response.rows.length === 0) {
+                throw new NotFound("customer_contact", "id", id.toString())
+            }
+            ret = {
+                id: id,
+                isDeleted: false,
+            }
+
+            if (response.rows[0].email !== null) {
+                ret.email = response.rows[0].email
+            }
+
+            if (response.rows[0].phone_number !== null) {
+                ret.phoneNumber = response.rows[0].phone_number
+            }
+
+            if (response.rows[0].name !== null) {
+                ret.name = response.rows[0].name
+            }
+        })
+        return ret!
+    }
 }

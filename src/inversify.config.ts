@@ -54,6 +54,8 @@ import { EndUserAddressController } from "./controller/EndUserAddressController"
 import { EndUserProductController } from "./controller/EndUserProductController";
 import { IEmailService } from "./services/IEmailService";
 import { EMailService } from "./services/EmailService";
+import { AdminOrderView } from "./view/AdminOrderView";
+import { AdminOrderController } from "./controller/AdminOrderController";
 
 
 export let myContainer = new Container();
@@ -111,6 +113,9 @@ export function resetContainer() {
 
     myContainer.bind<IEmailService>(TYPES.EMAIL_SERVICE).toConstantValue(new EMailService('gmail', 'erenjeager212121@gmail.com', 'whatisagoodpassword'));
     myContainer.bind<string>(TYPES.ADMIN_EMAIL).toConstantValue('le.hoang.long@outlook.com')
+
+    myContainer.bind<AdminOrderController>(TYPES.ADMIN_ORDER_CONTROLLER).to(AdminOrderController)
+    myContainer.bind<AdminOrderView>(TYPES.ADMIN_ORDER_VIEW).to(AdminOrderView)
 }
 
 resetContainer()
