@@ -28,7 +28,12 @@ export class ProductView {
             offset = 0;
         }
 
-        let products = await this.productController.fetchProductSummaries(offset, limit);
+        let search = ''
+        if (typeof(request.query.productSearch) === 'string') {
+            search = request.query.productSearch
+        }
+
+        let [count, products] = await this.productController.findProductsByName(search, offset, limit);
         for (let i = 0; i < products.length; i++) {
             products[i] = parseProductSummary(products[i])
         }

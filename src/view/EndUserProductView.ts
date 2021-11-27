@@ -6,6 +6,7 @@ import { ProductController } from '../controller/ProductController';
 const config = require('../config').config;
 import { EProductUnitToString } from '../model/ProductPrice';
 import { NotFound } from '../exception/NotFound';
+import { parseProductSummary } from '../parsers/ProductParser';
 
 @injectable()
 export class EndUserProductView {
@@ -23,7 +24,15 @@ export class EndUserProductView {
             offset = 0;
         }
 
-        let products = await this.productController.fetchProductSummaries(offset, limit);
+        let search = ''
+        if (typeof(request.query.productSearch) === 'string') {
+            search = request.query.productSearch
+        }
+
+        let [count, products] = await this.productController.findProductsByName(search, offset, limit);
+        for (let i = 0; i < products.length; i++) {
+            products[i] = parseProductSummary(products[i])
+        }
         return response.status(200).send(products);
     }
 
