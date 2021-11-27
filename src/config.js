@@ -23,8 +23,6 @@ const config = {
     }
 }
 
-console.log('process.env.CLOUD')
-console.log(process.env.CLOUD)
 if (process.env.CLOUD) {
     config.postgres = {
         host: '/cloudsql/kimthi:asia-southeast1:kim-thi-main',
