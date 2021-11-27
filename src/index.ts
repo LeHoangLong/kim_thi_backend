@@ -20,15 +20,16 @@ import fileUpload from 'express-fileupload'
 import { DuplicateResource } from './exception/DuplicateResource';
 import { NotFound } from './exception/NotFound';
 
-console.log('start asdasdasdasdsadas')
 var migrate = require('migrate')
 var path = require('path')
+var cors = require('cors')
 
 const app = express();
 const port = 80;
 const jwtAuthentication = myContainer.get<JwtAuthenticator>(TYPES.JWT_AUTHENTICATOR);
 
 app.set('view engine', 'ejs');
+app.use(cors())
 app.use(express.json());
 app.use(cookies());
 app.use(generateContext);
