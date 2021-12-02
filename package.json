@@ -8,7 +8,7 @@
     "full_test": "FULL_TEST=true mocha --exit -r ts-node/register --file ./src/setupTest.ts src/tests/**/*.test.ts",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "prod": "ls migrations/ && npx migrate up 1627888299291-create_transport_fee.js  && node ./build/src/index.js"
+    "prod": "npx migrate up && node ./build/src/index.js"
   },
   "author": "le.hoang.long@outlook.com",
   "license": "",
