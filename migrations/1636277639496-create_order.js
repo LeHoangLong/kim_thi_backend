@@ -31,11 +31,11 @@ module.exports.up = async function (next) {
     `)
 
     await client.query(`
-        CREATE UNIQUE INDEX phone_number_idx ON "customer_contact"(phone_number) WHERE is_deleted = TRUE
+        CREATE UNIQUE INDEX IF NOT EXISTS phone_number_idx ON "customer_contact"(phone_number) WHERE is_deleted = TRUE
     `)
 
     await client.query(`
-        CREATE UNIQUE INDEX email_idx ON "customer_contact"(email) WHERE is_deleted = TRUE
+        CREATE UNIQUE INDEX IF NOT EXISTS email_idx ON "customer_contact"(email) WHERE is_deleted = TRUE
     `)
 
     await client.query(`
