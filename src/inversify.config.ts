@@ -56,6 +56,8 @@ import { IEmailService } from "./services/IEmailService";
 import { EMailService } from "./services/EmailService";
 import { AdminOrderView } from "./view/AdminOrderView";
 import { AdminOrderController } from "./controller/AdminOrderController";
+import { Storage } from "@google-cloud/storage";
+import { BinaryRepositoryGCloudStorage } from "./repository/BinaryRepositoryGCloudStorage";
 
 
 export let myContainer = new Container();
@@ -73,7 +75,6 @@ export function resetContainer() {
     myContainer.bind<IProductRepository>(TYPES.PRODUCT_REPOSITORY).to(ProductRepositoryPostgres);
     myContainer.bind<IProductPriceRepository>(TYPES.PRODUCT_PRICE_REPOSITORY).to(PriceRepositoryPostgres);
     myContainer.bind<IImageRepository>(TYPES.IMAGE_REPOSITORY).to(ImageRepositoryPostgres)
-    myContainer.bind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).to(BinaryRepositoryFileSystem)
     myContainer.bind<ProductController>(TYPES.PRODUCT_CONTROLLER).to(ProductController)
     myContainer.bind<ProductImageController>(TYPES.PRODUCT_IMAGE_CONTROLLER).to(ProductImageController)
     myContainer.bind<ProductView>(TYPES.PRODUCT_VIEW).to(ProductView)
@@ -116,6 +117,15 @@ export function resetContainer() {
 
     myContainer.bind<AdminOrderController>(TYPES.ADMIN_ORDER_CONTROLLER).to(AdminOrderController)
     myContainer.bind<AdminOrderView>(TYPES.ADMIN_ORDER_VIEW).to(AdminOrderView)
+
+    myContainer.bind<string>(TYPES.GOOGLE_CLOUD_STORAGE_BUCKET_NAME).toConstantValue('kim-thi')
+    myContainer.bind<Storage>(TYPES.GOOGLE_CLOUD_STORAGE).toConstantValue(new Storage())
+
+    if (process.env.GCLOUD !== undefined) {
+        myContainer.bind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).to(BinaryRepositoryGCloudStorage)
+    } else {
+        myContainer.bind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).to(BinaryRepositoryFileSystem)
+    }
 }
 
 resetContainer()

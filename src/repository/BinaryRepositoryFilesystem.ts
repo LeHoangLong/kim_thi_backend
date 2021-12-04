@@ -14,7 +14,7 @@ export class BinaryRepositoryFileSystem implements IBinaryRepository {
                 fs.mkdirSync(joinedPath)
             }
             fs.writeFile(path, data, { flag: 'w' }, (error) => {
-                if (error != null) {
+                if (error == null) {
                     resolve(true);
                 } else {
                     resolve(false);
