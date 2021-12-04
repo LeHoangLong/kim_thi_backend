@@ -165,13 +165,14 @@ describe('Product view and controller test', async function() {
             wholesalePrices: ['wholesale_price_1'],
         })
         let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
+        context.request.query.offset = 1
         await productView.fetchProducts(context.request as Request, context.response as Response)
         sinon.assert.calledOnceWithExactly(context.statusSpy, 200)
-        chai.expect(context.sendSpy.getCall(0).args[0][0]).to.eql({
+        chai.expect(context.sendSpy.getCall(0).args[0]).to.eql([{
             product: {
-                id: 2,
-                serialNumber: '2',
-                name: 'name_2',
+                id: 3,
+                serialNumber: '3',
+                name: 'name_3',
                 isDeleted: false,
                 avatarId: '0',
                 createdTimeStamp: context.now,
@@ -192,64 +193,8 @@ describe('Product view and controller test', async function() {
                 createdTimeStamp: context.now,
                 path: 'product_images_0'
             }
-        },)
+        },])
         sinon.assert.calledOnce(context.sendSpy)
-        
-        chai.expect(context.sendSpy.getCall(0).args[0]).to.eql([
-            {
-                product: {
-                    id: 2,
-                    serialNumber: '2',
-                    name: 'name_2',
-                    isDeleted: false,
-                    avatarId: '0',
-                    createdTimeStamp: context.now,
-                    rank: 0,
-                    wholesalePrices: ['wholesale_price_1']
-                },
-                defaultPrice: {
-                  id: 0,
-                  unit: 'KG',
-                  isDeleted: false,
-                  defaultPrice: '100',
-                  priceLevels: [],
-                  isDefault: true
-                },
-                avatar: {
-                    id: '0',
-                    isDeleted: false,
-                    createdTimeStamp: context.now,
-                    path: 'product_images_0'
-                }
-            },
-            {
-                product: {
-                    id: 3,
-                    serialNumber: '3',
-                    name: 'name_3',
-                    isDeleted: false,
-                    avatarId: '0',
-                    createdTimeStamp: context.now,
-                    rank: 0,
-                    wholesalePrices: ['wholesale_price_1'],
-                },
-                defaultPrice: {
-                  id: 0,
-                  unit: 'KG',
-                  isDeleted: false,
-                  defaultPrice: '100',
-                  priceLevels: [],
-                  isDefault: true
-                },
-                avatar: {
-                    id: '0',
-                    isDeleted: false,
-                    createdTimeStamp: context.now,
-                    path: 'product_images_0'
-                }
-            }
-        ])
-        
     });
 
     it('Fetch product count', async function() {

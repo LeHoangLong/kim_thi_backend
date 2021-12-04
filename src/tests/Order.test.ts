@@ -702,7 +702,7 @@ describe('Order tests', async () => {
                     
                     await adminOrderView.fetchNumberOfOrders(request, response)
                     sinon.assert.calledOnceWithExactly(statusSpy, 200)
-                    sinon.assert.calledOnceWithExactly(sendSpy, 0)
+                    sinon.assert.calledOnceWithExactly(sendSpy, '0')
                 })
             })
 
@@ -728,7 +728,7 @@ describe('Order tests', async () => {
                     
                     await adminOrderView.fetchNumberOfOrders(request, response)
                     sinon.assert.calledOnceWithExactly(statusSpy, 200)
-                    sinon.assert.calledOnceWithExactly(sendSpy, 1)
+                    sinon.assert.calledOnceWithExactly(sendSpy, '1')
                 })
             })
         })

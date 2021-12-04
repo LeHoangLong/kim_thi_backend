@@ -89,23 +89,5 @@ app.use('/backend/enduser/orders', endUserOrderRoutes)
 app.use('/', pageRoutes)
 
 app.listen(port, async () => {
-  await new Promise((resolve, reject) => {
-    migrate.load({
-      stateStore: './migrations-state/.migrate-development'
-    }, function(err: any, set: any) {
-      if (err) {
-        console.log('err')
-        console.log(err)
-        throw err;
-      } else {
-        console.log('migrate up')
-        set.up(function() {
-          console.log('migration finished')
-          resolve(true)
-        });
-      }
-    })
-  })
-
   return console.log(`server is listening on ${port}`);
 });

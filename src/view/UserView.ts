@@ -21,8 +21,6 @@ export class UserView {
             var [jwt, maxAge] = ret;
             let option: CookieOptions = {
                 maxAge: maxAge,
-                sameSite: 'none',
-                secure: true,
             };
             response.cookie("jwt", jwt, option);
             return response.status(200).send();

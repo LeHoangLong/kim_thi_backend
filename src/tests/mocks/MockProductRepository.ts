@@ -34,12 +34,34 @@ export class MockProductRepository implements IProductRepository {
         return ret
     }
 
-    fetchProductsCountWithName(name: string): Promise<number> {
-        throw new Error("Method not implemented.");
+    async fetchProductsCountWithName(name: string): Promise<number> {
+        let products : Product[] = []
+        for (let [productId, product] of this.products.entries()) {
+            if (name === '' || product.name.includes(name)) {
+                products.push(product)
+            }
+        }
+        return products.length
     }
 
-    findProductsByName(name: string, offset: number, limit: number): Promise<Product[]> {
-        throw new Error("Method not implemented.");
+    async findProductsByName(name: string, offset: number, limit: number): Promise<Product[]> {
+        let products : Product[] = []
+        for (let [productId, product] of this.products.entries()) {
+            if (product.name.includes(name)) {
+                products.push(product)
+            }
+        }
+
+        let ret: Product[] = []
+        console.log('offset')
+        console.log(offset)
+        console.log(limit)
+        for (let i = offset; i < offset + limit && i < products.length; i++) {
+            ret.push(products[i])
+        }
+        console.log('ret.length')
+        console.log(ret.length)
+        return ret
     }
 
     async fetchProductCategories(productId: number): Promise<ProductCategory[]> {

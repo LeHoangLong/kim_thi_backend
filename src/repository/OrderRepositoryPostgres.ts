@@ -213,8 +213,6 @@ export class OrderRepositoryPostgres implements IOrderRepository {
     
     async fetchNumberOfOrders(arg: FilterOrderArg): Promise<number> {
         let ret: number = 0
-        console.log('arg')
-        console.log(arg)
         await this.connectionFactory.getConnection(this, async connection => {
             let response = await connection.query(SQL`
                 SELECT 
