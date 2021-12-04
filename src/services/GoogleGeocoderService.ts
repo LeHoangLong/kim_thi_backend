@@ -69,8 +69,11 @@ export class GoogleGeocoderService implements IGeocoderService {
 
 
     async geocode(address: string) : Promise<Address> {
-        return new Promise<Address>((resolve, reject) => {
-            this.geocoder.geocode(address, (error, data) => {
+        return new Promise<Address>(async (resolve, reject) => {
+            this.geocoder.geocode({
+                address,
+                minConfidence: 0,
+            }, (error, data) => {
                 if (error) {
                     reject(error)
                 } else {

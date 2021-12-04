@@ -32,6 +32,7 @@ if (process.env.FULL_TEST) {
 
 
             it('Should give correct city with short name', async function name() {
+                // This is currently failing due to google not returning the correct response
                 let googleGeocoder = myContainer.get<IGeocoderService>(TYPES.GEOCODER_SERVICE)
                 let address = await googleGeocoder.geocode('Hồ Chí Minh')
                 chai.expect(address.city).to.eql('Thành phố Hồ Chí Minh')
