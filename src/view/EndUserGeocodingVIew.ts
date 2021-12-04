@@ -25,6 +25,8 @@ export class EndUserGeocodingView {
                     city: address.city,
                 })
             } catch (exception) {
+                console.log('end user geocoding exception')
+                console.log(exception)
                 response.status(404).send()
             }
         }
