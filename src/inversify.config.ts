@@ -127,8 +127,6 @@ export function resetContainer() {
 
     myContainer.bind<string>(TYPES.SEND_GRID_API_KEY).toConstantValue(process.env.SENDGRID_API_KEY!)
     myContainer.bind<string>(TYPES.SEND_GRID_SENDER_EMAIL).toConstantValue('erenjeager212121@gmail.com')
-    myContainer.bind<string>(TYPES.SEND_GRID_SENDER_EMAIL).toConstantValue('erenjeager212121@gmail.com')
-
     
     myContainer.bind<IEmailService>(TYPES.EMAIL_SERVICE).to(SendGridEmailService);
     if (process.env.GCLOUD !== undefined) {
