@@ -58,6 +58,7 @@ import { AdminOrderView } from "./view/AdminOrderView";
 import { AdminOrderController } from "./controller/AdminOrderController";
 import { Storage } from "@google-cloud/storage";
 import { BinaryRepositoryGCloudStorage } from "./repository/BinaryRepositoryGCloudStorage";
+import { SendGridEmailService } from "./services/SendGridEmailService";
 
 
 export let myContainer = new Container();
@@ -112,9 +113,6 @@ export function resetContainer() {
     myContainer.bind<EndUserAddressController>(TYPES.END_USER_ADDRESS_CONTROLLER).to(EndUserAddressController)
     myContainer.bind<EndUserProductController>(TYPES.END_USER_PRODUCT_CONTROLLER).to(EndUserProductController)
 
-    myContainer.bind<IEmailService>(TYPES.EMAIL_SERVICE).toConstantValue(new EMailService('gmail', 'erenjeager212121@gmail.com', 'whatisagoodpassword'));
-    myContainer.bind<string>(TYPES.ADMIN_EMAIL).toConstantValue('le.hoang.long@outlook.com')
-
     myContainer.bind<AdminOrderController>(TYPES.ADMIN_ORDER_CONTROLLER).to(AdminOrderController)
     myContainer.bind<AdminOrderView>(TYPES.ADMIN_ORDER_VIEW).to(AdminOrderView)
 
@@ -125,6 +123,18 @@ export function resetContainer() {
         myContainer.bind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).to(BinaryRepositoryGCloudStorage)
     } else {
         myContainer.bind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).to(BinaryRepositoryFileSystem)
+    }
+
+    myContainer.bind<string>(TYPES.SEND_GRID_API_KEY).toConstantValue(process.env.SENDGRID_API_KEY!)
+    myContainer.bind<string>(TYPES.SEND_GRID_SENDER_EMAIL).toConstantValue('erenjeager212121@gmail.com')
+    myContainer.bind<string>(TYPES.SEND_GRID_SENDER_EMAIL).toConstantValue('erenjeager212121@gmail.com')
+
+    
+    myContainer.bind<IEmailService>(TYPES.EMAIL_SERVICE).to(SendGridEmailService);
+    if (process.env.GCLOUD !== undefined) {
+        myContainer.bind<string>(TYPES.ADMIN_EMAIL).toConstantValue('lecong364@gmail.com')
+    } else {
+        myContainer.bind<string>(TYPES.ADMIN_EMAIL).toConstantValue('le.hoang.long@outlook.com')
     }
 }
 
