@@ -7,7 +7,7 @@ import { UnsupportedCity } from "../exception/UnsupportedCity";
 import { AreaTransportFee } from "../model/AreaTransportFee";
 import { CustomerContact } from "../model/CustomerContact";
 import { Order, OrderItem } from "../model/Order";
-import { EProductUnit } from "../model/ProductPrice";
+import { EProductUnit, EProductUnitToString } from "../model/ProductPrice";
 import { parseOrder } from "../parsers/OrderParser";
 import { ICustomerContactRepository } from "../repository/ICustomerContactRepository";
 import { IOrderRepository } from "../repository/IOrderRepository";
@@ -52,6 +52,31 @@ export class EndUserOrderController {
     ) {
 
     }
+
+    private async orderToEmail(order: Order) : Promise<string> {
+        let ret: string = ''
+        let products : Map<number, ProductAndPrice> = new Map()
+
+        for (let i = 0; i < order.items.length; i++) {
+            let productId = order.items[i].productId
+            if (!products.has(productId)) {
+                let productWithPrice = await this.productController.fetchProductAndPrice(productId)
+                products.set(productId, productWithPrice)
+            }
+        }
+
+        ret += 'Tên khách: ' + order.customerContact.name + '\n'
+        ret += 'Địa chỉ: ' + order.address.address + '\n'
+        ret += '\tTên hàng\t|\tSố lượng\t|\tĐơn vị\n'
+        for (let i = 0; i < order.items.length; i++) {
+            let orderItem = order.items[i]
+            let productId = orderItem.productId
+            let productWithPrice = products.get(productId)
+            ret += `\t${productWithPrice?.product.name}\t|\t${orderItem.quantity}\t|\t${EProductUnitToString(orderItem.unit)}\n`
+        }
+        return ret
+    }
+
     // throw IncorrectValue if expectedPrice is different
     // throw DeletedResource if product is deleted
     async createOrder(arg: CreateOrderArg) : Promise<Order> {
@@ -153,7 +178,9 @@ export class EndUserOrderController {
                     shippingAddress: address,
                     areaTransportFee: shippingFee,
                 })
-                await this.emailService.sendEmail(this.adminEmail, JSON.stringify(parseOrder(order), null, 2), 'Đơn hàng mới')
+
+                let email = await this.orderToEmail(order)
+                await this.emailService.sendEmail(this.adminEmail, email, 'Đơn hàng mới')
                 ret = order
             } else {
                 throw new IncorrectValue('Mismatch expected price')

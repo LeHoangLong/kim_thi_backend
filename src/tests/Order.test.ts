@@ -530,7 +530,7 @@ describe('Order tests', async () => {
                 })
                 chai.expect(mockOrderRepository.orders.length).to.eql(1)
                 chai.expect(mockEmailService.sentEmails.length).to.eql(1)
-                chai.expect(typeof(mockEmailService.sentEmails[0].content)).to.eql('string')
+                chai.expect(mockEmailService.sentEmails[0].content).to.eql(`Tên khách: name\nĐịa chỉ: address\n\tTên hàng\t|\tSố lượng\t|\tĐơn vị\n\tproduct-0\t|\t10\t|\tKG\n`)
             })
             it('should fail if mismatch', async () => {
                 
