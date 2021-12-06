@@ -45,7 +45,8 @@ export class BinaryRepositoryGCloudStorage implements IBinaryRepository {
     }
 
     getPath(namespace: string, id: string) : string {
-        return `https://storage.cloud.google.com/${this.bucketName}/${namespace}:${id}`
+        let encodedString = encodeURI(`${namespace}:${id}`)
+        return `https://storage.cloud.google.com/${this.bucketName}/${encodedString}`
     }
 
     private getTempPath(namespace: string, id: string) : string {
