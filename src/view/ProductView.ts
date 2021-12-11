@@ -66,7 +66,14 @@ export class ProductView {
             if (isNaN(productId)) {
                 return response.status(400).send()
             }
+            
             let [alternativePrices, defaultPrice] = this.convertPrice(request.body)
+            for (let i = 0 ; i < alternativePrices.length ; i ++) {
+                alternativePrices[i] = normalizeProductPrice(alternativePrices[i])
+            }
+
+            defaultPrice = normalizeProductPrice(defaultPrice)
+
             let productWithPrices = await this.productController.updateProduct(productId, {
                 serialNumber: request.body.serialNumber,
                 name: request.body.name,
@@ -141,11 +148,12 @@ export class ProductView {
             for (let i = 0 ; i < alternativePrices.length ; i ++) {
                 alternativePrices[i] = normalizeProductPrice(alternativePrices[i])
             }
+            defaultPrice = normalizeProductPrice(defaultPrice)
             let args: CreateProductArgs = {
                 serialNumber: request.body.serialNumber,
                 name: request.body.name,
                 avatarId: request.body.avatar.id,
-                defaultPrice: normalizeProductPrice(defaultPrice),
+                defaultPrice: defaultPrice,
                 alternativePrices: alternativePrices,
                 rank: request.body.rank,
                 categories: request.body.categories,

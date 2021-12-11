@@ -44,18 +44,24 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
     }
 
     async fetchPricesByProductId(productId: number) : Promise<ProductPrice[]> {
+        console.log('productId')
+        console.log(productId)
         try {
             let results = await this.client.query(`
-                SELECT 
-                    price.id, price.unit, price.default_price, price.product_id, price.is_default,
-                    level.min_quantity, level.price
-                FROM "product_price" price
-                LEFT JOIN "product_price_level" level
-                ON price.product_id = $1 AND price.is_deleted = FALSE
-                    AND level.product_price_id = price.id
-                ORDER BY id ASC
+                SELECT *
+                FROM (
+                    SELECT 
+                        price.id, price.unit, price.default_price, price.product_id, price.is_default, price.is_deleted,
+                        level.min_quantity, level.price
+                    FROM "product_price" price
+                    LEFT JOIN "product_price_level" level
+                    ON level.product_price_id = price.id
+                    ORDER BY id ASC
+                ) price WHERE price.product_id = $1 AND price.is_deleted = FALSE
             `, [productId]);
             let ret = this.jsonToPrices(results.rows)
+            console.log('ret')
+            console.log(ret)
             return ret
         } catch (exception: any) {
             throw exception.message
@@ -65,14 +71,16 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
     async fetchPriceById(id: number) : Promise<ProductPrice> {
         try {
             let results = await this.client.query(`
-                SELECT 
-                    price.id, price.unit, price.default_price, price.product_id, price.is_default,
-                    level.min_quantity, level.price
-                FROM "product_price" price
-                LEFT JOIN "product_price_level" level
-                ON product_id = $1 AND price.is_deleted = FALSE
-                    AND level.product_price_id = price.id
-                ORDER BY id ASC
+                SELECT *
+                FROM (
+                    SELECT 
+                        price.id, price.unit, price.default_price, price.product_id, price.is_default,
+                        level.min_quantity, level.price
+                    FROM "product_price" price
+                    LEFT JOIN "product_price_level" level
+                    ON level.product_price_id = price.id
+                    ORDER BY id ASC
+                ) price WHERE price.product_id = $1 AND price.is_deleted = FALSE
             `, [id]);
             if (results.rows.length == 0) {
                 throw new NotFound("product_price", "id", id.toString());
