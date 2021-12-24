@@ -74,7 +74,7 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
                 SELECT *
                 FROM (
                     SELECT 
-                        price.id, price.unit, price.default_price, price.product_id, price.is_default,
+                        price.id, price.unit, price.default_price, price.product_id, price.is_default, price.is_deleted,
                         level.min_quantity, level.price
                     FROM "product_price" price
                     LEFT JOIN "product_price_level" level
