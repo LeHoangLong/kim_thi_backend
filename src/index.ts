@@ -13,6 +13,7 @@ import endUserProductCategoryRoutes from './routes/EndUserProductCategoryRoute'
 import endUserGeocodingRoutes from './routes/EndUserGeocoderRoute'
 import endUserTransportFeeRoutes from './routes/EndUserAreaTransportFeeRoute'
 import endUserOrderRoutes from './routes/EndUserOrderRoute'
+import endUserPriceRequestRoute from './routes/EndUserPriceRequestRoute'
 import adminOrderRoutes from './routes/AdminOrderRoute'
 import { myContainer } from './inversify.config';
 import { JwtAuthenticator } from './middleware/JwtAuthenticator';
@@ -86,6 +87,7 @@ app.use('/backend/enduser/categories', endUserProductCategoryRoutes)
 app.use('/backend/enduser/geocoding', endUserGeocodingRoutes)
 app.use('/backend/enduser/transport_fees', endUserTransportFeeRoutes)
 app.use('/backend/enduser/orders', endUserOrderRoutes)
+app.use('/backend/enduser/price_requests/', endUserPriceRequestRoute)
 app.use('/', pageRoutes)
 
 app.listen(port, async () => {

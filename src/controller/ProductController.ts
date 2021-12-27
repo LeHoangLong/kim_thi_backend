@@ -1,5 +1,6 @@
 import { inject, injectable } from "inversify";
 import { v4 } from "uuid";
+import { NotFound } from "../exception/NotFound";
 import { AreaTransportFee } from "../model/AreaTransportFee";
 import { Product } from "../model/Product";
 import { ProductCategory } from "../model/ProductCategory";
@@ -17,7 +18,7 @@ export interface CreateProductArgs {
     serialNumber: string,
     name: string,
     avatarId: string,
-    defaultPrice: ProductPrice,
+    defaultPrice: ProductPrice | undefined,
     alternativePrices: ProductPrice[],
     rank: number,
     categories: ProductCategory[],
@@ -26,7 +27,7 @@ export interface CreateProductArgs {
 
 export interface ProductSummary {
     product: Product,
-    defaultPrice: ProductPrice,
+    defaultPrice: ProductPrice | undefined,
     avatar: ImageWithPath,
 }
 
@@ -65,13 +66,14 @@ export class ProductController {
         }
 
         let pricesToCreate = args.alternativePrices
-        args.defaultPrice.isDefault = true
         pricesToCreate.forEach(e => e.isDefault = false)
-        pricesToCreate.push(args.defaultPrice)
+        if (args.defaultPrice) {
+            args.defaultPrice.isDefault = true
+            pricesToCreate.push(args.defaultPrice)
+        }
 
         let productPrices : ProductPrice[] = [];
         let categories : ProductCategory[] = [];
-        let areaTransportFees : AreaTransportFee[] = []
         await this.connectionFactory.startTransaction(this, [
             this.productRepository,
             this.productPriceRepository
@@ -103,7 +105,17 @@ export class ProductController {
         let ret : ProductSummary[] = [];
         for (let i = 0; i < products.length; i++) {
             let product = products[i];
-            let defaultPrice = await this.productPriceRepository.fetchDefaultPriceByProductId(product.id!);
+            let defaultPrice : ProductPrice | undefined = undefined
+            try {
+                defaultPrice = await this.productPriceRepository.fetchDefaultPriceByProductId(product.id!);
+            } catch (exception) {
+                if (exception instanceof NotFound) {
+                    // Do nothing
+                } else {
+                    throw exception;
+                }
+            }
+
             let avatar = await this.productImageController.fetchImageWithPath(product.avatarId)
             let summary : ProductSummary = {
                 product,
@@ -207,7 +219,7 @@ export class ProductController {
         if (currentProductPrices.length !== args.alternativePrices.length + 1) {
             return true
         } else {
-            if (currentProductPrices.findIndex(e => e.id === args.defaultPrice.id)) {
+            if (currentProductPrices.findIndex(e => e.id === args.defaultPrice?.id)) {
                 return true
             }
             for (let i = 0; i < args.alternativePrices.length; i++) {

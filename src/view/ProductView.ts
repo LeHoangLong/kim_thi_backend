@@ -72,7 +72,9 @@ export class ProductView {
                 alternativePrices[i] = normalizeProductPrice(alternativePrices[i])
             }
 
-            defaultPrice = normalizeProductPrice(defaultPrice)
+            if (defaultPrice) {
+                defaultPrice = normalizeProductPrice(defaultPrice)
+            }
 
             let productWithPrices = await this.productController.updateProduct(productId, {
                 serialNumber: request.body.serialNumber,
@@ -111,10 +113,22 @@ export class ProductView {
         }
     }
 
-    private convertPrice(body: any) : [ProductPrice[],ProductPrice] {
-        let defaultPrice = {
-            ...body.defaultPrice,
-            isDefault: true,
+    private convertPrice(body: any) : [ProductPrice[],ProductPrice?] {
+        let defaultPrice: ProductPrice | undefined = undefined
+
+        if (body.defaultPrice) {
+            defaultPrice = {
+                ...body.defaultPrice,
+                isDefault: true,
+            }
+
+
+            if (defaultPrice!.id === undefined) {
+                defaultPrice!.id = null
+            }
+            if (defaultPrice!.isDeleted === undefined) {
+                defaultPrice!.isDeleted = false
+            }
         }
 
         let alternativePrices : ProductPrice[] = []
@@ -132,13 +146,6 @@ export class ProductView {
             }
         }
 
-        if (defaultPrice.id === undefined) {
-            defaultPrice.id = null
-        }
-        if (defaultPrice.isDeleted === undefined) {
-            defaultPrice.isDeleted = false
-        }
-
         return [alternativePrices, defaultPrice]
     }
 
@@ -148,7 +155,11 @@ export class ProductView {
             for (let i = 0 ; i < alternativePrices.length ; i ++) {
                 alternativePrices[i] = normalizeProductPrice(alternativePrices[i])
             }
-            defaultPrice = normalizeProductPrice(defaultPrice)
+
+            if (defaultPrice) {
+                defaultPrice = normalizeProductPrice(defaultPrice)
+            }
+
             let args: CreateProductArgs = {
                 serialNumber: request.body.serialNumber,
                 name: request.body.name,

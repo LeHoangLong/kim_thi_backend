@@ -8,7 +8,7 @@ import { TYPES } from '../types';
 
 export interface ProductAndPrice {
     product: Product,
-    price: ProductPrice,
+    prices: ProductPrice[],
 }
 
 @injectable()
@@ -24,10 +24,12 @@ export class EndUserProductController {
         if (product.isDeleted) {
             throw new DeletedResource(`product with id ${product.id} has been deleted`)
         }
-        let price = await this.priceRepository.fetchPriceById(product.id!)
+
+        let prices = await this.priceRepository.fetchPricesByProductId(product.id!)
+
         return {
             product: product,
-            price: price,
+            prices: prices,
         }
     }
 }

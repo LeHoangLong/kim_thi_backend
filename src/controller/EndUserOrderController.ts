@@ -104,6 +104,7 @@ export class EndUserOrderController {
                     uniqueProductIds.push(arg.items[i].productId)
                 }
             }
+
             let productAndPrices: ProductAndPrice[] = []
             for (let i = 0; i < uniqueProductIds.length; i++) {
                 let productAndPrice = await this.productController.fetchProductAndPrice(uniqueProductIds[i])
@@ -115,25 +116,32 @@ export class EndUserOrderController {
             for (let i = 0; i < arg.items.length; i++) {
                 let productAndPrice = productAndPrices.find(e => e.product.id === arg.items[i].productId)
                 // find highest price level
-                let price = productAndPrice!.price
+                let prices = productAndPrice!.prices
                 let highestLevel = new Decimal(0)
                 let quantity = arg.items[i].quantity
-                let priceValue = price.defaultPrice
-                for (let j = 0; j < price.priceLevels.length; j++) {
-                    if (quantity.greaterThan(new Decimal(price.priceLevels[j].minQuantity)) &&
-                        price.priceLevels[j].minQuantity.greaterThan(highestLevel)) {
-                        priceValue =  price.priceLevels[j].price
-                        highestLevel = price.priceLevels[j].minQuantity
+                let unit = arg.items[i].unit
+                for (let priceIndex = 0; priceIndex < prices.length; priceIndex++) {
+                    let price = prices[priceIndex]
+                    if (price.unit == unit) {
+                        let priceValue = price.defaultPrice
+                        for (let j = 0; j < price.priceLevels.length; j++) {
+                            if (quantity.greaterThan(new Decimal(price.priceLevels[j].minQuantity)) &&
+                                price.priceLevels[j].minQuantity.greaterThan(highestLevel)) {
+                                priceValue =  price.priceLevels[j].price
+                                highestLevel = price.priceLevels[j].minQuantity
+                            }
+                        }
+
+                        itemsTotal = itemsTotal.add(quantity.mul(priceValue))
+                        orderItems.push({
+                            id: -1,
+                            price: priceValue,
+                            quantity: quantity,
+                            unit: arg.items[i].unit,
+                            productId: arg.items[i].productId,
+                        })
                     }
                 }
-                itemsTotal = itemsTotal.add(quantity.mul(priceValue))
-                orderItems.push({
-                    id: -1,
-                    price: priceValue,
-                    quantity: quantity,
-                    unit: arg.items[i].unit,
-                    productId: arg.items[i].productId,
-                })
             }
 
             let total = itemsTotal.add(0) // copy value

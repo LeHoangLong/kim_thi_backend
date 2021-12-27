@@ -23,7 +23,7 @@ export function normalizeProductPrice(productPrice: ProductPrice) : ProductPrice
     let ret: ProductPrice = {
         ...productPrice
     }
-
+    
     ret.priceLevels = [...ret.priceLevels]
     ret.unit = stringToEProductUnit(ret.unit as any)
     ret.defaultPrice = new Decimal(ret.defaultPrice)

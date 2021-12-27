@@ -44,8 +44,6 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
     }
 
     async fetchPricesByProductId(productId: number) : Promise<ProductPrice[]> {
-        console.log('productId')
-        console.log(productId)
         try {
             let results = await this.client.query(`
                 SELECT *
@@ -89,7 +87,11 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
                 return ret[0]
             }
         } catch (exception: any) {
-            throw exception.message
+            if (!(exception instanceof NotFound)) {
+                throw exception.message
+            } else {
+                throw exception
+            }
         }
     }
 

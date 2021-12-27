@@ -59,6 +59,10 @@ import { AdminOrderController } from "./controller/AdminOrderController";
 import { Storage } from "@google-cloud/storage";
 import { BinaryRepositoryGCloudStorage } from "./repository/BinaryRepositoryGCloudStorage";
 import { SendGridEmailService } from "./services/SendGridEmailService";
+import { IPriceRequestRepository } from "./repository/iPriceRequestRepository";
+import { PriceRequestRepositoryPostgres } from "./repository/PriceRequestRepositoryPostgres";
+import { EndUserPriceRequestController } from "./controller/EndUserPriceRequestController";
+import { EndUserPriceRequestView } from "./view/EndUserPriceRequestView";
 
 
 export let myContainer = new Container();
@@ -134,6 +138,11 @@ export function resetContainer() {
     } else {
         myContainer.bind<string>(TYPES.ADMIN_EMAIL).toConstantValue('le.hoang.long@outlook.com')
     }
+
+    myContainer.bind<IPriceRequestRepository>(TYPES.PRICE_REQUEST_REPOSITORY).to(PriceRequestRepositoryPostgres)
+
+    myContainer.bind<EndUserPriceRequestController>(TYPES.END_USER_PRICE_REQUEST_CONTROLLER).to(EndUserPriceRequestController)
+    myContainer.bind<EndUserPriceRequestView>(TYPES.END_USER_PRICE_REQUEST_VIEW).to(EndUserPriceRequestView)
 }
 
 resetContainer()
