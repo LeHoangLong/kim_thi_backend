@@ -38,6 +38,7 @@ describe('Price request repository test', () => {
                 avatarId: image.id,
                 rank: 1,
                 wholesalePrices: ['wholesale-price-1', 'wholesale-price-2'],
+                description: 'description',
                 defaultPrice: {
                     id: null,
                     unit: EProductUnit.KG,
@@ -119,6 +120,7 @@ describe('Price request view test', () => {
             avatarId: image.id,
             rank: 1,
             wholesalePrices: ['wholesale-price-1', 'wholesale-price-2'],
+            description: 'description',
             defaultPrice: {
                 id: null,
                 unit: EProductUnit.KG,

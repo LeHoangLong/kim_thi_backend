@@ -53,14 +53,9 @@ export class MockProductRepository implements IProductRepository {
         }
 
         let ret: Product[] = []
-        console.log('offset')
-        console.log(offset)
-        console.log(limit)
         for (let i = offset; i < offset + limit && i < products.length; i++) {
             ret.push(products[i])
         }
-        console.log('ret.length')
-        console.log(ret.length)
         return ret
     }
 
@@ -116,7 +111,8 @@ export class MockProductRepository implements IProductRepository {
             avatarId: '0',
             createdTimeStamp: new Date(),
             rank: 0,
-            wholesalePrices: ['wholesale_price_1',]
+            wholesalePrices: ['wholesale_price_1',],
+            description: 'description-1',
         }
     }
 
@@ -131,7 +127,8 @@ export class MockProductRepository implements IProductRepository {
                 avatarId: '0',
                 createdTimeStamp: new Date(),
                 rank: 0,
-                wholesalePrices: ['wholesale_price_1',]
+                wholesalePrices: ['wholesale_price_1',],
+                description: `description-${i}`,
             })
         }
         return ret

@@ -33,6 +33,7 @@ describe('Price repository test', async () => {
             createdTimeStamp: null,
             rank: 0,
             wholesalePrices: ['wholesale_price_1', 'wholesale_price_2'],
+            description: 'description',
         })
         createdPrices = await priceRepository.createProductPrice(createdProduct.id!, [
             {

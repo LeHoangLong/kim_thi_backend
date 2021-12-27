@@ -152,7 +152,8 @@ describe('Product view and controller test', async function() {
             avatarId: '0',
             createdTimeStamp: context.now,
             rank: 0,
-            wholesalePrices: ['wholesale_price_1']
+            wholesalePrices: ['wholesale_price_1'],
+            description: 'description',
         })
         await myContainer.get<IProductRepository>(TYPES.PRODUCT_REPOSITORY).createProduct({
             id: 3,
@@ -163,6 +164,7 @@ describe('Product view and controller test', async function() {
             createdTimeStamp: context.now,
             rank: 0,
             wholesalePrices: ['wholesale_price_1'],
+            description: 'description',
         })
         let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
         context.request.query.offset = 1
@@ -177,7 +179,8 @@ describe('Product view and controller test', async function() {
                 avatarId: '0',
                 createdTimeStamp: context.now,
                 rank: 0,
-                wholesalePrices: ['wholesale_price_1']
+                wholesalePrices: ['wholesale_price_1'],
+                description: 'description',
             },
             defaultPrice: {
               id: 0,
@@ -236,6 +239,7 @@ describe('Product view and controller test', async function() {
                 categories: [{category: "cat_1"}, {category: "cat_2"}],
                 areaTransportFeeIds: [0, 1],
                 wholesalePrices: ['wholesale_price_1',],
+                description: "description",
             }
         }
         
@@ -270,6 +274,7 @@ describe('Product view and controller test', async function() {
                 rank: 0,
                 categories: [{category: "cat_1"}, {category: "cat_2"}],
                 wholesalePrices: ['wholesale_price_1'],
+                description: 'description',
             }
             chai.expect(args.defaultPrice).to.be.eql(expectedCreateArgs.defaultPrice)
             chai.expect(args.alternativePrices).to.be.eql(expectedCreateArgs.alternativePrices)
@@ -294,6 +299,7 @@ describe('Product view and controller test', async function() {
                 createdTimeStamp: context.now,
                 rank: 0,
                 wholesalePrices: ['wholesale_price_1',],
+                description: 'description',
             },
             prices: [
               {
@@ -381,6 +387,7 @@ describe('Product view and controller test', async function() {
               createdTimeStamp: context.now,
               rank: 0,
               wholesalePrices: ['wholesale_price_1',],
+              description: 'description-1',
             },
             prices: [
               {
@@ -440,6 +447,7 @@ describe('Product view and controller test', async function() {
             createdTimeStamp: context.now,
             rank: undefined,
             wholesalePrices: [],
+            description: "",
         })
 
         chai.expect(context.sendSpy.getCall(0).args[0].prices).to.be.eql([
@@ -516,6 +524,7 @@ describe('Postgres product repository test', async function() {
                 createdTimeStamp: null,
                 rank: 0,
                 wholesalePrices: ['wholesale_price_1', 'wholesale_price_2'],
+                description: 'description',
             })
             
         })
@@ -536,6 +545,7 @@ describe('Postgres product repository test', async function() {
                 createdTimeStamp: product.createdTimeStamp,
                 rank: 0,
                 wholesalePrices: ['wholesale_price_1', 'wholesale_price_2'],
+                description: "description",
             })
             
         })
@@ -623,7 +633,8 @@ describe('Postgres product repository test', async function() {
                     avatarId: image.id,
                     createdTimeStamp: null,
                     rank: 0,
-                    wholesalePrices: ['wholesale_price_1']
+                    wholesalePrices: ['wholesale_price_1'],
+                    description: 'description',
                 })
                 if (i % 2 == 1) {
                     await productRepository.createProductCategory(product.id!, ['cat_1'])
@@ -760,6 +771,7 @@ describe('Postgres product repository test', async function() {
                     createdTimeStamp: null,
                     rank: 0,
                     wholesalePrices: ['wholesale_price_1'],
+                    description: 'description',
                 })
             }
         })

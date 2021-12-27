@@ -17,6 +17,7 @@ import { ImageWithPath, ProductImageController } from "./ImageController";
 export interface CreateProductArgs {
     serialNumber: string,
     name: string,
+    description: string,
     avatarId: string,
     defaultPrice: ProductPrice | undefined,
     alternativePrices: ProductPrice[],
@@ -56,6 +57,7 @@ export class ProductController {
         }
         let product : Product = {
             id: null,
+            description: args.description,
             serialNumber: serialNumber,
             name: args.name,
             isDeleted: false,

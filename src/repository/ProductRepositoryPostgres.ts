@@ -28,12 +28,14 @@ export class ProductRepositoryPostgres implements IProductRepository{
                     name, 
                     rank, 
                     avatar_id, 
+                    description,
                     wholesale_prices
                 ) VALUES (
                     ${product.serialNumber}, 
                     ${product.name}, 
                     ${product.rank}, 
                     ${product.avatarId}, 
+                    ${product.description},
                     ARRAY[
             `
 
@@ -76,6 +78,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
     _jsonToProduct(json: any) : Product {
         let newProduct : Product = {
             id: json['id'],
+            description: json['description'],
             serialNumber: json['serial_number'],
             name: json['name'],
             isDeleted: json['is_deleted'],
@@ -92,7 +95,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
         var results = await this.client.query(`
             SELECT 
                 id, serial_number, name, is_deleted, avatar_id,
-                rank, created_time, wholesale_prices
+                rank, created_time, wholesale_prices, description
             FROM "product"
             WHERE is_deleted = FALSE
             ORDER BY created_time DESC
@@ -132,7 +135,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
         var result = await this.client.query(`
             SELECT 
                 id, serial_number, name, is_deleted, avatar_id,
-                rank, created_time, wholesale_prices
+                rank, created_time, wholesale_prices, description
             FROM "product"
             WHERE ($2=FALSE OR ($2=TRUE AND is_deleted = FALSE)) AND id = $1
         `, [id, ignoreDeleted])
@@ -157,7 +160,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
         let response = await this.client.query(`
             SELECT 
                 id, serial_number, name, is_deleted, avatar_id,
-                rank, created_time, wholesale_prices
+                rank, created_time, wholesale_prices, description
             FROM "product"
             WHERE LOWER(name) LIKE $1 AND is_deleted = FALSE
             ORDER BY rank DESC, created_time DESC
@@ -180,7 +183,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
                 response = await connection.query(`
                     SELECT 
                         id, serial_number, name, is_deleted, avatar_id,
-                        rank, created_time, wholesale_prices
+                        rank, created_time, wholesale_prices, description
                     FROM "product" INNER JOIN "product_product_category" cat
                     ON is_deleted = FALSE AND cat.product_id = id AND cat.category = $1
                     ORDER BY rank DESC, created_time DESC
@@ -191,7 +194,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
                 response = await connection.query(`
                     SELECT 
                         id, serial_number, name, is_deleted, avatar_id,
-                        rank, created_time, wholesale_prices
+                        rank, created_time, wholesale_prices, description
                     FROM "product" INNER JOIN "product_product_category" cat
                     ON is_deleted = FALSE 
                         AND cat.product_id = id 
@@ -271,7 +274,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
             let response = await connection.query(SQL`
                 SELECT
                     id, serial_number, name, is_deleted, avatar_id,
-                    rank, created_time, wholesale_prices
+                    rank, created_time, wholesale_prices, description
                 FROM "product"
                 JOIN "product_area_transport_fee" patf
                 ON patf.transport_fee_id = ${areaTransportFeeId}

@@ -126,10 +126,6 @@ export class AdminOrderView {
 
     async fetchOrderDetailById(request: Request, response: Response) {
         let orderId = parseInt(request.params.id as string)
-        console.log('request.params')
-        console.log(request.params)
-        console.log('orderId')
-        console.log(orderId)
         if (isNaN(orderId)) {
             return response.status(400).send()
         }

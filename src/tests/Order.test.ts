@@ -69,6 +69,7 @@ describe('Order tests', async () => {
                     serialNumber: '0', 
                     name: 'product-0',
                     avatarId: image.id,
+                    description: 'description',
                     rank: 1,
                     wholesalePrices: ['wholesale-price-1', 'wholesale-price-2'],
                     defaultPrice: {
@@ -404,6 +405,7 @@ describe('Order tests', async () => {
                 avatarId: image.id,
                 rank: 1,
                 wholesalePrices: ['wholesale-price-1', 'wholesale-price-2'],
+                description: 'description',
                 defaultPrice: {
                     id: null,
                     unit: EProductUnit.KG,

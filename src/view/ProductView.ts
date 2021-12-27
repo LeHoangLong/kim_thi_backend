@@ -85,6 +85,7 @@ export class ProductView {
                 rank: request.body.rank,
                 categories: request.body.categories,
                 wholesalePrices: request.body.wholesalePrices?? [],
+                description: request.body.description ?? "",
             })
 
             productWithPrices.prices = [...productWithPrices.prices]
@@ -169,6 +170,7 @@ export class ProductView {
                 rank: request.body.rank,
                 categories: request.body.categories,
                 wholesalePrices: request.body.wholesalePrices,
+                description: request.body.description ?? "",
             }
 
             let productWithPrices = await this.productController.createProduct(args)

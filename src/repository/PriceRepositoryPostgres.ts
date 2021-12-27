@@ -58,8 +58,6 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
                 ) price WHERE price.product_id = $1 AND price.is_deleted = FALSE
             `, [productId]);
             let ret = this.jsonToPrices(results.rows)
-            console.log('ret')
-            console.log(ret)
             return ret
         } catch (exception: any) {
             throw exception.message
