@@ -2,6 +2,7 @@ import { inject, injectable } from "inversify";
 import { v4 } from "uuid";
 import { NotFound } from "../exception/NotFound";
 import { AreaTransportFee } from "../model/AreaTransportFee";
+import { Image } from "../model/Image";
 import { Product } from "../model/Product";
 import { ProductCategory } from "../model/ProductCategory";
 import { ProductPrice } from "../model/ProductPrice";
@@ -24,6 +25,7 @@ export interface CreateProductArgs {
     rank: number,
     categories: ProductCategory[],
     wholesalePrices: string[],
+    imagesId: string[],
 }
 
 export interface ProductSummary {
@@ -65,6 +67,7 @@ export class ProductController {
             createdTimeStamp: new Date(),
             rank: args.rank,
             wholesalePrices: args.wholesalePrices,
+            imagesId: args.imagesId,
         }
 
         let pricesToCreate = args.alternativePrices
@@ -90,10 +93,16 @@ export class ProductController {
             categories = await this.productRepository.createProductCategory(product.id!, categoryStr)
         })
         let avatar = await this.productImageController.fetchImageWithPath(product.avatarId)
+        let images: ImageWithPath[] = []
+        for (let i = 0; i < product.imagesId.length; i++) {
+            let image = await this.productImageController.fetchImageWithPath(product.imagesId[i])
+            images.push(image)
+        }
+
         return {
             product: product,
             prices: productPrices,
-            images: [],
+            images: images,
             avatar: avatar,
             categories: categories,
         }
@@ -144,11 +153,16 @@ export class ProductController {
         let avatarWithImage = await this.productImageController.fetchImageWithPath(product.avatarId)
         let productPrices = await this.productPriceRepository.fetchPricesByProductId(product.id!);
         let categories = await this.productRepository.fetchProductCategories(product.id!)
+        let imagesWithPage: ImageWithPath[] = []
+        for (let i = 0; i < product.imagesId.length; i++) {
+            let imageWithPath = await this.productImageController.fetchImageWithPath(product.imagesId[i])
+            imagesWithPage.push(imageWithPath)
+        }
         return {
             product: product,
             prices: productPrices,
             avatar: avatarWithImage,
-            images: [],
+            images: imagesWithPage,
             categories: categories,
         }
     }

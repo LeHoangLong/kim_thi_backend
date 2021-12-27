@@ -21,45 +21,62 @@ export class ProductRepositoryPostgres implements IProductRepository{
 
     async createProduct(product: Product): Promise<Product> {
         let ret : Product
-        await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
-            let query = SQL`
-                INSERT INTO "product" (
-                    serial_number, 
-                    name, 
-                    rank, 
-                    avatar_id, 
-                    description,
-                    wholesale_prices
-                ) VALUES (
-                    ${product.serialNumber}, 
-                    ${product.name}, 
-                    ${product.rank}, 
-                    ${product.avatarId}, 
-                    ${product.description},
-                    ARRAY[
-            `
+        await this.connectionFactory.startTransaction(this, [], async () => {
+            await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
+                let query = SQL`
+                    INSERT INTO "product" (
+                        serial_number, 
+                        name, 
+                        rank, 
+                        avatar_id, 
+                        description,
+                        wholesale_prices
+                    ) VALUES (
+                        ${product.serialNumber}, 
+                        ${product.name}, 
+                        ${product.rank}, 
+                        ${product.avatarId}, 
+                        ${product.description},
+                        ARRAY[
+                `
 
-            for (let i = 0; i < product.wholesalePrices.length; i++) {
-                query.append(SQL`
-                    ${product.wholesalePrices[i]}
-                `)
-                if (i !== product.wholesalePrices.length - 1) {
-                    query.append(',')
+                for (let i = 0; i < product.wholesalePrices.length; i++) {
+                    query.append(SQL`
+                        ${product.wholesalePrices[i]}
+                    `)
+                    if (i !== product.wholesalePrices.length - 1) {
+                        query.append(',')
+                    }
                 }
-            }
 
-            query.append(SQL`
-                    ]::text[]
-                ) RETURNING id, created_time
-            `)
-            var results = await connection.query(query);
-            let newProduct = {...product};
-            newProduct.id = results.rows[0].id;
-            newProduct.serialNumber = product.serialNumber;
-            newProduct.createdTimeStamp = results.rows[0].created_time;
-            newProduct.isDeleted = false;
-            newProduct.wholesalePrices = product.wholesalePrices
-            ret = newProduct;
+                query.append(SQL`
+                        ]::text[]
+                    ) RETURNING id, created_time
+                `)
+                var results = await connection.query(query);
+                let newProduct = {...product};
+                newProduct.id = results.rows[0].id;
+                newProduct.serialNumber = product.serialNumber;
+                newProduct.createdTimeStamp = results.rows[0].created_time;
+                newProduct.isDeleted = false;
+                newProduct.wholesalePrices = product.wholesalePrices
+                newProduct.imagesId = []
+                ret = newProduct;
+
+                for (let i = 0; i < product.imagesId.length; i++) {
+                    let query = SQL`
+                        INSERT INTO "product_image" (
+                            product_id,
+                            image_id
+                        ) VALUES (
+                            ${newProduct.id},
+                            ${product.imagesId[i]}
+                        )
+                    `
+                    await connection.query(query);
+                    newProduct.imagesId.push(product.imagesId[i])
+                }
+            })
         })
         return ret!;
     }
@@ -75,7 +92,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
         return ret
     }
 
-    _jsonToProduct(json: any) : Product {
+    private _jsonToProduct(json: any) : Product {
         let newProduct : Product = {
             id: json['id'],
             description: json['description'],
@@ -86,28 +103,52 @@ export class ProductRepositoryPostgres implements IProductRepository{
             createdTimeStamp: json['created_time'],
             rank: json['rank'],
             wholesalePrices: json['wholesale_prices'],
+            imagesId: [],
+        }
+
+        if (json['image_id'] !== null) {
+            newProduct.imagesId.push(json['image_id'])
         }
 
         return newProduct
     }  
 
-    async fetchProducts(offset: number, limit: number): Promise<Product[]> {
-        var results = await this.client.query(`
-            SELECT 
-                id, serial_number, name, is_deleted, avatar_id,
-                rank, created_time, wholesale_prices, description
-            FROM "product"
-            WHERE is_deleted = FALSE
-            ORDER BY created_time DESC
-            LIMIT $1
-            OFFSET $2
-        `, [limit, offset])
+    private _responseToProducts(results: QueryResult) : Product[] {
         let products : Product[] = [];
         for (let i = 0; i < results.rows.length; i++) {
             let result = results.rows[i];
-            products.push(this._jsonToProduct(result))
+            let product = this._jsonToProduct(result)
+            let currentProduct = products.find(e => e.id === product.id)
+            if (currentProduct === undefined) {
+                products.push(product)
+            } else if (product.imagesId.length > 0) {
+                currentProduct.imagesId.push(product.imagesId[0])
+            }
         }
-        return products;
+
+        return products
+    }
+
+    async fetchProducts(offset: number, limit: number): Promise<Product[]> {
+        var results = await this.client.query(`
+            SELECT 
+                p.*,
+                pi.image_id
+            FROM (
+                SELECT 
+                    id, serial_number, name, is_deleted, avatar_id,
+                    rank, created_time, wholesale_prices, description
+                FROM "product"
+                WHERE is_deleted = FALSE
+                ORDER BY created_time DESC
+                LIMIT $1
+                OFFSET $2
+            ) p
+            LEFT JOIN "product_image" pi
+            ON p.id = pi.product_id
+            ORDER BY p.created_time DESC
+        `, [limit, offset])
+        return this._responseToProducts(results)
     }
 
     async fetchNumberOfProducts(filter: ProductSearchFilter = {}): Promise<number> {
@@ -134,16 +175,22 @@ export class ProductRepositoryPostgres implements IProductRepository{
     async fetchProductById(id: number, ignoreDeleted: boolean = true) : Promise<Product> {
         var result = await this.client.query(`
             SELECT 
-                id, serial_number, name, is_deleted, avatar_id,
-                rank, created_time, wholesale_prices, description
-            FROM "product"
-            WHERE ($2=FALSE OR ($2=TRUE AND is_deleted = FALSE)) AND id = $1
+                p.*, pi.image_id
+            FROM (
+                SELECT 
+                    id, serial_number, name, is_deleted, avatar_id,
+                    rank, created_time, wholesale_prices, description
+                FROM "product"
+                WHERE ($2=FALSE OR ($2=TRUE AND is_deleted = FALSE)) AND id = $1
+            ) p
+            LEFT JOIN "product_image" pi 
+            ON p.id = pi.product_id
         `, [id, ignoreDeleted])
         if (result.rowCount == 0) {
             throw new NotFound("product", "id", id.toString())
         } else {
-            let row = result.rows[0]
-            return this._jsonToProduct(row)
+            let products = this._responseToProducts(result)
+            return products[0]
         }
     }
 
@@ -159,20 +206,24 @@ export class ProductRepositoryPostgres implements IProductRepository{
     async findProductsByName(name: string, offset: number, limit: number) : Promise<Product[]> {
         let response = await this.client.query(`
             SELECT 
-                id, serial_number, name, is_deleted, avatar_id,
-                rank, created_time, wholesale_prices, description
-            FROM "product"
-            WHERE LOWER(name) LIKE $1 AND is_deleted = FALSE
-            ORDER BY rank DESC, created_time DESC
-            LIMIT $2
-            OFFSET $3
+                p.*,
+                pi.product_id
+            FROM (
+                SELECT 
+                    id, serial_number, name, is_deleted, avatar_id,
+                    rank, created_time, wholesale_prices, description
+                FROM "product"
+                WHERE LOWER(name) LIKE $1 AND is_deleted = FALSE
+                ORDER BY rank DESC, created_time DESC
+                LIMIT $2
+                OFFSET $3
+            ) p
+            LEFT JOIN "product_image" pi
+            ON p.id = pi.product_id
+            ORDER BY p.rank DESC, p.created_time DESC
         `, [`%${name}%`.toLowerCase(), limit, offset]);
-        let ret : Product[] = [];
-        for (let i = 0; i < response.rows.length; i++) {
-            let result = response.rows[i];
-            ret.push(this._jsonToProduct(result))
-        }
-        return ret;
+
+        return this._responseToProducts(response)
     }
     
     async fetchProductsByCategory(category: string, limit: number, offset: number, name?: string) : Promise<Product[]> {
@@ -181,34 +232,48 @@ export class ProductRepositoryPostgres implements IProductRepository{
             let response: QueryResult<any>;
             if (name === undefined) {
                 response = await connection.query(`
-                    SELECT 
-                        id, serial_number, name, is_deleted, avatar_id,
-                        rank, created_time, wholesale_prices, description
-                    FROM "product" INNER JOIN "product_product_category" cat
-                    ON is_deleted = FALSE AND cat.product_id = id AND cat.category = $1
-                    ORDER BY rank DESC, created_time DESC
-                    LIMIT $2
-                    OFFSET $3
+                    SELECT
+                        p.*,
+                        pi.*
+                    FROM (
+                        SELECT 
+                            id, serial_number, name, is_deleted, avatar_id,
+                            rank, created_time, wholesale_prices, description
+                        FROM "product" INNER JOIN "product_product_category" cat
+                        ON is_deleted = FALSE AND cat.product_id = id AND cat.category = $1
+                        ORDER BY rank DESC, created_time DESC
+                        LIMIT $2
+                        OFFSET $3
+                    ) p
+                    LEFT JOIN "product_image" pi
+                    ON p.id = pi.product_id
+                    ORDER BY p.rank DESC, p.created_time DESC
                 `, [category, limit, offset]);
             } else {
                 response = await connection.query(`
-                    SELECT 
-                        id, serial_number, name, is_deleted, avatar_id,
-                        rank, created_time, wholesale_prices, description
-                    FROM "product" INNER JOIN "product_product_category" cat
-                    ON is_deleted = FALSE 
-                        AND cat.product_id = id 
-                        AND cat.category = $1
-                        AND LOWER(name) LIKE LOWER($2)
-                    ORDER BY rank DESC, created_time DESC
-                    LIMIT $3
-                    OFFSET $4
+                    SELECT
+                        p.*,
+                        pi.*
+                    FROM (
+                        SELECT 
+                            id, serial_number, name, is_deleted, avatar_id,
+                            rank, created_time, wholesale_prices, description
+                        FROM "product" INNER JOIN "product_product_category" cat
+                        ON is_deleted = FALSE 
+                            AND cat.product_id = id 
+                            AND cat.category = $1
+                            AND LOWER(name) LIKE LOWER($2)
+                        ORDER BY rank DESC, created_time DESC
+                        LIMIT $3
+                        OFFSET $4
+                    ) p 
+                    LEFT JOIN "product_image" pi
+                    ON p.id = pi.product_id
+                    ORDER BY p.rank DESC, p.created_time DESC
                 `, [category, `%${name}%`, limit, offset]);
             }
-            for (let i = 0; i < response.rows.length; i++) {
-                let result = response.rows[i];
-                ret.push(this._jsonToProduct(result))
-            }
+
+            ret = this._responseToProducts(response)
         })
 
         return ret;
@@ -264,34 +329,6 @@ export class ProductRepositoryPostgres implements IProductRepository{
             `, [productId])
             ret = await this.createProductCategory(productId, categories)
         })
-        return ret
-    }
-
-
-    async fetchProductsByAreaTransportFee(areaTransportFeeId: number, limit: number, offset: number, ignoreDeleted: boolean = true) : Promise<Product[]> {
-        let ret: Product[] = []
-        await this.connectionFactory.getConnection(this, async (connection) => {
-            let response = await connection.query(SQL`
-                SELECT
-                    id, serial_number, name, is_deleted, avatar_id,
-                    rank, created_time, wholesale_prices, description
-                FROM "product"
-                JOIN "product_area_transport_fee" patf
-                ON patf.transport_fee_id = ${areaTransportFeeId}
-                    AND  id = patf.product_id
-                    AND (${ignoreDeleted} = FALSE OR is_deleted = FALSE)
-                ORDER BY created_time DESC, id DESC
-                LIMIT ${limit}
-                OFFSET ${offset}
-            `)
-
-
-            for (let i = 0; i < response.rows.length; i++) {
-                let result = response.rows[i];
-                ret.push(this._jsonToProduct(result))
-            }
-        })
-
         return ret
     }
 }

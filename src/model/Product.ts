@@ -8,4 +8,5 @@ export interface Product {
     createdTimeStamp: Date | null,
     rank: number, // rank is to indicate which product to prioritize for showing
     wholesalePrices: string[],
+    imagesId: string[],
 }

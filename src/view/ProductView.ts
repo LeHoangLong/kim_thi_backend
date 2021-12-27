@@ -86,6 +86,7 @@ export class ProductView {
                 categories: request.body.categories,
                 wholesalePrices: request.body.wholesalePrices?? [],
                 description: request.body.description ?? "",
+                imagesId: request.body.imagesId ?? [],
             })
 
             productWithPrices.prices = [...productWithPrices.prices]
@@ -97,6 +98,8 @@ export class ProductView {
             if (exception instanceof NotFound) {
                 return response.status(404).send()
             } else {
+                console.log('exception')
+                console.log(exception)
                 return response.status(500).send(exception)
             }
         }
@@ -171,6 +174,7 @@ export class ProductView {
                 categories: request.body.categories,
                 wholesalePrices: request.body.wholesalePrices,
                 description: request.body.description ?? "",
+                imagesId: request.body.imagesId ?? [],
             }
 
             let productWithPrices = await this.productController.createProduct(args)

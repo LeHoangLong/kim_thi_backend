@@ -82,6 +82,7 @@ describe('Order tests', async () => {
                     },
                     alternativePrices: [],
                     categories: [],
+                    imagesId: [],
                 })
 
                 product = productWithPricesAndImages.product
@@ -416,6 +417,7 @@ describe('Order tests', async () => {
                 },
                 alternativePrices: [],
                 categories: [],
+                imagesId: [],
             })
 
             product = productWithPricesAndImages.product

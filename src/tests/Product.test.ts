@@ -154,6 +154,7 @@ describe('Product view and controller test', async function() {
             rank: 0,
             wholesalePrices: ['wholesale_price_1'],
             description: 'description',
+            imagesId: ['1', '2'],
         })
         await myContainer.get<IProductRepository>(TYPES.PRODUCT_REPOSITORY).createProduct({
             id: 3,
@@ -165,6 +166,7 @@ describe('Product view and controller test', async function() {
             rank: 0,
             wholesalePrices: ['wholesale_price_1'],
             description: 'description',
+            imagesId: ['1', '2'],
         })
         let productView = myContainer.get<ProductView>(TYPES.PRODUCT_VIEW)
         context.request.query.offset = 1
@@ -181,6 +183,7 @@ describe('Product view and controller test', async function() {
                 rank: 0,
                 wholesalePrices: ['wholesale_price_1'],
                 description: 'description',
+                imagesId: ['1', '2'],
             },
             defaultPrice: {
               id: 0,
@@ -195,7 +198,7 @@ describe('Product view and controller test', async function() {
                 isDeleted: false,
                 createdTimeStamp: context.now,
                 path: 'product_images_0'
-            }
+            },
         },])
         sinon.assert.calledOnce(context.sendSpy)
     });
@@ -240,6 +243,7 @@ describe('Product view and controller test', async function() {
                 areaTransportFeeIds: [0, 1],
                 wholesalePrices: ['wholesale_price_1',],
                 description: "description",
+                imagesId: ['1', '2'],
             }
         }
         
@@ -275,6 +279,7 @@ describe('Product view and controller test', async function() {
                 categories: [{category: "cat_1"}, {category: "cat_2"}],
                 wholesalePrices: ['wholesale_price_1'],
                 description: 'description',
+                imagesId: ['1', '2'],
             }
             chai.expect(args.defaultPrice).to.be.eql(expectedCreateArgs.defaultPrice)
             chai.expect(args.alternativePrices).to.be.eql(expectedCreateArgs.alternativePrices)
@@ -300,6 +305,7 @@ describe('Product view and controller test', async function() {
                 rank: 0,
                 wholesalePrices: ['wholesale_price_1',],
                 description: 'description',
+                imagesId: ['1', '2'],
             },
             prices: [
               {
@@ -325,7 +331,17 @@ describe('Product view and controller test', async function() {
                 isDefault: false
               }
             ],
-            images: [],
+            images: [{
+                id: "1",
+                isDeleted: false,
+                createdTimeStamp: context.now,
+                path: 'product_images_1'
+            }, {
+                id: "2",
+                isDeleted: false,
+                createdTimeStamp: context.now,
+                path: 'product_images_2'
+            }],
             avatar: {
               id: "0",
               isDeleted: false,
@@ -388,6 +404,7 @@ describe('Product view and controller test', async function() {
               rank: 0,
               wholesalePrices: ['wholesale_price_1',],
               description: 'description-1',
+              imagesId: ['1', '2'],
             },
             prices: [
               {
@@ -413,7 +430,17 @@ describe('Product view and controller test', async function() {
               createdTimeStamp: context.now,
               path: 'product_images_0'
             },
-            images: [],
+            images: [{
+                id: "1",
+                isDeleted: false,
+                createdTimeStamp: context.now,
+                path: 'product_images_1'
+            }, {
+                id: "2",
+                isDeleted: false,
+                createdTimeStamp: context.now,
+                path: 'product_images_2'
+            }],
             categories: [
                 { category: 'cat_1' },
                 { category: 'cat_2' },
@@ -448,30 +475,31 @@ describe('Product view and controller test', async function() {
             rank: undefined,
             wholesalePrices: [],
             description: "",
+            imagesId: [],
         })
 
         chai.expect(context.sendSpy.getCall(0).args[0].prices).to.be.eql([
             {
-              id: 0,
-              unit: 'KG',
-              isDeleted: false,
-              defaultPrice: '101',
-              priceLevels: [{
-                  minQuantity: '15',
-                  price: '50'
-              }],
-              isDefault: true
+                id: 0,
+                unit: 'KG',
+                isDeleted: false,
+                defaultPrice: '101',
+                priceLevels: [{
+                    minQuantity: '15',
+                    price: '50'
+                }],
+                isDefault: true
             },
             {
-              id: 1,
-              unit: 'KG',
-              isDeleted: false,
-              defaultPrice: '102',
-              priceLevels: [{
-                  minQuantity: '15',
-                  price: '50'
-              }],
-              isDefault: false
+                id: 1,
+                unit: 'KG',
+                isDeleted: false,
+                defaultPrice: '102',
+                priceLevels: [{
+                    minQuantity: '15',
+                    price: '50'
+                }],
+                isDefault: false
             }
         ])
 
@@ -511,10 +539,15 @@ describe('Postgres product repository test', async function() {
         let product : Product
         let productRepository: IProductRepository
         let image: Image
+        let image_2: Image
+        let image_3: Image
+        let imageRepository: IImageRepository
         beforeEach(async function() {
             productRepository = myContainer.get<IProductRepository>(TYPES.PRODUCT_REPOSITORY)
-            let imageRepository = myContainer.get<IImageRepository>(TYPES.IMAGE_REPOSITORY)
+            imageRepository = myContainer.get<IImageRepository>(TYPES.IMAGE_REPOSITORY)
             image = await imageRepository.createImage()
+
+
             product = await productRepository.createProduct({
                 id: null,
                 serialNumber: '',
@@ -525,8 +558,42 @@ describe('Postgres product repository test', async function() {
                 rank: 0,
                 wholesalePrices: ['wholesale_price_1', 'wholesale_price_2'],
                 description: 'description',
+                imagesId: [],
             })
-            
+        })
+
+        it('can create product with images',async () => {
+            let image_2: Image
+            let image_3: Image
+
+            image_2 = await imageRepository.createImage()
+            image_3 = await imageRepository.createImage()
+
+            product = await productRepository.createProduct({
+                id: null,
+                serialNumber: '',
+                name: 'product_1',
+                isDeleted: false,
+                avatarId: image.id,
+                createdTimeStamp: null,
+                rank: 0,
+                wholesalePrices: ['wholesale_price_1', 'wholesale_price_2'],
+                description: 'description',
+                imagesId: [image_2.id, image_3.id],
+            })
+
+            chai.expect(product).to.eql({
+                id: product.id,
+                serialNumber: '',
+                name: 'product_1',
+                isDeleted: false,
+                avatarId: image.id,
+                createdTimeStamp: product.createdTimeStamp,
+                rank: 0,
+                wholesalePrices: ['wholesale_price_1', 'wholesale_price_2'],
+                description: "description",
+                imagesId: [image_2.id, image_3.id],
+            })
         })
 
         it('should succeed', async function() {
@@ -546,6 +613,7 @@ describe('Postgres product repository test', async function() {
                 rank: 0,
                 wholesalePrices: ['wholesale_price_1', 'wholesale_price_2'],
                 description: "description",
+                imagesId: [],
             })
             
         })
@@ -560,44 +628,6 @@ describe('Postgres product repository test', async function() {
             }
             chai.expect(exceptionCalled).to.eql(1)
         })
-
-        /*
-        describe('Create product transport fee', async () => {
-            it('Should succeed', async () => {
-                let factoryConnection = myContainer.get<PostgresConnectionFactory>(TYPES.CONNECTION_FACTORY)
-
-                await factoryConnection.getConnection(this, async (connection) => {
-                    await connection.query(`DELETE FROM "product_area_transport_fee"`)
-                    let response = await connection.query(`SELECT COUNT(*) FROM "product_area_transport_fee"`)
-                    chai.expect(parseInt(response.rows[0].count)).to.be.equal(0)
-                })
-
-                let areaTransportFeeRepository = myContainer.get<IAreaTransportFeeRepository>(TYPES.AREA_TRANSPORT_FEE_REPOSITORY)
-                let areaTransportFee_1 = await areaTransportFeeRepository.createFee({
-                    areaCity: "city_1",
-                    name: "fee_1",
-                    billBasedTransportFee: [],
-                    originLatitude: new Decimal(0),
-                    originLongitude: new Decimal(0),
-                    isDeleted: false
-                })
-                let areaTransportFee_2 = await areaTransportFeeRepository.createFee({
-                    areaCity: "city_2",
-                    name: "fee_2",
-                    billBasedTransportFee: [],
-                    originLatitude: new Decimal(0),
-                    originLongitude: new Decimal(0),
-                    isDeleted: false
-                })
-                await productRepository.setAreaTransportFee(product.id!, [areaTransportFee_1.id, areaTransportFee_2.id])
-                
-                await factoryConnection.getConnection(this, async (connection) => {
-                    let response = await connection.query(`SELECT COUNT(*) FROM "product_area_transport_fee"`)
-                    chai.expect(parseInt(response.rows[0].count)).to.be.equal(2)
-                })
-            })
-        })
-        */
     })
     
     describe('Fetch product', async function() {
@@ -605,9 +635,10 @@ describe('Postgres product repository test', async function() {
         let productRepository: IProductRepository
         let image: Image
         let areaTransportFee_1: AreaTransportFee
+        let imageRepository: IImageRepository
         beforeEach(async function() {
             productRepository = myContainer.get<IProductRepository>(TYPES.PRODUCT_REPOSITORY)
-            let imageRepository = myContainer.get<IImageRepository>(TYPES.IMAGE_REPOSITORY)
+            imageRepository = myContainer.get<IImageRepository>(TYPES.IMAGE_REPOSITORY)
             let productCategoryRepository = myContainer.get<IProductCategoryRepository>(TYPES.PRODUCT_CATEGORY_REPOSITORY)
             image = await imageRepository.createImage()
             await productCategoryRepository.createProductCategory('cat_1')
@@ -635,16 +666,51 @@ describe('Postgres product repository test', async function() {
                     rank: 0,
                     wholesalePrices: ['wholesale_price_1'],
                     description: 'description',
+                    imagesId: [],
                 })
                 if (i % 2 == 1) {
                     await productRepository.createProductCategory(product.id!, ['cat_1'])
                 } else {
                     await productRepository.createProductCategory(product.id!, ['cat_2'])
-                    // await productRepository.setAreaTransportFee(product.id!, [areaTransportFee_1.id])
                 }
             }
 
             let factory = myContainer.get<PostgresConnectionFactory>(TYPES.CONNECTION_FACTORY)
+        })
+
+        it('fetch product with multiple images',async () => {
+            let image_2: Image
+            let image_3: Image
+
+            image_2 = await imageRepository.createImage()
+            image_3 = await imageRepository.createImage()
+
+            product = await productRepository.createProduct({
+                id: null,
+                serialNumber: '',
+                name: `product`,
+                isDeleted: false,
+                avatarId: image.id,
+                createdTimeStamp: null,
+                rank: 0,
+                wholesalePrices: ['wholesale_price_1'],
+                description: 'description',
+                imagesId: [image_2.id, image_3.id],
+            })
+
+            let fetchedProduct = await productRepository.fetchProductById(product.id!)
+            chai.expect(fetchedProduct).to.eql({
+                id: fetchedProduct.id,
+                createdTimeStamp: fetchedProduct.createdTimeStamp,
+                serialNumber: '',
+                name: `product`,
+                isDeleted: false,
+                avatarId: image.id,
+                rank: 0,
+                imagesId: [image_2.id, image_3.id],
+                wholesalePrices: ['wholesale_price_1'],
+                description: 'description',
+            })
         })
 
         it('can fetch count', async function() {
@@ -772,6 +838,7 @@ describe('Postgres product repository test', async function() {
                     rank: 0,
                     wholesalePrices: ['wholesale_price_1'],
                     description: 'description',
+                    imagesId: [],
                 })
             }
         })

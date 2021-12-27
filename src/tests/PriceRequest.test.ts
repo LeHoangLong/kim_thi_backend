@@ -49,6 +49,7 @@ describe('Price request repository test', () => {
                 },
                 alternativePrices: [],
                 categories: [],
+                imagesId: [],
             })
 
             product = productWithPricesAndImages.product
@@ -131,6 +132,7 @@ describe('Price request view test', () => {
             },
             alternativePrices: [],
             categories: [],
+            imagesId: [],
         })
         product = productWithPricesAndImages.product
 

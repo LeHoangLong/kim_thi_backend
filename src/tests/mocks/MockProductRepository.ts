@@ -12,9 +12,6 @@ export class MockProductRepository implements IProductRepository {
     async setAreaTransportFee(productId: number, areaTransportFeeId: number[]): Promise<void> {
 
     }
-    fetchProductsByAreaTransportFee(areaTransportFeeId: number, limit: number, offset: number): Promise<Product[]> {
-        return this.fetchProducts(offset, limit - 1) // if use limit, test will loop forever
-    }
 
     fetchAllCategories(limit: number, offset: number): Promise<ProductCategory[]> {
         throw new Error("Method not implemented.");
@@ -113,6 +110,7 @@ export class MockProductRepository implements IProductRepository {
             rank: 0,
             wholesalePrices: ['wholesale_price_1',],
             description: 'description-1',
+            imagesId: ['1', '2'],
         }
     }
 
@@ -129,6 +127,7 @@ export class MockProductRepository implements IProductRepository {
                 rank: 0,
                 wholesalePrices: ['wholesale_price_1',],
                 description: `description-${i}`,
+                imagesId: ['1', '2'],
             })
         }
         return ret
