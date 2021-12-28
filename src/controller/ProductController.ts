@@ -139,12 +139,12 @@ export class ProductController {
     }
 
     async fetchProductSummaries(offset: number, limit: number) : Promise<ProductSummary[]> {
-        let products = await this.productRepository.fetchProducts(offset, limit);
+        let products = await this.productRepository.fetchProducts({offset, limit});
         return this._productsToProductSummaries(products);
     }
 
     async fetchProductsByCategory(category: string, offset: number, limit: number, name?: string) : Promise<ProductSummary[]> {
-        let products = await this.productRepository.fetchProductsByCategory(category, limit, offset, name);
+        let products = await this.productRepository.fetchProducts({category, limit, offset, name});
         return this._productsToProductSummaries(products);
     }
 
@@ -260,9 +260,9 @@ export class ProductController {
         return false
     }
 
-    async findProductsByName(name: string, offset: number, limit: number) : Promise<[number, ProductSummary[]]> {
-        let count = await this.productRepository.fetchProductsCountWithName(name);
-        let products = await this.productRepository.findProductsByName(name, offset, limit)
+    async fetchProducts(name: string, category: string, offset: number, limit: number) : Promise<[number, ProductSummary[]]> {
+        let count = await this.productRepository.fetchNumberOfProducts({name, category,});
+        let products = await this.productRepository.fetchProducts({name, category, offset, limit})
         let productSummaries = await this._productsToProductSummaries(products)
         return [count, productSummaries];
     }

@@ -11,13 +11,18 @@ export interface ProductSearchFilter {
 export interface IProductRepository {
     createProduct(product: Product): Promise<Product>;
     fetchNumberOfProducts(filter?: ProductSearchFilter): Promise<number>;
-    fetchProducts(offset: number, limit: number): Promise<Product[]>;
+
     fetchProductById(id: number, ignoreDeleted?: boolean) : Promise<Product>;
     deleteProduct(pk: number) : Promise<number>;
-    fetchProductsCountWithName(name: string) : Promise<number>;
-    findProductsByName(name: string, offset: number, limit: number) : Promise<Product[]>;
-    fetchProductsByCategory(category: string, limit: number, offset: number, name?: string) : Promise<Product[]>;
+
+    fetchProductsCountWithName(name: string, category?: string) : Promise<number>;
+    
     updateProductCategories(productId: number, categories: string[]) : Promise<ProductCategory[]>;
     fetchProductCategories(productId: number) : Promise<ProductCategory[]>;
     createProductCategory(productId: number, categories: string[]) : Promise<ProductCategory[]>;
+
+    fetchProducts(filter: ProductSearchFilter & {
+        limit: number, 
+        offset: number
+    }) : Promise<Product[]>
 }

@@ -129,7 +129,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
         return products
     }
 
-    async fetchProducts(offset: number, limit: number): Promise<Product[]> {
+    private async _fetchProducts(offset: number, limit: number): Promise<Product[]> {
         var results = await this.client.query(`
             SELECT 
                 p.*,
@@ -203,7 +203,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
         return parseInt(response.rows[0].count)
     }
 
-    async findProductsByName(name: string, offset: number, limit: number) : Promise<Product[]> {
+    async _fetchProductsByName(name: string, offset: number, limit: number) : Promise<Product[]> {
         let response = await this.client.query(`
             SELECT 
                 p.*,
@@ -226,52 +226,28 @@ export class ProductRepositoryPostgres implements IProductRepository{
         return this._responseToProducts(response)
     }
     
-    async fetchProductsByCategory(category: string, limit: number, offset: number, name?: string) : Promise<Product[]> {
+    async _fetchProductsByCategory(category: string, limit: number, offset: number) : Promise<Product[]> {
         let ret : Product[] = [];
         await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
             let response: QueryResult<any>;
-            if (name === undefined) {
-                response = await connection.query(`
-                    SELECT
-                        p.*,
-                        pi.*
-                    FROM (
-                        SELECT 
-                            id, serial_number, name, is_deleted, avatar_id,
-                            rank, created_time, wholesale_prices, description
-                        FROM "product" INNER JOIN "product_product_category" cat
-                        ON is_deleted = FALSE AND cat.product_id = id AND cat.category = $1
-                        ORDER BY rank DESC, created_time DESC
-                        LIMIT $2
-                        OFFSET $3
-                    ) p
-                    LEFT JOIN "product_image" pi
-                    ON p.id = pi.product_id
-                    ORDER BY p.rank DESC, p.created_time DESC
-                `, [category, limit, offset]);
-            } else {
-                response = await connection.query(`
-                    SELECT
-                        p.*,
-                        pi.*
-                    FROM (
-                        SELECT 
-                            id, serial_number, name, is_deleted, avatar_id,
-                            rank, created_time, wholesale_prices, description
-                        FROM "product" INNER JOIN "product_product_category" cat
-                        ON is_deleted = FALSE 
-                            AND cat.product_id = id 
-                            AND cat.category = $1
-                            AND LOWER(name) LIKE LOWER($2)
-                        ORDER BY rank DESC, created_time DESC
-                        LIMIT $3
-                        OFFSET $4
-                    ) p 
-                    LEFT JOIN "product_image" pi
-                    ON p.id = pi.product_id
-                    ORDER BY p.rank DESC, p.created_time DESC
-                `, [category, `%${name}%`, limit, offset]);
-            }
+            response = await connection.query(`
+                SELECT
+                    p.*,
+                    pi.*
+                FROM (
+                    SELECT 
+                        id, serial_number, name, is_deleted, avatar_id,
+                        rank, created_time, wholesale_prices, description
+                    FROM "product" INNER JOIN "product_product_category" cat
+                    ON is_deleted = FALSE AND cat.product_id = id AND cat.category = $1
+                    ORDER BY rank DESC, created_time DESC
+                    LIMIT $2
+                    OFFSET $3
+                ) p
+                LEFT JOIN "product_image" pi
+                ON p.id = pi.product_id
+                ORDER BY p.rank DESC, p.created_time DESC
+            `, [category, limit, offset]);
 
             ret = this._responseToProducts(response)
         })
@@ -330,5 +306,69 @@ export class ProductRepositoryPostgres implements IProductRepository{
             ret = await this.createProductCategory(productId, categories)
         })
         return ret
+    }
+
+    async _fetchProductsWithNameAndProduct(
+        name: string,
+        category: string,
+        offset: number,
+        limit: number,
+    ) : Promise<Product[]> {
+        let ret: Product[] = []
+        await this.connectionFactory.getConnection(this, async (connection: PoolClient) => {
+            let response = await connection.query(`
+                SELECT
+                    p.*,
+                    pi.*
+                FROM (
+                    SELECT 
+                        p.*,
+                        cat.category
+                    FROM (
+                        SELECT 
+                            id, serial_number, name, is_deleted, avatar_id,
+                            rank, created_time, wholesale_prices, description
+                        FROM "product"
+                        WHERE LOWER(name) LIKE LOWER($2) AND is_deleted = FALSE
+                        ORDER BY rank DESC, created_time DESC
+                    ) p
+                    INNER JOIN "product_product_category" cat
+                    ON  cat.product_id = p.id 
+                        AND cat.category = $1
+                    ORDER BY p.rank DESC, p.created_time DESC
+                    LIMIT $3
+                    OFFSET $4
+                ) p 
+                LEFT JOIN "product_image" pi
+                ON p.id = pi.product_id
+                ORDER BY p.rank DESC, p.created_time DESC
+            `, [category, `%${name}%`, limit, offset]);
+            ret = this._responseToProducts(response)
+        });
+
+        return ret
+    }
+
+    async fetchProducts(filter: ProductSearchFilter & {
+        limit: number, 
+        offset: number
+    }) : Promise<Product[]> {
+        let hasName = filter.name !== undefined  && filter.name.length > 0
+        let hasCategory = filter.category !== undefined && filter.category.length > 0 
+        if (hasCategory && hasName) {
+            console.log('abc')
+            return this._fetchProductsWithNameAndProduct(
+                filter.name!, 
+                filter.category!, 
+                filter.offset, 
+                filter.limit
+            )
+        } else if (hasCategory && !hasName) {
+            return this._fetchProductsByCategory(filter.category!, filter.limit, filter.offset)
+        } else if (!hasCategory && hasName) {
+            return this._fetchProductsByName(filter.name!, filter.offset, filter.limit)
+        } else {
+            return this._fetchProducts(filter.offset, filter.limit)
+        }
     }
 }

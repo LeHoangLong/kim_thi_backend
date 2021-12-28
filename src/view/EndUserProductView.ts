@@ -29,7 +29,14 @@ export class EndUserProductView {
             search = request.query.productSearch
         }
 
-        let [count, products] = await this.productController.findProductsByName(search, offset, limit);
+        let category = ''
+        if (typeof(request.query.categories) === 'string') {
+            category = request.query.categories
+        } else if (Array.isArray(request.query.categories) && request.query.categories.length > 0) {
+            category = request.query.categories[0] as string
+        }
+
+        let [count, products] = await this.productController.fetchProducts(search, category, offset, limit);
         for (let i = 0; i < products.length; i++) {
             products[i] = parseProductSummary(products[i])
         }

@@ -172,17 +172,17 @@ describe('Product view and controller test', async function() {
         context.request.query.offset = 1
         await productView.fetchProducts(context.request as Request, context.response as Response)
         sinon.assert.calledOnceWithExactly(context.statusSpy, 200)
-        chai.expect(context.sendSpy.getCall(0).args[0]).to.eql([{
+        chai.expect(context.sendSpy.getCall(0).args[0][0]).to.eql({
             product: {
-                id: 3,
-                serialNumber: '3',
-                name: 'name_3',
+                id: 1,
+                serialNumber: '1',
+                name: 'name_1',
                 isDeleted: false,
                 avatarId: '0',
                 createdTimeStamp: context.now,
                 rank: 0,
                 wholesalePrices: ['wholesale_price_1'],
-                description: 'description',
+                description: 'description-1',
                 imagesId: ['1', '2'],
             },
             defaultPrice: {
@@ -191,7 +191,7 @@ describe('Product view and controller test', async function() {
               isDeleted: false,
               defaultPrice: '100',
               priceLevels: [],
-              isDefault: true
+              isDefault: true,
             },
             avatar: {
                 id: '0',
@@ -199,7 +199,7 @@ describe('Product view and controller test', async function() {
                 createdTimeStamp: context.now,
                 path: 'product_images_0'
             },
-        },])
+        })
         sinon.assert.calledOnce(context.sendSpy)
     });
 
@@ -720,7 +720,7 @@ describe('Postgres product repository test', async function() {
         })
 
         it('can fetch multiple products', async function() {
-            let products = await productRepository.fetchProducts(1, 2);
+            let products = await productRepository.fetchProducts({offset: 1, limit: 2});
             chai.expect(products.length).to.eql(2)
             chai.expect(products[0]).to.containSubset({
                 serialNumber: '',
@@ -758,7 +758,11 @@ describe('Postgres product repository test', async function() {
         })
 
         it('Can fetch products by category', async function() {
-            let fetchedProducts = await productRepository.fetchProductsByCategory('cat_1', 5, 0)
+            let fetchedProducts = await productRepository.fetchProducts({
+                category: 'cat_1', 
+                limit: 5, 
+                offset: 0
+            })
             chai.expect(fetchedProducts.length).to.eql(2)
             chai.expect(fetchedProducts[0]).to.containSubset({
                 serialNumber: '',
@@ -799,7 +803,11 @@ describe('Postgres product repository test', async function() {
         })
 
         it('Can find product name', async function() {
-            let fetchedProducts = await productRepository.findProductsByName('t_1', 0, 5)
+            let fetchedProducts = await productRepository.fetchProducts({
+                name: 't_1', 
+                offset: 0, 
+                limit: 5
+            })
             chai.expect(fetchedProducts.length).to.eql(1)
             chai.expect(fetchedProducts[0]).to.containSubset({
                 serialNumber: '',

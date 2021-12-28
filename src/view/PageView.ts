@@ -28,17 +28,20 @@ export async function productSummaryPage(request: Request, response: Response) {
         productSummaries = await controller.fetchProductsByCategory(categoryStr, pageNumber * config.pagination.defaultSize, config.pagination.defaultSize, phrase);
     } else if (typeof(phrase) === 'string') {
         let temp: number
-        [temp, productSummaries] = await controller.findProductsByName(phrase, pageNumber * config.pagination.defaultSize, config.pagination.defaultSize)
+        [temp, productSummaries] = await controller.fetchProducts(phrase, "", pageNumber * config.pagination.defaultSize, config.pagination.defaultSize)
     } else {
         productSummaries = await controller.fetchProductSummaries(pageNumber * config.pagination.defaultSize, config.pagination.defaultSize);
     }
 
     for (let i = 0; i < productSummaries.length; i++) {
-        productSummaries[i].defaultPrice.unit = EProductUnitToString(productSummaries[i].defaultPrice.unit) as any;
+        let summary = productSummaries[i]
+        if (summary.defaultPrice !== undefined) {
+            summary.defaultPrice.unit = EProductUnitToString(summary.defaultPrice.unit) as any;
+        }
     }
     let productsCount = await controller.fetchNumberOfProducts({
-        category: categoryStr,
-        name: phrase,
+        category: categoryStr!,
+        name: phrase!,
     })
     let categories = await categoryController.fetchCategories(config.pagination.defaultSize, 0)
     for (let i = 0; i < categories.length; i++) {
@@ -97,13 +100,17 @@ export async function productSearchPage(request: Request, response: Response) {
     if (typeof(phrase) !== typeof("")) {
         phrase = ""
     }
-    let [count, productSummaries] = await productController.findProductsByName(
+    let [count, productSummaries] = await productController.fetchProducts(
         phrase as string,
+        "",
         pageNumber * config.pagination.defaultSize,
         config.pagination.defaultSize
     )
     for (let i = 0; i < productSummaries.length; i++) {
-        productSummaries[i].defaultPrice.unit = EProductUnitToString(productSummaries[i].defaultPrice.unit).toLowerCase() as any;
+        let summary = productSummaries[i]
+        if (summary.defaultPrice !== undefined) {
+            summary.defaultPrice.unit = EProductUnitToString(summary.defaultPrice.unit) as any;
+        }
     }
 
     return response.status(200).render('productSummariesPage.ejs', {

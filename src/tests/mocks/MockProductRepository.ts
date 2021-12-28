@@ -114,19 +114,22 @@ export class MockProductRepository implements IProductRepository {
         }
     }
 
-    async fetchProducts(offset: number, limit: number): Promise<Product[]> {
+    async fetchProducts(filter: ProductSearchFilter & {
+        limit: number, 
+        offset: number
+    }): Promise<Product[]> {
         let ret : Product[] = []
-        for (let i = 0; i < limit; i++) {
+        for (let i = 0; i < filter.limit; i++) {
             ret.push({
-                id: i + offset,
-                serialNumber: (i + offset).toString(),
-                name: 'name_' + (i + offset).toString(),
+                id: i + filter.offset,
+                serialNumber: (i + filter.offset).toString(),
+                name: 'name_' + (i + filter.offset).toString(),
                 isDeleted: false,
                 avatarId: '0',
                 createdTimeStamp: new Date(),
                 rank: 0,
                 wholesalePrices: ['wholesale_price_1',],
-                description: `description-${i}`,
+                description: `description-${i + filter.offset}`,
                 imagesId: ['1', '2'],
             })
         }
