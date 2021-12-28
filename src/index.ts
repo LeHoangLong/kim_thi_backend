@@ -58,9 +58,9 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 })
 
 app.use(function (req, res, next) {
-  process.on('unhandledRejection', function(reason: any, p) {
+  let errorHandler = (reason: any) => {
     console.log("Unhandled Rejection:", reason);
-    console.log('stack: ' + reason.stack)
+
     if (!res.headersSent) {
       if (reason instanceof DuplicateResource) {
         res.status(409).send()
@@ -70,6 +70,12 @@ app.use(function (req, res, next) {
         res.status(500).send('Unknown Error');
       }
     }
+  }
+
+  process.on('unhandledRejection', errorHandler);
+
+  req.on('close', function(){
+    process.removeListener("unhandledRejection", errorHandler);
   });
   next()
 });
