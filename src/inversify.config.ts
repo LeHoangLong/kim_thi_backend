@@ -70,7 +70,7 @@ export let myContainer = new Container();
 export function resetContainer() {
     myContainer.unbindAll()
     myContainer.bind<Pool>(TYPES.POSTGRES_DRIVER).toConstantValue(new Pool(config.postgres));
-    myContainer.bind<string>(TYPES.JWT_SECRECT_KEY).toConstantValue("38BggaT/EYOza5yIKeR13+9kgibw3K5UK/5AJjlAamoLo0IT/y3fX2Qcx18IS1e0zTMb556dtfac4bNV0EOuGsdXAQRRgiJueyanKW534X/VRZgSUggNeR4lEuz0q7iBbRjGLS7zm+hjU1MtoBbW70C2qX2cnFTRXuVwGHy2pQyYCo+stA9+ZJiacryZarT4yf/kUr6hJ+/WAJTMHHRcBWOLr6vedZQ7EmVfJA==");
+    myContainer.bind<string>(TYPES.JWT_SECRECT_KEY).toConstantValue(process.env.JWT_SECRET_KEY!);
     myContainer.bind<UserView>(TYPES.USER_VIEW).to(UserView);
     myContainer.bind<UserController>(TYPES.USER_CONTROLLER).to(UserController);
     myContainer.bind<IUserRepository>(TYPES.USER_REPOSITORY).to(UserRepositoryPostgres);
@@ -100,10 +100,10 @@ export function resetContainer() {
     myContainer.bind<EndUserGeocoderController>(TYPES.END_USER_GEOCODER_CONTROLLER).to(EndUserGeocoderController)
     myContainer.bind<IGeocoderService>(TYPES.GEOCODER_SERVICE).to(GoogleGeocoderService)
     myContainer.bind<any>(TYPES.GOOGLE_GEOCODER_OPTION).toConstantValue({
-        apiKey: 'AIzaSyAPW61kcHMbEsIZaiBcfL3qyfhcRurm6bk',
+        apiKey: process.env.GOOGLE_GEOCODER_API_KEY,
         language: 'vi'
     })
-    myContainer.bind<string>(TYPES.GOOGLE_GEOCODER_API_KEY).toConstantValue('AIzaSyAPW61kcHMbEsIZaiBcfL3qyfhcRurm6bk')
+    myContainer.bind<string>(TYPES.GOOGLE_GEOCODER_API_KEY).toConstantValue(process.env.GOOGLE_GEOCODER_API_KEY!)
 
     myContainer.bind<EndUserTransportFeeController>(TYPES.END_USER_TRANSPORT_FEE_CONTROLLER).to(EndUserTransportFeeController)
     myContainer.bind<EndUserTransportFeeView>(TYPES.END_USER_TRANSPORT_FEE_VIEW).to(EndUserTransportFeeView)
@@ -120,7 +120,7 @@ export function resetContainer() {
     myContainer.bind<AdminOrderController>(TYPES.ADMIN_ORDER_CONTROLLER).to(AdminOrderController)
     myContainer.bind<AdminOrderView>(TYPES.ADMIN_ORDER_VIEW).to(AdminOrderView)
 
-    myContainer.bind<string>(TYPES.GOOGLE_CLOUD_STORAGE_BUCKET_NAME).toConstantValue('kim-thi')
+    myContainer.bind<string>(TYPES.GOOGLE_CLOUD_STORAGE_BUCKET_NAME).toConstantValue(process.env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME!)
     myContainer.bind<Storage>(TYPES.GOOGLE_CLOUD_STORAGE).toConstantValue(new Storage())
 
     if (process.env.GCLOUD !== undefined) {
@@ -130,14 +130,10 @@ export function resetContainer() {
     }
 
     myContainer.bind<string>(TYPES.SEND_GRID_API_KEY).toConstantValue(process.env.SENDGRID_API_KEY!)
-    myContainer.bind<string>(TYPES.SEND_GRID_SENDER_EMAIL).toConstantValue('erenjeager212121@gmail.com')
+    myContainer.bind<string>(TYPES.SEND_GRID_SENDER_EMAIL).toConstantValue(process.env.SENDGRID_SENDER_EMAIL!)
     
     myContainer.bind<IEmailService>(TYPES.EMAIL_SERVICE).to(SendGridEmailService);
-    if (process.env.GCLOUD !== undefined) {
-        myContainer.bind<string>(TYPES.ADMIN_EMAIL).toConstantValue('lecong364@gmail.com')
-    } else {
-        myContainer.bind<string>(TYPES.ADMIN_EMAIL).toConstantValue('le.hoang.long@outlook.com')
-    }
+    myContainer.bind<string>(TYPES.ADMIN_EMAIL).toConstantValue(process.env.ADMIN_EMAIL!)
 
     myContainer.bind<IPriceRequestRepository>(TYPES.PRICE_REQUEST_REPOSITORY).to(PriceRequestRepositoryPostgres)
 

@@ -95,6 +95,9 @@ app.use('/backend/enduser/transport_fees', endUserTransportFeeRoutes)
 app.use('/backend/enduser/orders', endUserOrderRoutes)
 app.use('/backend/enduser/price_requests/', endUserPriceRequestRoute)
 app.use('/', pageRoutes)
+app.get('/hello', (req, res) => {
+  res.send('Hello World From Ecommerce backend')
+})
 
 app.listen(port, async () => {
   return console.log(`server is listening on ${port}`);
