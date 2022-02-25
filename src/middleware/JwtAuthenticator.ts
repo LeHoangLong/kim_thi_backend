@@ -35,7 +35,7 @@ export class JwtAuthenticator {
                 if ('username' in payload) {
                     let username: string = payload.username;
                     try { 
-                        var user = await this.driver.fetchUserByUsername(username);
+                        let user = await this.driver.fetchUserByUsername(username);
                         request.context.user = user;
                         next();
                     } catch (error) {

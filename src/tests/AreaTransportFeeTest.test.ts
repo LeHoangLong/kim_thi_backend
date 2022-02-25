@@ -288,8 +288,8 @@ describe('Area transport fee repository test', async function() {
 describe('Area transport fee view test', async () => {
     let context : any = {}
     beforeEach(() => {
-        var now = new Date();
-        var clock = sinon.useFakeTimers(now);
+        let now = new Date();
+        let clock = sinon.useFakeTimers(now);
         const mockImageRepository = new MockImageRepository()
         const mockBinaryRepository = new MockBinaryRepository()
         const mockProductRepository = new MockProductRepository()

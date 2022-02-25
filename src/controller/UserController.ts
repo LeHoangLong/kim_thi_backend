@@ -16,17 +16,17 @@ export class UserController {
     ) {}
 
     async signUpNormalUser(username: string, password: string) : Promise<User> {
-        var encryptedPassword = await bcrypt.hash(password, 10);
+        let encryptedPassword = await bcrypt.hash(password, 10);
         return this.repository.createUser(username, encryptedPassword, []);
     }
 
     async signUpAdmin(username: string, password: string) : Promise<User> {
-        var encryptedPassword = await bcrypt.hash(password, 10);
+        let encryptedPassword = await bcrypt.hash(password, 10);
         return this.repository.createUser(username, encryptedPassword, [Permission.ADMIN]);
     }
 
     async logIn(username: string, password: string) : Promise<[string, number] | null> {
-        var user = await this.repository.fetchUserByUsername(username);
+        let user = await this.repository.fetchUserByUsername(username);
         let compare = await bcrypt.compare(password, user.password);
         if (compare) {
             if (this.jwtAuthentication !== null) {

@@ -4,8 +4,8 @@ import { TYPES } from "./types";
 import { IConnectionFactory } from "./services/IConnectionFactory";
 import { PostgresConnectionFactory } from "./services/PostgresConnectionFactory";
 
-var migrate = require('migrate')
-var config = require('./config').config
+const migrate = require('migrate')
+const config = require('./config').config
 
 before(() => {
     let configPostgres = config.postgres_test

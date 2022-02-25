@@ -105,7 +105,7 @@ export class PriceRepositoryPostgres implements IProductPriceRepository {
 
     async deletePrice(id: number) : Promise<number> {
         try {
-            var result = await this.client.query(`
+            let result = await this.client.query(`
                 UPDATE "product_price" SET is_deleted = TRUE WHERE id = $1
             `, [id])
 

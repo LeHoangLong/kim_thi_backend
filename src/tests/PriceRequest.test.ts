@@ -106,7 +106,7 @@ describe('Price request view test', () => {
 
     beforeEach(async () => {
         now = new Date();
-        var clock = Sinon.useFakeTimers(now);
+        let clock = Sinon.useFakeTimers(now);
         mockPriceRequestRepository = new MockPriceRequestRepository()
         mockEmailService = new MockEmailService()
         

@@ -16,12 +16,10 @@ describe('Product view test', async function() {
     let context : any = {}
     this.beforeEach(function() {
         let mockResponse = new MockResponse();
-        var now = new Date();
-        var clock = sinon.useFakeTimers(now);
+        let now = new Date();
         const mockImageRepository = new MockImageRepository()
         const mockBinaryRepository = new MockBinaryRepository()
         let imageRepository = myContainer.rebind<IImageRepository>(TYPES.IMAGE_REPOSITORY).toConstantValue(mockImageRepository)
-        let binaryRepository = myContainer.rebind<IBinaryRepository>(TYPES.BINARY_REPOSITORY).toConstantValue(mockBinaryRepository)
         let imageView = myContainer.get<ImageView>(TYPES.IMAGE_VIEW)
         context.imageView = imageView
         context.imageRepository = imageRepository

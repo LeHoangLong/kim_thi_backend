@@ -41,8 +41,7 @@ chai.use(chaiSubset)
 describe('Product view and controller test', async function() {
     let context : any = {}
     this.beforeEach(async function() {
-        var now = new Date();
-        var clock = sinon.useFakeTimers(now);
+        let now = new Date();
         const mockImageRepository = new MockImageRepository()
         const mockBinaryRepository = new MockBinaryRepository()
         const mockProductRepository = new MockProductRepository()

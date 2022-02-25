@@ -11,10 +11,10 @@ import { CookieOptions } from "express";
 import bcrypt from 'bcrypt';
 
 describe('User test', function() {
-    var context: any = {};
+    let context: any = {};
     this.beforeEach(function() {
         context = {} as any;
-        var fakeHasedPassword = bcrypt.hashSync("password", 10); 
+        let fakeHasedPassword = bcrypt.hashSync("password", 10); 
         const fakeUserDriver: IUserRepository = {
             async createUser(username: string, password: string, permissions: Permission[]): Promise<User> {
                 password = bcrypt.hashSync(password, 10); 

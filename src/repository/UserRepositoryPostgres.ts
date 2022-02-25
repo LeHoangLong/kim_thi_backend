@@ -18,13 +18,13 @@ export class UserRepositoryPostgres implements IUserRepository {
         let connection = await this.driver.connect()
         await connection.query('BEGIN');
         try {
-            var result = await connection.query(`
+            let result = await connection.query(`
                 INSERT INTO "user" (username, password, is_deactivated, is_verified) 
                 VALUES ($1, $2, $3, $4)
                 RETURNING id, username, password, is_deactivated, is_verified
             `, [username, password, false, false]);
-            var userJson = result.rows[0];
-            var user = new User(
+            let userJson = result.rows[0];
+            let user = new User(
                 userJson['id'], 
                 userJson['username'], 
                 userJson['password'],
@@ -34,12 +34,12 @@ export class UserRepositoryPostgres implements IUserRepository {
             );
 
             for (let permission of permissions) {
-                var permissionResult = await connection.query(`
+                let permissionResult = await connection.query(`
                     INSERT INTO "permission" (user_id, value)
                     VALUES ($1, $2)
                     RETURNING value
                 `, [user.id, permission]);
-                var permissionJson = permissionResult.rows[0];
+                let permissionJson = permissionResult.rows[0];
                 user.permissions.push(permissionJson['value']);
             }
                 
@@ -58,7 +58,7 @@ export class UserRepositoryPostgres implements IUserRepository {
     } 
 
     async fetchUserByUsername(username: string) : Promise<User> {
-        var result = await this.driver.query(`
+        let result = await this.driver.query(`
             SELECT u.id, u.username, u.password, u.is_deactivated, u.is_verified
             FROM "user" u
             WHERE u.username = $1
@@ -67,8 +67,8 @@ export class UserRepositoryPostgres implements IUserRepository {
         if (result.rowCount == 0) {
             throw new NotFound("user", "username", username);
         }
-        var userJson = result.rows[0];
-        var user = new User(
+        let userJson = result.rows[0];
+        let user = new User(
             userJson['id'], 
             userJson['username'], 
             userJson['password'],
@@ -82,7 +82,7 @@ export class UserRepositoryPostgres implements IUserRepository {
             FROM "permission" 
             WHERE user_id = $1
         `, [user.id]);
-        for (var row of result.rows) {
+        for (let row of result.rows) {
             user.permissions.push(row['permission'])
         }
 

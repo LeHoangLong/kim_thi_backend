@@ -4,11 +4,9 @@ import SQL from "sql-template-strings";
 import { NotFound } from "../exception/NotFound";
 import { Product } from "../model/Product";
 import { ProductCategory } from "../model/ProductCategory";
-import { ProductPrice } from "../model/ProductPrice";
 import { PostgresConnectionFactory } from "../services/PostgresConnectionFactory";
 import { TYPES } from "../types";
 import { IProductRepository, ProductSearchFilter } from "./IProductRepository";
-var PgError = require("pg-error")
 
 @injectable()
 export class ProductRepositoryPostgres implements IProductRepository{
@@ -53,7 +51,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
                         ]::text[]
                     ) RETURNING id, created_time
                 `)
-                var results = await connection.query(query);
+                let results = await connection.query(query);
                 let newProduct = {...product};
                 newProduct.id = results.rows[0].id;
                 newProduct.serialNumber = product.serialNumber;
@@ -130,7 +128,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
     }
 
     private async _fetchProducts(offset: number, limit: number): Promise<Product[]> {
-        var results = await this.client.query(`
+        let results = await this.client.query(`
             SELECT 
                 p.*,
                 pi.image_id
@@ -152,7 +150,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
     }
 
     async fetchNumberOfProducts(filter: ProductSearchFilter = {}): Promise<number> {
-        var result: QueryResult<any>
+        let result: QueryResult<any>
         if (filter.category) {
             result = await this.client.query(`
             SELECT COUNT(DISTINCT p.id) FROM "product" p 
@@ -173,7 +171,7 @@ export class ProductRepositoryPostgres implements IProductRepository{
     }
 
     async fetchProductById(id: number, ignoreDeleted: boolean = true) : Promise<Product> {
-        var result = await this.client.query(`
+        let result = await this.client.query(`
             SELECT 
                 p.*, pi.image_id
             FROM (
@@ -356,7 +354,6 @@ export class ProductRepositoryPostgres implements IProductRepository{
         let hasName = filter.name !== undefined  && filter.name.length > 0
         let hasCategory = filter.category !== undefined && filter.category.length > 0 
         if (hasCategory && hasName) {
-            console.log('abc')
             return this._fetchProductsWithNameAndProduct(
                 filter.name!, 
                 filter.category!, 

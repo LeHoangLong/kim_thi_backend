@@ -21,9 +21,8 @@ import fileUpload from 'express-fileupload'
 import { DuplicateResource } from './exception/DuplicateResource';
 import { NotFound } from './exception/NotFound';
 
-var migrate = require('migrate')
-var path = require('path')
-var cors = require('cors')
+const path = require('path')
+const cors = require('cors')
 
 const app = express();
 const port = 80;
@@ -94,10 +93,10 @@ app.use('/backend/enduser/geocoding', endUserGeocodingRoutes)
 app.use('/backend/enduser/transport_fees', endUserTransportFeeRoutes)
 app.use('/backend/enduser/orders', endUserOrderRoutes)
 app.use('/backend/enduser/price_requests/', endUserPriceRequestRoute)
-app.use('/', pageRoutes)
 app.get('/hello', (req, res) => {
   res.send('Hello World From Ecommerce backend')
 })
+app.use('/', pageRoutes)
 
 app.listen(port, async () => {
   return console.log(`server is listening on ${port}`);

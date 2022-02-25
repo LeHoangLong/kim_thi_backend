@@ -9,7 +9,7 @@ const nodemailer = require('nodemailer');
 
 describe('Email service', () => {
     it('can send email', async function() {
-        var stub = {
+        let stub = {
             sendMail: function(options: SendMailOptions) {}
         }
         const stubSendMail = sinon.stub(stub, "sendMail");

@@ -14,11 +14,11 @@ export class UserView {
         let username = request.body.username;
         let password = request.body.password;
 
-        var ret = await this.controller.logIn(username, password);
+        let ret = await this.controller.logIn(username, password);
         if (ret === null) {
             return response.status(404).send();
         } else {
-            var [jwt, maxAge] = ret;
+            let [jwt, maxAge] = ret;
             let option: CookieOptions = {
                 maxAge: maxAge,
             };

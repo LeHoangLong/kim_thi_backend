@@ -15,6 +15,8 @@ export class EndUserProductView {
     ) {}
 
     async fetchProducts(request: express.Request, response: express.Response) {
+        console.log('fetching products from view')
+        
         let limit = parseInt(request.query.limit as string);
         let offset = parseInt(request.query.offset as string);
         if (isNaN(limit)) {
