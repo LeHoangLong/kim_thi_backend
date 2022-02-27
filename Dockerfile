@@ -1,4 +1,4 @@
-FROM lehoanglong/nodejs:14
+FROM node:17.6-buster
 
 WORKDIR /usr/src/app
 
