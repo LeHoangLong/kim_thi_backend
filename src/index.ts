@@ -43,7 +43,7 @@ app.use(fileUpload({
   limits: { fileSize: 50 * 1024 * 1024 },
 }))
 app.use((req, res, next) => {
-  if (!req.path.match(/^(\/?)user\/(login|signup)(\/?)/)){
+  if (!req.path.match(/(\/?)user\/(login|signup)(\/?)/)){
     jwtAuthentication.authenticate(req, res, next)
   } else {
     next();
