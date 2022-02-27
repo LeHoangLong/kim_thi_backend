@@ -103,7 +103,8 @@ dist
 # TernJS port file
 .tern-port
 
-public/products/images/*
+public/products/images/product_images/*
+!public/products/images/product_images/.keep
 build/*
 .migrate
 migrations-state/*
