@@ -261,8 +261,6 @@ export class ProductController {
     }
 
     async fetchProducts(name: string, category: string, offset: number, limit: number) : Promise<[number, ProductSummary[]]> {
-        console.log('fetching products from controller')
-        
         let count = await this.productRepository.fetchNumberOfProducts({name, category,});
         let products = await this.productRepository.fetchProducts({name, category, offset, limit})
         let productSummaries = await this._productsToProductSummaries(products)
