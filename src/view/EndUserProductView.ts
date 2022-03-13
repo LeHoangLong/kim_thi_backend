@@ -7,6 +7,7 @@ const config = require('../config').config;
 import { EProductUnitToString } from '../model/ProductPrice';
 import { NotFound } from '../exception/NotFound';
 import { parseProductSummary } from '../parsers/ProductParser';
+import { ProductSearchFilter } from '../repository/IProductRepository';
 
 @injectable()
 export class EndUserProductView {
@@ -14,18 +15,7 @@ export class EndUserProductView {
         @inject(TYPES.PRODUCT_CONTROLLER) public productController: ProductController,
     ) {}
 
-    async fetchProducts(request: express.Request, response: express.Response) {
-        console.log('fetching products from view')
-        
-        let limit = parseInt(request.query.limit as string);
-        let offset = parseInt(request.query.offset as string);
-        if (isNaN(limit)) {
-            limit = config.pagination.defaultSize;
-        }
-        if (isNaN(offset)) {
-            offset = 0;
-        }
-
+    parseProductFilter(request: express.Request) : ProductSearchFilter {
         let search = ''
         if (typeof(request.query.productSearch) === 'string') {
             search = request.query.productSearch
@@ -38,7 +28,25 @@ export class EndUserProductView {
             category = request.query.categories[0] as string
         }
 
-        let [count, products] = await this.productController.fetchProducts(search, category, offset, limit);
+        return {
+            category: category,
+            name: search,
+        }
+    }
+
+    async fetchProducts(request: express.Request, response: express.Response) {
+        let limit = parseInt(request.query.limit as string);
+        let offset = parseInt(request.query.offset as string);
+        if (isNaN(limit)) {
+            limit = config.pagination.defaultSize;
+        }
+        if (isNaN(offset)) {
+            offset = 0;
+        }
+
+        let filter = this.parseProductFilter(request)
+
+        let [count, products] = await this.productController.fetchProducts(filter.name!, filter.category!, offset, limit);
         for (let i = 0; i < products.length; i++) {
             products[i] = parseProductSummary(products[i])
         }
@@ -46,7 +54,8 @@ export class EndUserProductView {
     }
 
     async fetchProductsCount(request: express.Request, response: express.Response) {
-        let numberOfProducts = await this.productController.fetchNumberOfProducts()
+        let filter = this.parseProductFilter(request)
+        let numberOfProducts = await this.productController.fetchNumberOfProducts(filter)
         response.status(200).send(numberOfProducts.toString())
     }
 
