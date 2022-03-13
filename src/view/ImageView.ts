@@ -28,8 +28,8 @@ export class ImageView {
     }
     
     async fetchImages(request: express.Request, response: express.Response) {
-        let limit = request.body.limit;
-        let offset = request.body.offset;
+        let limit = parseInt(request.query.limit as string);
+        let offset = parseInt(request.query.offset as string);
         if (limit === undefined) {
             limit = config.pagination.defaultSize;
         }
